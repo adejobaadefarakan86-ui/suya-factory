@@ -47,7 +47,53 @@ export type OrderView = {
     quantity: number;
     line_total_minor: number;
   }[];
+  events: { status: OrderStatus; at: string }[];
 };
+
+/** The normal journey of an order, in order (used for the customer's timeline). */
+export const ORDER_JOURNEY: OrderStatus[] = ["pending_payment", "paid", "preparing", "out_for_delivery", "delivered"];
+
+/** The next normal step and the button wording staff see for it. */
+export const NEXT_STEP: Partial<Record<OrderStatus, { to: OrderStatus; label: string }>> = {
+  paid: { to: "preparing", label: "Start preparing" },
+  preparing: { to: "out_for_delivery", label: "Send out for delivery" },
+  out_for_delivery: { to: "delivered", label: "Mark as delivered" },
+};
+
+/** Admins only: undo one step. */
+export const PREVIOUS_STEP: Partial<Record<OrderStatus, OrderStatus>> = {
+  preparing: "paid",
+  out_for_delivery: "preparing",
+  delivered: "out_for_delivery",
+};
+
+export const CANCELLABLE: OrderStatus[] = ["pending_payment", "paid", "preparing", "out_for_delivery"];
+
+export const PAYMENT_METHODS = {
+  mobile_money: "Mobile money",
+  bank_transfer: "Bank transfer",
+  cash: "Cash",
+  other: "Other",
+} as const;
+export type PaymentMethod = keyof typeof PAYMENT_METHODS;
+
+/** Friendly versions of the database's 'SF:<code>' errors for admin actions. */
+export const ADMIN_ERRORS: Record<string, string> = {
+  not_allowed: "You don't have permission to do that.",
+  admin_only: "Only admins can do that.",
+  bad_transition: "That change isn't allowed from the order's current status. Refresh the page and try again.",
+  order_not_found: "Order not found.",
+  not_payable: "This order isn't waiting for payment any more.",
+  bad_method: "Please choose a payment method.",
+  reference_required: "Please enter the payment reference (e.g. the mobile money transaction ID).",
+  too_long: "That text is too long. Please shorten it.",
+};
+
+export function adminErrorMessage(error: { message: string } | null) {
+  if (!error) return null;
+  const code = error.message.startsWith("SF:") ? error.message.slice(3) : "";
+  return ADMIN_ERRORS[code] ?? "Something went wrong. Please try again.";
+}
 
 /** "18 Nov 2026, 17:55" in the order's own country time. */
 export function formatOrderDate(iso: string, country: CountryCode) {

@@ -12,8 +12,20 @@ export const CONTACTS: Record<CountryCode, { whatsapp: string; phone: string }> 
 const BULK_MESSAGE =
   "Hi Suya Factory! I'd like to make a bulk order of Beef Kilishi (1kg or more).";
 
-export function whatsappLink(digits: string) {
-  return `https://wa.me/${digits}?text=${encodeURIComponent(BULK_MESSAGE)}`;
+export function whatsappLink(digits: string, message: string = BULK_MESSAGE) {
+  return `https://wa.me/${digits}?text=${encodeURIComponent(message)}`;
+}
+
+/**
+ * A customer's typed phone number -> international digits for WhatsApp/calls.
+ * "0803 000 0000" (NG) -> "2348030000000";  "+233 24 123 4567" -> "233241234567"
+ */
+export function toInternationalDigits(phone: string, country: "NG" | "GH") {
+  const digits = phone.replace(/\D/g, "");
+  if (phone.trim().startsWith("+")) return digits;
+  if (digits.startsWith("00")) return digits.slice(2);
+  if (digits.startsWith("0")) return (country === "NG" ? "234" : "233") + digits.slice(1);
+  return digits;
 }
 
 export function telLink(digits: string) {

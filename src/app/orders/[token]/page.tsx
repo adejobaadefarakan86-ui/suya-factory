@@ -4,7 +4,32 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { createPublicClient } from "@/lib/supabase/public";
 import { formatMoney } from "@/lib/money";
-import { ORDER_STATUS, formatOrderDate, isOrderToken, type OrderView } from "@/lib/orders";
+import { ORDER_JOURNEY, ORDER_STATUS, formatOrderDate, isOrderToken, type OrderView } from "@/lib/orders";
+
+const STEP_LABELS = ["Order placed", "Paid", "Being prepared", "Out for delivery", "Delivered"];
+
+/** Order placed → Paid → Being prepared → Out for delivery → Delivered, with times. */
+function Timeline({ order }: { order: OrderView }) {
+  const current = ORDER_JOURNEY.indexOf(order.status);
+  // When each step was (last) reached.
+  const reachedAt = new Map((order.events ?? []).map((e) => [e.status, e.at]));
+  return (
+    <ol className="mt-6 grid grid-cols-5 gap-1 text-center text-xs" aria-label="Order progress">
+      {ORDER_JOURNEY.map((step, i) => {
+        const done = i <= current;
+        const at = done ? reachedAt.get(step) : undefined;
+        return (
+          <li key={step} aria-current={i === current ? "step" : undefined}>
+            <div className={`mx-auto mb-1 h-2 rounded-full ${done ? "bg-orange-600" : "bg-stone-200"}`} />
+            <span className={done ? "font-semibold text-stone-900" : "text-stone-400"}>{STEP_LABELS[i]}</span>
+            {at && <span className="block text-stone-500">{formatOrderDate(at, order.country)}</span>}
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+import { AutoRefresh } from "@/components/auto-refresh";
 import { payWithPaystack } from "./actions";
 import { PayButton } from "./pay-button";
 
@@ -76,6 +101,11 @@ async function OrderDetails({ params, searchParams }: Pick<OrderPageProps, "para
         </div>
         <span className={`rounded-full px-3 py-1 text-sm font-semibold ${status.className}`}>{status.label}</span>
       </div>
+
+      {order.status !== "cancelled" && <Timeline order={order} />}
+
+      {/* Keep the status up to date by itself until the order is finished. */}
+      {order.status !== "delivered" && order.status !== "cancelled" && <AutoRefresh seconds={30} />}
 
       {message && (
         <p role="status" className={`mt-6 rounded-2xl p-4 text-sm ${message.className}`}>{message.text}</p>

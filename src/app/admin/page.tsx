@@ -1,108 +1,61 @@
+import Link from "next/link";
 import { Suspense } from "react";
 import { requireStaff } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { formatMoney, type Currency } from "@/lib/money";
+import { AutoRefresh } from "@/components/auto-refresh";
 
-export const metadata = { title: "Products · Admin · Suya Factory" };
+export const metadata = { title: "Overview · Admin · Suya Factory" };
 
-type Price = { currency: Currency; amount_minor: number };
-type Variant = {
-  id: string;
-  sku: string | null;
-  size_label: string;
-  spice_level: string | null;
-  is_active: boolean;
-  variant_prices: Price[];
-};
-type Product = {
-  id: string;
-  name: string;
-  is_active: boolean;
-  categories: { name: string } | null;
-  product_variants: Variant[];
-};
-
-function priceIn(variant: Variant, currency: Currency) {
-  const price = variant.variant_prices.find((p) => p.currency === currency);
-  return price ? formatMoney(price.amount_minor, currency) : "—";
-}
-
-export default function AdminProductsPage() {
+export default function AdminOverviewPage() {
   return (
     <>
-      <h1 className="text-2xl font-bold text-stone-900">Products</h1>
-      <Suspense fallback={<p className="mt-4 text-sm text-stone-400">Loading products…</p>}>
-        <ProductList />
+      <h1 className="text-2xl font-bold text-stone-900">Overview</h1>
+      <AutoRefresh seconds={60} />
+      <Suspense fallback={<p className="mt-4 text-sm text-stone-400">Loading…</p>}>
+        <Counts />
       </Suspense>
     </>
   );
 }
 
-async function ProductList() {
-  // Checked HERE, next to the data, on every visit.
+async function Counts() {
   await requireStaff("/admin");
   const supabase = await createClient();
 
-  // One request fetches products + their variants + their prices.
-  const { data, error } = await supabase
-    .from("products")
-    .select(
-      "id, name, is_active, categories(name), product_variants(id, sku, size_label, spice_level, is_active, sort_order, variant_prices(currency, amount_minor))",
-    )
-    .order("name")
-    .order("sort_order", { referencedTable: "product_variants" });
+  // head:true + count = just count the rows, don't download them.
+  const countOrders = (status: string) =>
+    supabase.from("orders").select("id", { count: "exact", head: true }).eq("status", status);
+  const [toPrepare, preparing, outForDelivery, unpaid, newEnquiries] = await Promise.all([
+    countOrders("paid"),
+    countOrders("preparing"),
+    countOrders("out_for_delivery"),
+    countOrders("pending_payment"),
+    supabase.from("bulk_enquiries").select("id", { count: "exact", head: true }).eq("status", "new"),
+  ]);
 
-  if (error) {
-    return <p className="text-red-700">Couldn&apos;t load products: {error.message}</p>;
-  }
-
-  const products = (data ?? []) as unknown as Product[];
+  const cards = [
+    { label: "Paid, to prepare", count: toPrepare.count, href: "/admin/orders?status=paid", urgent: true },
+    { label: "Being prepared", count: preparing.count, href: "/admin/orders?status=preparing" },
+    { label: "Out for delivery", count: outForDelivery.count, href: "/admin/orders?status=out_for_delivery" },
+    { label: "New bulk enquiries", count: newEnquiries.count, href: "/admin/enquiries?status=new", urgent: true },
+    { label: "Waiting for payment", count: unpaid.count, href: "/admin/orders?status=pending_payment" },
+  ];
 
   return (
-    <>
-      <p className="mt-1 mb-6 text-sm text-stone-600">
-        {products.length} products · editing comes in a later phase.
-      </p>
-
-      <div className="space-y-6">
-        {products.map((product) => (
-          <section key={product.id} className="overflow-hidden rounded-xl border border-stone-200 bg-white">
-            <header className="flex items-center justify-between border-b border-stone-200 bg-stone-50 px-4 py-3">
-              <h2 className="font-semibold text-stone-900">
-                {product.name}
-                <span className="ml-2 text-xs font-normal text-stone-500">{product.categories?.name}</span>
-              </h2>
-              {!product.is_active && (
-                <span className="rounded bg-stone-200 px-2 py-0.5 text-xs text-stone-700">Hidden</span>
-              )}
-            </header>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className="text-xs uppercase text-stone-500">
-                  <tr>
-                    <th className="px-4 py-2">SKU</th>
-                    <th className="px-4 py-2">Size</th>
-                    <th className="px-4 py-2">Spice</th>
-                    <th className="px-4 py-2 text-right">Nigeria</th>
-                    <th className="px-4 py-2 text-right">Ghana</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {product.product_variants.map((v) => (
-                    <tr key={v.id} className="border-t border-stone-100">
-                      <td className="px-4 py-2 font-mono text-xs text-stone-600">{v.sku}</td>
-                      <td className="px-4 py-2">{v.size_label}</td>
-                      <td className="px-4 py-2 capitalize">{v.spice_level?.replace("_", " ") ?? "—"}</td>
-                      <td className="px-4 py-2 text-right tabular-nums">{priceIn(v, "NGN")}</td>
-                      <td className="px-4 py-2 text-right tabular-nums">{priceIn(v, "GHS")}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
-        ))}
-      </div>
-    </>
+    <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {cards.map((c) => (
+        <li key={c.label}>
+          <Link
+            href={c.href}
+            className={`block rounded-2xl border p-5 hover:shadow-md ${
+              c.urgent && (c.count ?? 0) > 0 ? "border-orange-300 bg-orange-50" : "border-stone-200 bg-white"
+            }`}
+          >
+            <p className="text-3xl font-bold tabular-nums text-stone-900">{c.count ?? "?"}</p>
+            <p className="mt-1 text-sm text-stone-600">{c.label} →</p>
+          </Link>
+        </li>
+      ))}
+    </ul>
   );
 }

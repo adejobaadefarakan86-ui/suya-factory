@@ -1,0 +1,169 @@
+"use client";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useActionState, useEffect, useState } from "react";
+import { cart, useCartLines } from "@/lib/cart";
+import { formatMoney, type Currency } from "@/lib/money";
+import type { CountryCode } from "@/lib/countries";
+import type { Zone } from "@/lib/zones";
+import { Field, buttonClass } from "@/components/field";
+import type { CartItemInfo } from "../cart/cart-view";
+import { placeOrder, type CheckoutState } from "./actions";
+
+const inputClass =
+  "w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-stone-900 outline-none focus:border-orange-600 focus:ring-2 focus:ring-orange-200";
+
+export function CheckoutForm({
+  items,
+  zones,
+  country,
+  countryName,
+  currency,
+  defaults,
+  loggedIn,
+}: {
+  items: Record<string, CartItemInfo>;
+  zones: Zone[];
+  country: CountryCode;
+  countryName: string;
+  currency: Currency;
+  defaults: { name: string; email: string; phone: string };
+  loggedIn: boolean;
+}) {
+  const router = useRouter();
+  const lines = useCartLines();
+  const [zoneId, setZoneId] = useState("");
+  const [state, action, pending] = useActionState<CheckoutState, FormData>(placeOrder, undefined);
+
+  const placed = state && "token" in state ? state : null;
+  const failed = state && "error" in state ? state : null;
+
+  // Order saved: empty the cart and go to the confirmation page.
+  useEffect(() => {
+    if (!placed) return;
+    cart.clear();
+    router.replace(`/orders/${placed.token}`);
+  }, [placed, router]);
+
+  if (placed) {
+    return <p role="status" className="mt-6 text-stone-600">Order {placed.orderNumber} placed! Taking you to it…</p>;
+  }
+
+  const rows = lines
+    .map((line) => ({ ...line, info: items[line.variantId] }))
+    .filter((row) => row.info !== undefined);
+
+  if (rows.length === 0) {
+    return (
+      <div className="mt-6 rounded-2xl border border-stone-200 bg-white p-8 text-center">
+        <p className="text-stone-600">Your cart is empty.</p>
+        <Link href="/shop" className="mt-4 inline-block rounded-lg bg-orange-700 px-5 py-2.5 font-semibold text-white hover:bg-orange-800">
+          Browse the shop
+        </Link>
+      </div>
+    );
+  }
+
+  if (rows.some((r) => r.info.price === null)) {
+    return (
+      <div className="mt-6 rounded-2xl bg-amber-50 p-6 text-amber-900">
+        Some items in your cart aren&apos;t available in {countryName}.{" "}
+        <Link href="/cart" className="font-semibold underline">Go back to your cart</Link> to remove them.
+      </div>
+    );
+  }
+
+  const zone = zones.find((z) => z.id === zoneId) ?? null;
+  const subtotal = rows.reduce((sum, r) => sum + (r.info.price ?? 0) * r.quantity, 0);
+  const fee = zone?.feeMinor ?? 0;
+  const total = subtotal + fee;
+  const v = failed?.values;
+
+  return (
+    <form action={action} className="mt-6 grid gap-8 lg:grid-cols-[1fr_22rem]">
+      {/* What we send besides the visible fields */}
+      <input type="hidden" name="country" value={country} />
+      <input type="hidden" name="items" value={JSON.stringify(rows.map(({ variantId, quantity }) => ({ variant_id: variantId, quantity })))} />
+      <input type="hidden" name="expectedTotal" value={total} />
+
+      <div className="space-y-6">
+        <fieldset className="space-y-4 rounded-2xl border border-stone-200 bg-white p-6">
+          <legend className="px-1 text-lg font-semibold text-stone-900">Your details</legend>
+          {!loggedIn && (
+            <p className="text-sm text-stone-600">
+              Checking out as a guest.{" "}
+              <Link href="/login?next=/checkout" className="font-medium text-orange-700 hover:underline">Log in</Link>{" "}
+              to keep track of your orders.
+            </p>
+          )}
+          <Field label="Full name" name="name" autoComplete="name" defaultValue={v?.name ?? defaults.name} required maxLength={100} />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Email" name="email" type="email" autoComplete="email" defaultValue={v?.email ?? defaults.email} required maxLength={200} />
+            <Field label="Phone" name="phone" type="tel" autoComplete="tel" defaultValue={v?.phone ?? defaults.phone} required maxLength={20}
+              hint="Our rider will call this number on delivery." />
+          </div>
+        </fieldset>
+
+        <fieldset className="space-y-4 rounded-2xl border border-stone-200 bg-white p-6">
+          <legend className="px-1 text-lg font-semibold text-stone-900">Delivery in {countryName}</legend>
+          <label className="block">
+            <span className="mb-1 block text-sm font-medium text-stone-700">Delivery area</span>
+            <select name="zoneId" required value={zoneId} onChange={(e) => setZoneId(e.target.value)} className={inputClass}>
+              <option value="" disabled>Choose your area…</option>
+              {zones.map((z) => (
+                <option key={z.id} value={z.id}>
+                  {z.name} · {formatMoney(z.feeMinor, currency)}{z.estimatedTime ? ` · ${z.estimatedTime}` : ""}
+                </option>
+              ))}
+            </select>
+          </label>
+          <Field label="Street address" name="line1" autoComplete="address-line1" defaultValue={v?.line1} required maxLength={200} />
+          <Field label="Flat, floor, estate (optional)" name="line2" autoComplete="address-line2" defaultValue={v?.line2} maxLength={200} />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="City / town" name="city" autoComplete="address-level2" defaultValue={v?.city} required maxLength={100} />
+            <Field label="Nearest landmark (optional)" name="landmark" defaultValue={v?.landmark} maxLength={200} />
+          </div>
+          <label className="block">
+            <span className="mb-1 block text-sm font-medium text-stone-700">Notes for the rider (optional)</span>
+            <textarea name="notes" rows={2} maxLength={500} defaultValue={v?.notes} className={inputClass} />
+          </label>
+        </fieldset>
+      </div>
+
+      <aside className="h-fit space-y-4 rounded-2xl border border-stone-200 bg-white p-6 lg:sticky lg:top-6">
+        <h2 className="text-lg font-semibold text-stone-900">Your order</h2>
+        <ul className="divide-y divide-stone-100 text-sm">
+          {rows.map(({ variantId, quantity, info }) => (
+            <li key={variantId} className="flex justify-between gap-3 py-2">
+              <span>
+                <span className="font-medium text-stone-900">{quantity} × {info.productName}</span>
+                <span className="block text-stone-500">{info.label}</span>
+              </span>
+              <span className="tabular-nums">{formatMoney((info.price ?? 0) * quantity, currency)}</span>
+            </li>
+          ))}
+        </ul>
+        <dl className="space-y-1 border-t border-stone-200 pt-3 text-sm">
+          <div className="flex justify-between"><dt>Subtotal</dt><dd className="tabular-nums">{formatMoney(subtotal, currency)}</dd></div>
+          <div className="flex justify-between">
+            <dt>Delivery</dt>
+            <dd className="tabular-nums">{zone ? formatMoney(fee, currency) : "Choose an area"}</dd>
+          </div>
+          <div className="flex justify-between pt-2 text-lg font-bold">
+            <dt>Total</dt><dd className="tabular-nums">{formatMoney(total, currency)}</dd>
+          </div>
+        </dl>
+
+        {failed && (
+          <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-800">{failed.error}</p>
+        )}
+
+        <button type="submit" disabled={pending || !zone} className={buttonClass}>
+          {pending ? "Placing order…" : "Place order"}
+        </button>
+        <p className="text-xs text-stone-500">You&apos;ll pay on the next step.</p>
+        <Link href="/cart" className="block text-center text-sm text-stone-600 hover:text-orange-700">← Back to cart</Link>
+      </aside>
+    </form>
+  );
+}

@@ -88,10 +88,17 @@ export function CartView({
           </p>
         )}
 
-        <button type="button" disabled
-          className="mt-4 w-full cursor-not-allowed rounded-lg bg-stone-300 px-4 py-3 font-semibold text-stone-600">
-          Checkout (coming in the next phase)
-        </button>
+        {unavailable.length > 0 ? (
+          <button type="button" disabled
+            className="mt-4 w-full cursor-not-allowed rounded-lg bg-stone-300 px-4 py-3 font-semibold text-stone-600">
+            Go to checkout
+          </button>
+        ) : (
+          <Link href="/checkout"
+            className="mt-4 block w-full rounded-lg bg-orange-700 px-4 py-3 text-center font-semibold text-white hover:bg-orange-800">
+            Go to checkout
+          </Link>
+        )}
       </div>
     </div>
   );

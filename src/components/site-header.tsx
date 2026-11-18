@@ -39,6 +39,7 @@ export function SiteHeader() {
         </Link>
         <nav className="flex items-center gap-3 text-sm text-stone-700 sm:gap-5">
           <Link href="/shop" className="hover:text-orange-700">Shop</Link>
+          <Link href="/bulk-orders" className="hover:text-orange-700">Bulk<span className="hidden sm:inline"> orders</span></Link>
           <Suspense fallback={<span className="w-20" />}>
             <CountrySwitcher />
           </Suspense>

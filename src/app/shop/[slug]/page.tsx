@@ -53,6 +53,14 @@ async function ProductDetail({ params }: { params: PageProps<"/shop/[slug]">["pa
         <Suspense fallback={<div className="mt-6 h-64 animate-pulse rounded-xl bg-stone-100" />}>
           <PricedBuyBox slug={product.slug} />
         </Suspense>
+
+        <Link href="/bulk-orders"
+          className="mt-8 block rounded-xl border border-orange-200 bg-orange-50 p-4 hover:border-orange-400">
+          <span className="font-semibold text-orange-900">Need 1kg or more?</span>
+          <span className="block text-sm text-orange-900/80">
+            Bulk & custom orders: chat with us on WhatsApp, call, or send an enquiry →
+          </span>
+        </Link>
       </div>
     </div>
   );

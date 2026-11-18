@@ -37,7 +37,8 @@ export default function HomePage() {
         <div className="mx-auto grid max-w-6xl gap-8 px-4 py-14 sm:grid-cols-3">
           <div>
             <h3 className="font-semibold text-stone-900">1. Pick your pack</h3>
-            <p className="mt-1 text-sm text-stone-600">Small pack or big pack. Need 1kg or more? Ask about bulk orders.</p>
+            <p className="mt-1 text-sm text-stone-600">Small pack or big pack. Need 1kg or more?{" "}
+              <Link href="/bulk-orders" className="font-medium text-orange-700 hover:underline">Ask about bulk orders</Link>.</p>
           </div>
           <div>
             <h3 className="font-semibold text-stone-900">2. Pay securely</h3>

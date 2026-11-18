@@ -17,3 +17,14 @@ Things that are set up for development and MUST change before real customers use
 
 ## App settings
 - [ ] Set `NEXT_PUBLIC_SITE_URL` to the live address in Vercel's environment variables.
+- [ ] Add `SUPABASE_SECRET_KEY` and `PAYSTACK_SECRET_KEY` to Vercel's environment variables (never `NEXT_PUBLIC_`).
+
+## Data
+- [ ] Replace the sample delivery zones and fees with the real ones.
+- [ ] Delete test orders, payments and enquiries from the database.
+- [ ] Upload real product photos.
+
+## Test on real phones (Android and iPhone)
+- [ ] "Call us" opens the normal phone dialer.
+- [ ] "Chat on WhatsApp" opens WhatsApp with the bulk-order message filled in.
+- [ ] A full order + Paystack payment works on mobile data.

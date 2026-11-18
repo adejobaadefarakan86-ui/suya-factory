@@ -33,7 +33,19 @@ export async function updateSession(request: NextRequest) {
 
   // Don't put code between createServerClient and this call.
   // It checks the login token and refreshes it if it has expired.
-  await supabase.auth.getClaims();
+  const { data } = await supabase.auth.getClaims();
+
+  // Quick first check: not logged in at all? Send to login before loading
+  // the page. (Pages still do the full role check themselves.)
+  const path = request.nextUrl.pathname;
+  if (!data?.claims && (path.startsWith("/admin") || path.startsWith("/account"))) {
+    const loginUrl = request.nextUrl.clone();
+    loginUrl.pathname = "/login";
+    loginUrl.search = `?next=${encodeURIComponent(path)}`;
+    const redirect = NextResponse.redirect(loginUrl);
+    response.cookies.getAll().forEach((cookie) => redirect.cookies.set(cookie));
+    return redirect;
+  }
 
   return response;
 }

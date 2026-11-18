@@ -4,6 +4,7 @@
 // The database's RLS rules are the final guard; these checks decide what to SHOW.
 import { cache } from "react";
 import { redirect } from "next/navigation";
+import { connection } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
 export type Role = "customer" | "staff" | "admin";
@@ -18,6 +19,10 @@ export type CurrentUser = {
 // cache() = if several components ask during the same page load,
 // only talk to Supabase once.
 export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
+  // Tell Next.js this must run fresh on every visit: checking a login
+  // compares its expiry time with the current clock.
+  await connection();
+
   const supabase = await createClient();
 
   // getClaims() verifies the login token's signature. Never trust getSession() on the server.

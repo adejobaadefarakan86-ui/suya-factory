@@ -24,7 +24,7 @@ export function SignupForm() {
         type="tel"
         autoComplete="tel"
         defaultValue={state?.phone}
-        hint="For delivery updates, e.g. +234 801 234 5678"
+        hint="We'll only use it for delivery updates."
       />
       <Field
         label="Password"

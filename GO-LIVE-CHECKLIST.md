@@ -9,5 +9,11 @@ Things that are set up for development and MUST change before real customers use
 - [ ] URL Configuration: add the live address to **Redirect URLs** (e.g. `https://your-site.vercel.app/**`).
 - [ ] Set up a custom SMTP email sender (the built-in one only sends a few emails per hour).
 
+## Paystack
+- [ ] Complete business verification (activate account) so live payments are allowed.
+- [ ] Enable Ghana (GHS) payments on the account, or set up a Ghana arrangement with Paystack.
+- [ ] Swap the TEST secret key for the LIVE one in Vercel's environment variables.
+- [ ] Set the live webhook URL in Paystack (Settings → API Keys & Webhooks).
+
 ## App settings
 - [ ] Set `NEXT_PUBLIC_SITE_URL` to the live address in Vercel's environment variables.

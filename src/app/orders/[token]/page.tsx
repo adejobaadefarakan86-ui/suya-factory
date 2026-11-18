@@ -5,6 +5,8 @@ import { Suspense } from "react";
 import { createPublicClient } from "@/lib/supabase/public";
 import { formatMoney } from "@/lib/money";
 import { ORDER_STATUS, formatOrderDate, isOrderToken, type OrderView } from "@/lib/orders";
+import { payWithPaystack } from "./actions";
+import { PayButton } from "./pay-button";
 
 // Private page: keep it out of search engines.
 export const metadata = { title: "Your order · Suya Factory", robots: { index: false, follow: false } };
@@ -13,13 +15,38 @@ export default function OrderPage(props: PageProps<"/orders/[token]">) {
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-10">
       <Suspense fallback={<div className="h-96 animate-pulse rounded-2xl bg-stone-200" />}>
-        <OrderDetails params={props.params} />
+        <OrderDetails params={props.params} searchParams={props.searchParams} />
       </Suspense>
     </main>
   );
 }
 
-async function OrderDetails({ params }: { params: PageProps<"/orders/[token]">["params"] }) {
+const PAYMENT_MESSAGES: Record<string, { text: string; className: string }> = {
+  failed: {
+    text: "Your payment didn't go through, so you haven't been charged. Please try again.",
+    className: "bg-red-50 text-red-900",
+  },
+  pending: {
+    text: "Your payment is still being processed (this can happen with bank transfers). Refresh this page in a minute or two.",
+    className: "bg-blue-50 text-blue-900",
+  },
+  unavailable: {
+    text: "We couldn't reach the payment service just now. Please try again in a moment.",
+    className: "bg-red-50 text-red-900",
+  },
+  error: {
+    text: "Something went wrong checking your payment. If money left your account, don't worry: it will show here once confirmed. Otherwise, please try again.",
+    className: "bg-red-50 text-red-900",
+  },
+  too_many_attempts: {
+    text: "There have been too many payment attempts for this order. Please contact us and we'll help.",
+    className: "bg-red-50 text-red-900",
+  },
+};
+
+type OrderPageProps = PageProps<"/orders/[token]">;
+
+async function OrderDetails({ params, searchParams }: Pick<OrderPageProps, "params" | "searchParams">) {
   const { token } = await params;
   if (!isOrderToken(token)) notFound();
 
@@ -31,6 +58,14 @@ async function OrderDetails({ params }: { params: PageProps<"/orders/[token]">["
   const status = ORDER_STATUS[order.status];
   const money = (n: number) => formatMoney(n, order.currency);
   const a = order.delivery_address;
+  const firstName = order.contact_name.split(" ")[0];
+  // Ghana (GHS) online payment waits for a provider that supports mobile money.
+  const canPayOnline = order.currency === "NGN";
+
+  // Result of a payment attempt, passed back in the link (?payment=...).
+  // Only for display: the order's real status always comes from the database.
+  const { payment } = await searchParams;
+  const message = order.status === "pending_payment" ? PAYMENT_MESSAGES[String(payment)] : undefined;
 
   return (
     <>
@@ -42,15 +77,39 @@ async function OrderDetails({ params }: { params: PageProps<"/orders/[token]">["
         <span className={`rounded-full px-3 py-1 text-sm font-semibold ${status.className}`}>{status.label}</span>
       </div>
 
+      {message && (
+        <p role="status" className={`mt-6 rounded-2xl p-4 text-sm ${message.className}`}>{message.text}</p>
+      )}
+
       {order.status === "pending_payment" && (
         <div className="mt-6 rounded-2xl bg-orange-50 p-5 text-orange-950">
-          <p className="font-semibold">Thank you, {order.contact_name.split(" ")[0]}! We&apos;ve received your order.</p>
-          <p className="mt-1 text-sm">
-            Online payment is coming soon. We&apos;ll start preparing your suya once payment is confirmed.
-          </p>
-          <p className="mt-2 text-sm">
+          <p className="font-semibold">Thank you, {firstName}! We&apos;ve received your order.</p>
+          {canPayOnline ? (
+            <>
+              <p className="mt-1 text-sm">
+                Pay securely with card, bank transfer or USSD through Paystack. We&apos;ll start preparing your suya
+                as soon as your payment is confirmed.
+              </p>
+              <form action={payWithPaystack.bind(null, token)} className="mt-4">
+                <PayButton label={`Pay ${money(order.total_minor)} now`} />
+              </form>
+            </>
+          ) : (
+            <p className="mt-1 text-sm">
+              Online payment for Ghana, including mobile money, is coming soon. We&apos;ll contact you to arrange
+              payment for this order.
+            </p>
+          )}
+          <p className="mt-3 text-sm">
             <strong>Bookmark this page:</strong> its link is private to you and shows your order&apos;s progress.
           </p>
+        </div>
+      )}
+
+      {order.status === "paid" && (
+        <div className="mt-6 rounded-2xl bg-green-50 p-5 text-green-950">
+          <p className="font-semibold">Payment received. Thank you, {firstName}!</p>
+          <p className="mt-1 text-sm">We&apos;re getting your order ready. This page will show its progress.</p>
         </div>
       )}
 

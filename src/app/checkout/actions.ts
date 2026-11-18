@@ -34,7 +34,9 @@ const MESSAGES: Record<string, string> = {
   unavailable: "Something in your cart is no longer available. Please check your cart.",
   bad_items: "Something went wrong with your cart. Please check your cart.",
   price_changed:
-    "Prices or delivery fees changed while you were checking out. Please refresh the page to see the latest total.",
+    "Prices changed while you were checking out. Please refresh the page to see the latest total.",
+  location: "Please set your exact delivery location on the map (or tap “Use my current location”).",
+  location_country: "Your map pin is outside the country you're ordering in. Please move the pin, or switch country at the top of the page.",
 };
 
 const text = (formData: FormData, key: string) => String(formData.get(key) ?? "").trim();
@@ -73,7 +75,11 @@ export async function placeOrder(_prev: CheckoutState, formData: FormData): Prom
     p_contact_name: values.name,
     p_contact_email: values.email,
     p_contact_phone: values.phone,
-    p_address: { line1: values.line1, line2: values.line2, city: values.city, landmark: values.landmark },
+    p_address: {
+      line1: values.line1, line2: values.line2, city: values.city, landmark: values.landmark,
+      // Exact pin from the map / GPS (checked again by the database).
+      lat: text(formData, "lat"), lng: text(formData, "lng"), accuracy: text(formData, "accuracy"),
+    },
     p_notes: values.notes,
     p_items: items,
     p_expected_total_minor: expectedTotal,

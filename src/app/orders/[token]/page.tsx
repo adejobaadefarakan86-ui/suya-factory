@@ -4,37 +4,31 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { createPublicClient } from "@/lib/supabase/public";
 import { formatMoney } from "@/lib/money";
-import { ORDER_JOURNEY, ORDER_STATUS, formatOrderDate, isOrderToken, type OrderView } from "@/lib/orders";
-
-const STEP_LABELS = ["Order placed", "Paid", "Being prepared", "Out for delivery", "Delivered"];
-
-/** Order placed → Paid → Being prepared → Out for delivery → Delivered, with times. */
-function Timeline({ order }: { order: OrderView }) {
-  const current = ORDER_JOURNEY.indexOf(order.status);
-  // When each step was (last) reached.
-  const reachedAt = new Map((order.events ?? []).map((e) => [e.status, e.at]));
-  return (
-    <ol className="mt-6 grid grid-cols-5 gap-1 text-center text-xs" aria-label="Order progress">
-      {ORDER_JOURNEY.map((step, i) => {
-        const done = i <= current;
-        const at = done ? reachedAt.get(step) : undefined;
-        return (
-          <li key={step} aria-current={i === current ? "step" : undefined}>
-            <div className={`mx-auto mb-1 h-2 rounded-full ${done ? "bg-orange-600" : "bg-stone-200"}`} />
-            <span className={done ? "font-semibold text-stone-900" : "text-stone-400"}>{STEP_LABELS[i]}</span>
-            {at && <span className="block text-stone-500">{formatOrderDate(at, order.country)}</span>}
-          </li>
-        );
-      })}
-    </ol>
-  );
-}
+import {
+  DELIVERY_STAGES, ORDER_JOURNEY, ORDER_STATUS, formatOrderDate, isOrderToken, type OrderView,
+} from "@/lib/orders";
+import { telLink, toInternationalDigits, whatsappLink } from "@/lib/contacts";
 import { AutoRefresh } from "@/components/auto-refresh";
-import { payWithPaystack } from "./actions";
+import { PhoneText } from "@/components/phone-text";
+import { cancelOrder, payWithPaystack, requestNewQuote } from "./actions";
 import { PayButton } from "./pay-button";
+import { ConfirmButton } from "./confirm-button";
 
 // Private page: keep it out of search engines.
 export const metadata = { title: "Your order · Suya Factory", robots: { index: false, follow: false } };
+
+const STEP_LABELS = ["Order placed", "Delivery price", "Paid", "Being prepared", "Out for delivery", "Delivered"];
+
+const PAYMENT_MESSAGES: Record<string, { text: string; className: string }> = {
+  failed: { text: "Your payment didn't go through, so you haven't been charged. Please try again.", className: "bg-red-50 text-red-900" },
+  pending: { text: "Your payment is still being processed (this can happen with bank transfers). Refresh this page in a minute or two.", className: "bg-blue-50 text-blue-900" },
+  unavailable: { text: "We couldn't reach the payment service just now. Please try again in a moment.", className: "bg-red-50 text-red-900" },
+  error: { text: "Something went wrong checking your payment. If money left your account, don't worry: it will show here once confirmed. Otherwise, please try again.", className: "bg-red-50 text-red-900" },
+  too_many_attempts: { text: "There have been too many payment attempts for this order. Please contact us and we'll help.", className: "bg-red-50 text-red-900" },
+  accept_delivery: { text: "Please tick the box to accept the delivery fee before paying.", className: "bg-amber-50 text-amber-900" },
+  quote_expired: { text: "The delivery price has expired. Please ask for a new one below.", className: "bg-amber-50 text-amber-900" },
+  cannot_cancel: { text: "This order can't be cancelled here any more. Please contact us.", className: "bg-red-50 text-red-900" },
+};
 
 export default function OrderPage(props: PageProps<"/orders/[token]">) {
   return (
@@ -45,29 +39,6 @@ export default function OrderPage(props: PageProps<"/orders/[token]">) {
     </main>
   );
 }
-
-const PAYMENT_MESSAGES: Record<string, { text: string; className: string }> = {
-  failed: {
-    text: "Your payment didn't go through, so you haven't been charged. Please try again.",
-    className: "bg-red-50 text-red-900",
-  },
-  pending: {
-    text: "Your payment is still being processed (this can happen with bank transfers). Refresh this page in a minute or two.",
-    className: "bg-blue-50 text-blue-900",
-  },
-  unavailable: {
-    text: "We couldn't reach the payment service just now. Please try again in a moment.",
-    className: "bg-red-50 text-red-900",
-  },
-  error: {
-    text: "Something went wrong checking your payment. If money left your account, don't worry: it will show here once confirmed. Otherwise, please try again.",
-    className: "bg-red-50 text-red-900",
-  },
-  too_many_attempts: {
-    text: "There have been too many payment attempts for this order. Please contact us and we'll help.",
-    className: "bg-red-50 text-red-900",
-  },
-};
 
 type OrderPageProps = PageProps<"/orders/[token]">;
 
@@ -82,21 +53,22 @@ async function OrderDetails({ params, searchParams }: Pick<OrderPageProps, "para
   const order = data as OrderView;
   const status = ORDER_STATUS[order.status];
   const money = (n: number) => formatMoney(n, order.currency);
+  const when = (iso: string) => formatOrderDate(iso, order.country);
   const a = order.delivery_address;
   const firstName = order.contact_name.split(" ")[0];
   // Ghana (GHS) online payment waits for a provider that supports mobile money.
   const canPayOnline = order.currency === "NGN";
+  const quote = order.delivery_quote_minor;
 
-  // Result of a payment attempt, passed back in the link (?payment=...).
-  // Only for display: the order's real status always comes from the database.
+  // Result of an action, passed back in the link (?payment=...). Display only.
   const { payment } = await searchParams;
-  const message = order.status === "pending_payment" ? PAYMENT_MESSAGES[String(payment)] : undefined;
+  const message = PAYMENT_MESSAGES[String(payment)];
 
   return (
     <>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-sm text-stone-500">{formatOrderDate(order.created_at, order.country)}</p>
+          <p className="text-sm text-stone-500">{when(order.created_at)}</p>
           <h1 className="text-3xl font-bold text-stone-900">Order {order.order_number}</h1>
         </div>
         <span className={`rounded-full px-3 py-1 text-sm font-semibold ${status.className}`}>{status.label}</span>
@@ -107,39 +79,90 @@ async function OrderDetails({ params, searchParams }: Pick<OrderPageProps, "para
       {/* Keep the status up to date by itself until the order is finished. */}
       {order.status !== "delivered" && order.status !== "cancelled" && <AutoRefresh seconds={30} />}
 
-      {message && (
+      {message && (order.status === "pending_payment" || order.status === "awaiting_quote" || payment === "cannot_cancel") && (
         <p role="status" className={`mt-6 rounded-2xl p-4 text-sm ${message.className}`}>{message.text}</p>
       )}
 
-      {order.status === "pending_payment" && (
-        <div className="mt-6 rounded-2xl bg-orange-50 p-5 text-orange-950">
-          <p className="font-semibold">Thank you, {firstName}! We&apos;ve received your order.</p>
-          {canPayOnline ? (
-            <>
-              <p className="mt-1 text-sm">
-                Pay securely with card, bank transfer or USSD through Paystack. We&apos;ll start preparing your suya
-                as soon as your payment is confirmed.
-              </p>
-              <form action={payWithPaystack.bind(null, token)} className="mt-4">
-                <PayButton label={`Pay ${money(order.total_minor)} now`} />
-              </form>
-            </>
-          ) : (
-            <p className="mt-1 text-sm">
-              Online payment for Ghana, including mobile money, is coming soon. We&apos;ll contact you to arrange
-              payment for this order.
-            </p>
-          )}
-          <p className="mt-3 text-sm">
-            <strong>Bookmark this page:</strong> its link is private to you and shows your order&apos;s progress.
+      {/* 1. Waiting for staff to check the delivery price */}
+      {order.status === "awaiting_quote" && (
+        <div className="mt-6 rounded-2xl bg-sky-50 p-5 text-sky-950">
+          <p className="font-semibold">Thank you, {firstName}! We&apos;re checking the delivery price to your location.</p>
+          <p className="mt-1 text-sm">
+            This page updates by itself as soon as the price is ready. You&apos;ll see it <strong>before</strong> you pay
+            anything. Keep this page open, or bookmark it and come back.
           </p>
         </div>
       )}
 
-      {order.status === "paid" && (
+      {/* 2. Price ready: accept & pay, ask for a new price, or cancel */}
+      {order.status === "pending_payment" && quote !== null && (
+        <div className="mt-6 space-y-4 rounded-2xl border-2 border-orange-200 bg-orange-50 p-5 text-orange-950">
+          <div>
+            <p className="text-sm">Delivery fee to your location</p>
+            <p className="text-3xl font-bold tabular-nums">{money(quote)}</p>
+            <p className="text-sm">Paid to the rider when they arrive.{order.delivery_quote_note ? ` ${order.delivery_quote_note}` : ""}</p>
+            {order.quote_expires_at && !order.quote_expired && (
+              <p className="mt-1 text-xs text-orange-900/70">Price valid until {when(order.quote_expires_at)}.</p>
+            )}
+          </div>
+
+          {order.quote_expired ? (
+            <form action={requestNewQuote.bind(null, token)}>
+              <p className="mb-2 text-sm">This price has expired, because delivery prices change during the day.</p>
+              <button className="rounded-lg bg-orange-700 px-4 py-2.5 font-semibold text-white hover:bg-orange-800">
+                Get a new delivery price
+              </button>
+            </form>
+          ) : canPayOnline ? (
+            <form action={payWithPaystack.bind(null, token)} className="space-y-3">
+              <label className="flex items-start gap-2 text-sm">
+                <input type="checkbox" name="acceptDelivery" value="yes" required className="mt-0.5 h-4 w-4 accent-orange-700" />
+                <span>I accept the delivery fee of <strong>{money(quote)}</strong>, which I&apos;ll pay to the rider on arrival.</span>
+              </label>
+              <PayButton label={`Pay ${money(order.total_minor)} for my kilishi`} />
+              <p className="text-xs">Card, bank transfer or USSD, securely through Paystack.</p>
+            </form>
+          ) : (
+            <p className="text-sm">
+              Online payment for Ghana, including mobile money, is coming soon. We&apos;ll contact you to arrange
+              payment of <strong>{money(order.total_minor)}</strong> for your kilishi.
+            </p>
+          )}
+        </div>
+      )}
+
+      {order.can_cancel && (
+        <form action={cancelOrder.bind(null, token)} className="mt-3 text-right">
+          <ConfirmButton label="Cancel this order" confirmText="Cancel this order? You can order again any time."
+            className="text-sm font-medium text-stone-600 underline hover:text-red-700" />
+        </form>
+      )}
+
+      {order.status === "cancelled" && (
+        <div className="mt-6 rounded-2xl bg-stone-100 p-5 text-stone-800">
+          <p className="font-semibold">This order was cancelled.</p>
+          <p className="mt-1 text-sm">Whenever you&apos;re ready, you can <Link href="/shop" className="font-medium text-orange-700 underline">order again</Link>.</p>
+        </div>
+      )}
+
+      {/* 3. Paid / being prepared */}
+      {(order.status === "paid" || order.status === "preparing") && (
         <div className="mt-6 rounded-2xl bg-green-50 p-5 text-green-950">
           <p className="font-semibold">Payment received. Thank you, {firstName}!</p>
-          <p className="mt-1 text-sm">We&apos;re getting your order ready. This page will show its progress.</p>
+          <p className="mt-1 text-sm">
+            {order.status === "paid" ? "We're getting your order ready." : "Your kilishi is being packed."} You&apos;ll see your
+            rider&apos;s details here once it&apos;s on the way.
+            {quote !== null && <> Delivery fee to pay the rider: <strong>{money(quote)}</strong>.</>}
+          </p>
+        </div>
+      )}
+
+      {/* 4. Rider on the way */}
+      {order.status === "out_for_delivery" && order.rider && <RiderCard order={order} />}
+
+      {order.status === "delivered" && (
+        <div className="mt-6 rounded-2xl bg-green-50 p-5 text-green-950">
+          <p className="font-semibold">Delivered. Enjoy your kilishi, {firstName}! 🎉</p>
         </div>
       )}
 
@@ -157,9 +180,17 @@ async function OrderDetails({ params, searchParams }: Pick<OrderPageProps, "para
           ))}
         </ul>
         <dl className="mt-2 space-y-1 border-t border-stone-200 pt-3 text-sm">
-          <div className="flex justify-between"><dt>Subtotal</dt><dd className="tabular-nums">{money(order.subtotal_minor)}</dd></div>
-          <div className="flex justify-between"><dt>Delivery ({a.zone_name})</dt><dd className="tabular-nums">{money(order.delivery_fee_minor)}</dd></div>
-          <div className="flex justify-between pt-2 text-lg font-bold"><dt>Total</dt><dd className="tabular-nums">{money(order.total_minor)}</dd></div>
+          {order.delivery_fee_minor > 0 && (
+            // Older orders, from before delivery was paid to the rider.
+            <div className="flex justify-between"><dt>Delivery ({a.zone_name})</dt><dd className="tabular-nums">{money(order.delivery_fee_minor)}</dd></div>
+          )}
+          <div className="flex justify-between pt-1 text-lg font-bold"><dt>Paid online</dt><dd className="tabular-nums">{money(order.total_minor)}</dd></div>
+          {order.delivery_fee_minor === 0 && (
+            <div className="flex justify-between text-stone-600">
+              <dt>Delivery fee (pay the rider)</dt>
+              <dd className="tabular-nums">{quote !== null ? money(quote) : "Being checked…"}</dd>
+            </div>
+          )}
         </dl>
       </section>
 
@@ -171,12 +202,12 @@ async function OrderDetails({ params, searchParams }: Pick<OrderPageProps, "para
           {a.line2 && <p>{a.line2}</p>}
           <p>{a.city} · {a.zone_name}</p>
           {a.landmark && <p className="text-stone-500">Near {a.landmark}</p>}
+          {a.lat !== undefined && <p className="mt-1 text-green-700">📍 Exact location pinned</p>}
         </div>
         <div>
           <h2 className="mb-2 text-lg font-semibold text-stone-900">Contact</h2>
           <p className="break-all">{order.contact_email}</p>
-          {/* Some browsers turn phone numbers into links; that's harmless here. */}
-          <p suppressHydrationWarning>{order.contact_phone}</p>
+          <p><PhoneText value={order.contact_phone} /></p>
           {order.notes && <p className="mt-3 text-stone-600">Note: {order.notes}</p>}
         </div>
       </section>
@@ -185,5 +216,72 @@ async function OrderDetails({ params, searchParams }: Pick<OrderPageProps, "para
         ← Continue shopping
       </Link>
     </>
+  );
+}
+
+/** Order placed → Delivery price → Paid → Being prepared → Out for delivery → Delivered, with times. */
+function Timeline({ order }: { order: OrderView }) {
+  const current = ORDER_JOURNEY.indexOf(order.status);
+  const reachedAt = new Map(order.events.filter((e) => e.from_status !== e.status).map((e) => [e.status, e.at]));
+  return (
+    <ol className="mt-6 grid grid-cols-6 gap-1 text-center text-[11px] sm:text-xs" aria-label="Order progress">
+      {ORDER_JOURNEY.map((step, i) => {
+        const done = i <= current;
+        const at = done ? reachedAt.get(step) : undefined;
+        return (
+          <li key={step} aria-current={i === current ? "step" : undefined}>
+            <div className={`mx-auto mb-1 h-2 rounded-full ${done ? "bg-orange-600" : "bg-stone-200"}`} />
+            <span className={done ? "font-semibold text-stone-900" : "text-stone-400"}>{STEP_LABELS[i]}</span>
+            {at && <span className="block text-stone-500">{formatOrderDate(at, order.country)}</span>}
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
+/** Rider's name, contact and progress: On the way → Almost there → Arrived. */
+function RiderCard({ order }: { order: OrderView }) {
+  const rider = order.rider!;
+  const digits = toInternationalDigits(rider.phone, order.country);
+  const current = DELIVERY_STAGES.findIndex((s) => s.stage === rider.stage);
+  const stageAt = new Map(order.events.filter((e) => e.stage).map((e) => [e.stage!, e.at]));
+
+  return (
+    <section className="mt-6 rounded-2xl border-2 border-indigo-200 bg-indigo-50 p-5 text-indigo-950">
+      <p className="text-sm">Your rider</p>
+      <p className="text-2xl font-bold">{rider.name}</p>
+
+      <ol className="mt-4 grid grid-cols-3 gap-2 text-center text-sm" aria-label="Delivery progress">
+        {DELIVERY_STAGES.map((s, i) => {
+          const done = i <= current;
+          const at = done ? stageAt.get(s.stage) : undefined;
+          return (
+            <li key={s.stage} aria-current={i === current ? "step" : undefined}
+              className={`rounded-xl p-2 ${done ? "bg-indigo-600 text-white" : "bg-white text-stone-400"}`}>
+              <span className="block text-xl">{s.icon}</span>
+              <span className="font-semibold">{s.label}</span>
+              {at && <span className="block text-xs opacity-80">{formatOrderDate(at, order.country).split(", ")[1]}</span>}
+            </li>
+          );
+        })}
+      </ol>
+
+      <div className="mt-4 flex flex-wrap gap-2">
+        <a href={telLink(digits)} className="rounded-lg bg-white px-4 py-2 font-semibold text-indigo-900 ring-1 ring-indigo-200 hover:bg-indigo-100">
+          📞 Call rider <span className="font-normal"><PhoneText value={rider.phone} /></span>
+        </a>
+        <a href={whatsappLink(digits, `Hi ${rider.name}, I'm expecting a Suya Factory delivery (order ${order.order_number}).`)}
+          target="_blank" rel="noopener noreferrer"
+          className="rounded-lg bg-green-600 px-4 py-2 font-semibold text-white hover:bg-green-700">💬 WhatsApp rider</a>
+        {rider.tracking_url && (
+          <a href={rider.tracking_url} target="_blank" rel="noopener noreferrer"
+            className="rounded-lg bg-indigo-700 px-4 py-2 font-semibold text-white hover:bg-indigo-800">🗺️ Track on map</a>
+        )}
+      </div>
+      {order.delivery_quote_minor !== null && (
+        <p className="mt-3 text-sm">Delivery fee to pay the rider: <strong>{formatMoney(order.delivery_quote_minor, order.currency)}</strong></p>
+      )}
+    </section>
   );
 }

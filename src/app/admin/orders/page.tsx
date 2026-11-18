@@ -11,6 +11,7 @@ export const metadata = { title: "Orders · Admin · Suya Factory" };
 
 // Tabs in working order: what needs doing first comes first.
 const TABS: { status: OrderStatus; label: string }[] = [
+  { status: "awaiting_quote", label: "Needs delivery price" },
   { status: "paid", label: "To prepare" },
   { status: "preparing", label: "Preparing" },
   { status: "out_for_delivery", label: "Out for delivery" },
@@ -46,7 +47,7 @@ export default function AdminOrdersPage(props: PageProps<"/admin/orders">) {
 async function OrderList({ searchParams }: { searchParams: PageProps<"/admin/orders">["searchParams"] }) {
   await requireStaff("/admin/orders");
   const sp = await searchParams;
-  const status = (TABS.find((t) => t.status === sp.status)?.status ?? "paid") as OrderStatus;
+  const status = (TABS.find((t) => t.status === sp.status)?.status ?? "awaiting_quote") as OrderStatus;
   const country = sp.country === "NG" || sp.country === "GH" ? sp.country : null;
   // Keep only letters, numbers, spaces and dashes: stops the search box being used to inject filters.
   const q = String(sp.q ?? "").replace(/[^\p{L}\p{N} -]/gu, "").trim().slice(0, 50);
@@ -67,7 +68,7 @@ async function OrderList({ searchParams }: { searchParams: PageProps<"/admin/ord
     .select("order_number, contact_name, country, currency, total_minor, status, created_at, delivery_address, order_items(quantity)")
     .eq("status", status)
     // Work queue tabs: oldest first (first come, first served). History tabs: newest first.
-    .order("created_at", { ascending: ["paid", "preparing", "out_for_delivery"].includes(status) })
+    .order("created_at", { ascending: ["awaiting_quote", "paid", "preparing", "out_for_delivery"].includes(status) })
     .limit(100);
   if (country) query = query.eq("country", country);
   if (q) query = query.or(`order_number.ilike.%${q}%,contact_name.ilike.%${q}%`);

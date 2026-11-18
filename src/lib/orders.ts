@@ -3,6 +3,7 @@ import type { Currency } from "@/lib/money";
 import type { CountryCode } from "@/lib/countries";
 
 export type OrderStatus =
+  | "awaiting_quote"
   | "pending_payment"
   | "paid"
   | "preparing"
@@ -11,6 +12,7 @@ export type OrderStatus =
   | "cancelled";
 
 export const ORDER_STATUS: Record<OrderStatus, { label: string; className: string }> = {
+  awaiting_quote: { label: "Checking delivery price", className: "bg-sky-100 text-sky-900" },
   pending_payment: { label: "Waiting for payment", className: "bg-amber-100 text-amber-900" },
   paid: { label: "Paid", className: "bg-green-100 text-green-900" },
   preparing: { label: "Being prepared", className: "bg-blue-100 text-blue-900" },
@@ -35,7 +37,17 @@ export type OrderView = {
     city: string;
     landmark: string | null;
     zone_name: string;
+    lat?: number;
+    lng?: number;
+    accuracy_m?: number | null;
   };
+  delivery_quote_minor: number | null;
+  delivery_quote_note: string | null;
+  delivery_quoted_at: string | null;
+  quote_expires_at: string | null;
+  quote_expired: boolean;
+  can_cancel: boolean;
+  rider: { name: string; phone: string; tracking_url: string | null; stage: DeliveryStage | null } | null;
   notes: string | null;
   subtotal_minor: number;
   delivery_fee_minor: number;
@@ -47,16 +59,26 @@ export type OrderView = {
     quantity: number;
     line_total_minor: number;
   }[];
-  events: { status: OrderStatus; at: string }[];
+  /** from_status === status means a note (e.g. "rider almost there"), not a status change. */
+  events: { from_status: OrderStatus | null; status: OrderStatus; stage: DeliveryStage | null; at: string }[];
 };
 
-/** The normal journey of an order, in order (used for the customer's timeline). */
-export const ORDER_JOURNEY: OrderStatus[] = ["pending_payment", "paid", "preparing", "out_for_delivery", "delivered"];
+export type DeliveryStage = "on_the_way" | "almost_there" | "arrived";
 
-/** The next normal step and the button wording staff see for it. */
+export const DELIVERY_STAGES: { stage: DeliveryStage; label: string; icon: string }[] = [
+  { stage: "on_the_way", label: "On the way", icon: "🛵" },
+  { stage: "almost_there", label: "Almost there", icon: "📍" },
+  { stage: "arrived", label: "Arrived", icon: "🏁" },
+];
+
+/** The normal journey of an order, in order (used for the customer's timeline). */
+export const ORDER_JOURNEY: OrderStatus[] = [
+  "awaiting_quote", "pending_payment", "paid", "preparing", "out_for_delivery", "delivered",
+];
+
+/** Simple next steps (a single button). Quotes and sending out have their own forms. */
 export const NEXT_STEP: Partial<Record<OrderStatus, { to: OrderStatus; label: string }>> = {
   paid: { to: "preparing", label: "Start preparing" },
-  preparing: { to: "out_for_delivery", label: "Send out for delivery" },
   out_for_delivery: { to: "delivered", label: "Mark as delivered" },
 };
 
@@ -67,7 +89,12 @@ export const PREVIOUS_STEP: Partial<Record<OrderStatus, OrderStatus>> = {
   delivered: "out_for_delivery",
 };
 
-export const CANCELLABLE: OrderStatus[] = ["pending_payment", "paid", "preparing", "out_for_delivery"];
+export const CANCELLABLE: OrderStatus[] = ["awaiting_quote", "pending_payment", "paid", "preparing", "out_for_delivery"];
+
+/** "Open in Google Maps" for an exact pin. */
+export function mapsLink(lat: number, lng: number) {
+  return `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+}
 
 export const PAYMENT_METHODS = {
   mobile_money: "Mobile money",
@@ -87,6 +114,15 @@ export const ADMIN_ERRORS: Record<string, string> = {
   bad_method: "Please choose a payment method.",
   reference_required: "Please enter the payment reference (e.g. the mobile money transaction ID).",
   too_long: "That text is too long. Please shorten it.",
+  bad_amount: "Please enter a valid delivery price.",
+  quote_locked: "The delivery price can only be set before the customer pays.",
+  use_send_out: "Use the 'Send out for delivery' form (it needs the rider's details).",
+  rider_name: "Please enter the rider's name.",
+  rider_phone: "Please enter the rider's phone number (7 to 15 digits).",
+  tracking_url: "The tracking link must start with https://",
+  user_not_found: "No account with that email. Ask them to sign up on the website first.",
+  not_self: "You can't remove your own admin access.",
+  last_admin: "You can't remove the last admin.",
 };
 
 export function adminErrorMessage(error: { message: string } | null) {

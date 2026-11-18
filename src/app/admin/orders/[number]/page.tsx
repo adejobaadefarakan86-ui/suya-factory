@@ -4,11 +4,16 @@ import { Suspense } from "react";
 import { requireStaff } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { formatMoney, type Currency } from "@/lib/money";
-import { ORDER_STATUS, PAYMENT_METHODS, formatOrderDate, type OrderStatus, type PaymentMethod } from "@/lib/orders";
+import {
+  ORDER_STATUS, PAYMENT_METHODS, formatOrderDate, mapsLink,
+  type DeliveryStage, type OrderStatus, type PaymentMethod,
+} from "@/lib/orders";
 import { telLink, toInternationalDigits, whatsappLink } from "@/lib/contacts";
-import type { CountryCode } from "@/lib/countries";
+import { COUNTRIES, type CountryCode } from "@/lib/countries";
 import { PhoneText } from "@/components/phone-text";
-import { ManualPayment, StaffNotes, StatusActions } from "./order-actions";
+import {
+  CopyButton, DeliveryQuoteForm, ManualPayment, SendOutForm, StaffNotes, StageButtons, StatusActions,
+} from "./order-actions";
 
 export const metadata = { title: "Order · Admin · Suya Factory" };
 
@@ -23,9 +28,19 @@ type Order = {
   contact_phone: string;
   country: CountryCode;
   currency: Currency;
-  delivery_address: { line1: string; line2: string | null; city: string; landmark: string | null; zone_name: string };
+  delivery_address: {
+    line1: string; line2: string | null; city: string; landmark: string | null; zone_name: string;
+    lat?: number; lng?: number; accuracy_m?: number | null;
+  };
   notes: string | null;
   staff_notes: string | null;
+  delivery_quote_minor: number | null;
+  delivery_quote_note: string | null;
+  delivery_quoted_at: string | null;
+  rider_name: string | null;
+  rider_phone: string | null;
+  tracking_url: string | null;
+  delivery_stage: DeliveryStage | null;
   subtotal_minor: number;
   delivery_fee_minor: number;
   total_minor: number;
@@ -70,6 +85,16 @@ async function OrderDetail({ params }: { params: PageProps<"/admin/orders/[numbe
   const phoneDigits = toInternationalDigits(o.contact_phone, o.country);
   const firstName = o.contact_name.split(" ")[0];
   const ids = { orderId: o.id, orderNumber: o.order_number };
+  const customerPage = `${process.env.NEXT_PUBLIC_SITE_URL}/orders/${o.access_token}`;
+  const hasPin = typeof a.lat === "number" && typeof a.lng === "number";
+
+  // A ready-written WhatsApp message that fits where the order is.
+  const waMessage =
+    o.status === "pending_payment" && o.delivery_quote_minor !== null
+      ? `Hi ${firstName}, this is Suya Factory. The delivery fee for your order ${o.order_number} is ${money(o.delivery_quote_minor)} (paid to the rider on arrival). You can accept and pay here: ${customerPage}`
+      : o.status === "out_for_delivery" && o.rider_name
+        ? `Hi ${firstName}, your Suya Factory order ${o.order_number} is on the way with ${o.rider_name}. Follow it here: ${customerPage}`
+        : `Hi ${firstName}, this is Suya Factory about your order ${o.order_number}.`;
 
   return (
     <div className="mt-4 space-y-6">
@@ -94,9 +119,16 @@ async function OrderDetail({ params }: { params: PageProps<"/admin/orders/[numbe
               ))}
             </ul>
             <dl className="mt-2 space-y-1 border-t border-stone-200 pt-2 text-sm">
-              <div className="flex justify-between"><dt>Subtotal</dt><dd className="tabular-nums">{money(o.subtotal_minor)}</dd></div>
-              <div className="flex justify-between"><dt>Delivery ({a.zone_name})</dt><dd className="tabular-nums">{money(o.delivery_fee_minor)}</dd></div>
-              <div className="flex justify-between font-bold"><dt>Total</dt><dd className="tabular-nums">{money(o.total_minor)}</dd></div>
+              {o.delivery_fee_minor > 0 && (
+                <div className="flex justify-between"><dt>Delivery charged online (older order)</dt><dd className="tabular-nums">{money(o.delivery_fee_minor)}</dd></div>
+              )}
+              <div className="flex justify-between font-bold"><dt>Paid online</dt><dd className="tabular-nums">{money(o.total_minor)}</dd></div>
+              {o.delivery_fee_minor === 0 && (
+                <div className="flex justify-between text-stone-600">
+                  <dt>Delivery fee (customer pays rider)</dt>
+                  <dd className="tabular-nums">{o.delivery_quote_minor !== null ? money(o.delivery_quote_minor) : "Not set yet"}</dd>
+                </div>
+              )}
             </dl>
           </section>
 
@@ -108,6 +140,16 @@ async function OrderDetail({ params }: { params: PageProps<"/admin/orders/[numbe
               {a.line2 && <p>{a.line2}</p>}
               <p>{a.city} · {a.zone_name}</p>
               {a.landmark && <p className="text-stone-500">Near {a.landmark}</p>}
+              {hasPin ? (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <a href={mapsLink(a.lat!, a.lng!)} target="_blank" rel="noopener noreferrer"
+                    className="rounded-lg bg-stone-900 px-3 py-1.5 font-semibold text-white hover:bg-stone-700">📍 Open in Google Maps</a>
+                  <CopyButton value={`${a.lat}, ${a.lng}`} label="Copy coordinates" />
+                  {a.accuracy_m ? <span className="self-center text-xs text-stone-500">GPS accuracy about {a.accuracy_m}m</span> : <span className="self-center text-xs text-stone-500">Pin placed on map</span>}
+                </div>
+              ) : (
+                <p className="mt-2 text-xs text-stone-500">No map pin (older order).</p>
+              )}
               {o.notes && <p className="mt-2 rounded bg-amber-50 p-2 text-amber-900">Customer note: {o.notes}</p>}
             </div>
             <div>
@@ -116,7 +158,7 @@ async function OrderDetail({ params }: { params: PageProps<"/admin/orders/[numbe
               <p className="break-all text-stone-600">{o.contact_email}</p>
               <p className="mt-1 text-xs text-stone-500">{o.user_id ? "Registered customer" : "Guest checkout"}</p>
               <div className="mt-3 flex flex-wrap gap-2">
-                <a href={whatsappLink(phoneDigits, `Hi ${firstName}, this is Suya Factory about your order ${o.order_number}.`)}
+                <a href={whatsappLink(phoneDigits, waMessage)}
                   target="_blank" rel="noopener noreferrer"
                   className="rounded-lg bg-green-600 px-3 py-1.5 font-semibold text-white hover:bg-green-700">💬 WhatsApp</a>
                 <a href={telLink(phoneDigits)} className="rounded-lg border border-stone-300 px-3 py-1.5 font-semibold hover:bg-stone-50">📞 Call</a>
@@ -130,7 +172,7 @@ async function OrderDetail({ params }: { params: PageProps<"/admin/orders/[numbe
               {o.order_events.map((e) => (
                 <li key={e.id} className="flex flex-wrap gap-x-2">
                   <span className="w-36 shrink-0 text-stone-500">{when(e.created_at)}</span>
-                  <span className="font-medium">{ORDER_STATUS[e.to_status].label}</span>
+                  <span className="font-medium">{e.from_status === e.to_status ? "Update" : ORDER_STATUS[e.to_status].label}</span>
                   <span className="text-stone-500">by {e.actor_name ?? "unknown"}</span>
                   {e.note && <span className="w-full pl-0 text-stone-700 sm:pl-38">“{e.note}”</span>}
                 </li>
@@ -163,6 +205,42 @@ async function OrderDetail({ params }: { params: PageProps<"/admin/orders/[numbe
             <h2 className="mb-3 font-semibold text-stone-900">Next step</h2>
             <StatusActions {...ids} status={o.status} isAdmin={isAdmin} />
           </section>
+
+          {(o.status === "awaiting_quote" || o.status === "pending_payment") && (
+            <section className={`rounded-2xl border-2 bg-white p-5 ${o.status === "awaiting_quote" ? "border-sky-300" : "border-stone-200"}`}>
+              <h2 className="mb-1 font-semibold text-stone-900">Delivery price</h2>
+              <p className="mb-3 text-xs text-stone-500">
+                Open the pin in your delivery app, check the price, enter it here. The customer sees it at once and decides
+                whether to pay. Valid for 6 hours.
+              </p>
+              <DeliveryQuoteForm {...ids} currencySymbol={COUNTRIES[o.country].symbol} current={o.delivery_quote_minor} />
+              {o.status === "pending_payment" && (
+                <a href={whatsappLink(phoneDigits, waMessage)} target="_blank" rel="noopener noreferrer"
+                  className="mt-3 block rounded-lg bg-green-600 px-3 py-2 text-center text-sm font-semibold text-white hover:bg-green-700">
+                  💬 Tell the customer on WhatsApp
+                </a>
+              )}
+            </section>
+          )}
+
+          {(o.status === "preparing" || o.status === "out_for_delivery") && (
+            <section className="rounded-2xl border-2 border-indigo-200 bg-white p-5">
+              <h2 className="mb-3 font-semibold text-stone-900">{o.status === "preparing" ? "Send out for delivery" : "Rider"}</h2>
+              {o.status === "out_for_delivery" && (
+                <div className="mb-4">
+                  <p className="mb-2 text-xs font-medium uppercase text-stone-500">Rider progress (customer sees this)</p>
+                  <StageButtons {...ids} stage={o.delivery_stage} />
+                </div>
+              )}
+              <SendOutForm {...ids} rider={o.rider_name ? { name: o.rider_name, phone: o.rider_phone, trackingUrl: o.tracking_url } : null} />
+              {o.status === "out_for_delivery" && o.rider_phone && (
+                <a href={telLink(toInternationalDigits(o.rider_phone, o.country))}
+                  className="mt-3 block rounded-lg border border-stone-300 px-3 py-2 text-center text-sm font-semibold hover:bg-stone-50">
+                  📞 Call the rider
+                </a>
+              )}
+            </section>
+          )}
 
           {isAdmin && o.status === "pending_payment" && (
             <section className="rounded-2xl border border-stone-200 bg-white p-5">

@@ -9,6 +9,7 @@ import type { Zone } from "@/lib/zones";
 import { Field, buttonClass } from "@/components/field";
 import type { CartItemInfo } from "../cart/cart-view";
 import { placeOrder, type CheckoutState } from "./actions";
+import { LocationPicker, type PickedLocation } from "./location-picker";
 
 const inputClass =
   "w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-stone-900 outline-none focus:border-orange-600 focus:ring-2 focus:ring-orange-200";
@@ -34,6 +35,7 @@ export function CheckoutForm({
   const lines = useCartLines();
   usePruneCart(Object.keys(items)); // remove discontinued items from the browser's cart
   const [zoneId, setZoneId] = useState("");
+  const [location, setLocation] = useState<PickedLocation | null>(null);
   const [state, action, pending] = useActionState<CheckoutState, FormData>(placeOrder, undefined);
 
   const placed = state && "token" in state ? state : null;
@@ -75,9 +77,8 @@ export function CheckoutForm({
   }
 
   const zone = zones.find((z) => z.id === zoneId) ?? null;
-  const subtotal = rows.reduce((sum, r) => sum + (r.info.price ?? 0) * r.quantity, 0);
-  const fee = zone?.feeMinor ?? 0;
-  const total = subtotal + fee;
+  // Paid online: the kilishi only. The delivery fee is paid to the rider on arrival.
+  const total = rows.reduce((sum, r) => sum + (r.info.price ?? 0) * r.quantity, 0);
   const v = failed?.values;
 
   return (
@@ -86,6 +87,9 @@ export function CheckoutForm({
       <input type="hidden" name="country" value={country} />
       <input type="hidden" name="items" value={JSON.stringify(rows.map(({ variantId, quantity }) => ({ variant_id: variantId, quantity })))} />
       <input type="hidden" name="expectedTotal" value={total} />
+      <input type="hidden" name="lat" value={location?.lat ?? ""} />
+      <input type="hidden" name="lng" value={location?.lng ?? ""} />
+      <input type="hidden" name="accuracy" value={location?.accuracy ?? ""} />
 
       <div className="space-y-6">
         <fieldset className="space-y-4 rounded-2xl border border-stone-200 bg-white p-6">
@@ -112,12 +116,14 @@ export function CheckoutForm({
             <select name="zoneId" required value={zoneId} onChange={(e) => setZoneId(e.target.value)} className={inputClass}>
               <option value="" disabled>Choose your area…</option>
               {zones.map((z) => (
-                <option key={z.id} value={z.id}>
-                  {z.name} · {formatMoney(z.feeMinor, currency)}{z.estimatedTime ? ` · ${z.estimatedTime}` : ""}
-                </option>
+                <option key={z.id} value={z.id}>{z.name}</option>
               ))}
             </select>
           </label>
+          <div>
+            <span className="mb-1 block text-sm font-medium text-stone-700">Exact delivery location</span>
+            <LocationPicker country={country} value={location} onChange={setLocation} />
+          </div>
           <Field label="Street address" name="line1" autoComplete="address-line1" defaultValue={v?.line1} required maxLength={200} />
           <Field label="Flat, floor, estate (optional)" name="line2" autoComplete="address-line2" defaultValue={v?.line2} maxLength={200} />
           <div className="grid gap-4 sm:grid-cols-2">
@@ -145,24 +151,28 @@ export function CheckoutForm({
           ))}
         </ul>
         <dl className="space-y-1 border-t border-stone-200 pt-3 text-sm">
-          <div className="flex justify-between"><dt>Subtotal</dt><dd className="tabular-nums">{formatMoney(subtotal, currency)}</dd></div>
-          <div className="flex justify-between">
-            <dt>Delivery</dt>
-            <dd className="tabular-nums">{zone ? formatMoney(fee, currency) : "Choose an area"}</dd>
-          </div>
-          <div className="flex justify-between pt-2 text-lg font-bold">
-            <dt>Total</dt><dd className="tabular-nums">{formatMoney(total, currency)}</dd>
+          <div className="flex justify-between pt-1 text-lg font-bold">
+            <dt>Kilishi total</dt><dd className="tabular-nums">{formatMoney(total, currency)}</dd>
           </div>
         </dl>
+        <div className="rounded-lg bg-sky-50 p-3 text-sm text-sky-950">
+          <p className="font-semibold">🛵 Delivery fee: confirmed after you order</p>
+          <p className="mt-1">
+            We check the exact delivery price to your pin and show it to you <strong>before you pay</strong>.
+            You pay the rider on arrival. Not happy with the price? You can cancel for free.
+          </p>
+        </div>
 
         {failed && (
           <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-800">{failed.error}</p>
         )}
 
-        <button type="submit" disabled={pending || !zone} className={buttonClass}>
+        <button type="submit" disabled={pending || !zone || !location} className={buttonClass}>
           {pending ? "Placing order…" : "Place order"}
         </button>
-        <p className="text-xs text-stone-500">You&apos;ll pay on the next step.</p>
+        <p className="text-xs text-stone-500">
+          {!location ? "Set your delivery pin on the map to continue. " : ""}Nothing is charged yet.
+        </p>
         <Link href="/cart" className="block text-center text-sm text-stone-600 hover:text-orange-700">← Back to cart</Link>
       </aside>
     </form>

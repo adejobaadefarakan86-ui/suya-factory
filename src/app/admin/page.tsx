@@ -25,7 +25,8 @@ async function Counts() {
   // head:true + count = just count the rows, don't download them.
   const countOrders = (status: string) =>
     supabase.from("orders").select("id", { count: "exact", head: true }).eq("status", status);
-  const [toPrepare, preparing, outForDelivery, unpaid, newEnquiries] = await Promise.all([
+  const [needsQuote, toPrepare, preparing, outForDelivery, unpaid, newEnquiries] = await Promise.all([
+    countOrders("awaiting_quote"),
     countOrders("paid"),
     countOrders("preparing"),
     countOrders("out_for_delivery"),
@@ -34,6 +35,7 @@ async function Counts() {
   ]);
 
   const cards = [
+    { label: "Need a delivery price", count: needsQuote.count, href: "/admin/orders?status=awaiting_quote", urgent: true },
     { label: "Paid, to prepare", count: toPrepare.count, href: "/admin/orders?status=paid", urgent: true },
     { label: "Being prepared", count: preparing.count, href: "/admin/orders?status=preparing" },
     { label: "Out for delivery", count: outForDelivery.count, href: "/admin/orders?status=out_for_delivery" },

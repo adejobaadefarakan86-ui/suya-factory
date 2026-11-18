@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useState } from "react";
-import { cart, useCartLines } from "@/lib/cart";
+import { cart, useCartLines, usePruneCart } from "@/lib/cart";
 import { formatMoney, type Currency } from "@/lib/money";
 import type { CountryCode } from "@/lib/countries";
 import type { Zone } from "@/lib/zones";
@@ -32,6 +32,7 @@ export function CheckoutForm({
 }) {
   const router = useRouter();
   const lines = useCartLines();
+  usePruneCart(Object.keys(items)); // remove discontinued items from the browser's cart
   const [zoneId, setZoneId] = useState("");
   const [state, action, pending] = useActionState<CheckoutState, FormData>(placeOrder, undefined);
 

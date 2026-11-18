@@ -9,16 +9,19 @@ import { ProductImage } from "@/components/product-image";
  *  Reads the country cookie, so always render it inside <Suspense>. */
 export async function ProductGrid() {
   const [catalog, country] = await Promise.all([getCatalog(), getCountry()]);
-  const { currency, name: countryName } = COUNTRIES[country];
+  const { currency } = COUNTRIES[country];
 
-  if (catalog.length === 0) {
+  // Only show products sold in this visitor's country.
+  const products = catalog.filter((p) => lowestPrice(p, currency) !== null);
+
+  if (products.length === 0) {
     return <p className="text-stone-600">No products yet. Check back soon!</p>;
   }
 
   return (
-    <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-      {catalog.map((product, i) => {
-        const from = lowestPrice(product, currency);
+    <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      {products.map((product, i) => {
+        const from = lowestPrice(product, currency)!;
         return (
           <li key={product.id}>
             <Link
@@ -30,11 +33,7 @@ export async function ProductGrid() {
                 <p className="text-xs uppercase tracking-wide text-stone-500">{product.category?.name}</p>
                 <h3 className="font-semibold text-stone-900 group-hover:text-orange-700">{product.name}</h3>
                 <p className="mt-1 text-sm text-stone-700">
-                  {from !== null ? (
-                    <>From <span className="font-semibold">{formatMoney(from, currency)}</span></>
-                  ) : (
-                    <span className="text-stone-500">Not available in {countryName}</span>
-                  )}
+                  From <span className="font-semibold">{formatMoney(from, currency)}</span>
                 </p>
               </div>
             </Link>

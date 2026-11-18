@@ -158,9 +158,9 @@ begin
   )
   select
     v_order.id, v.id, p.name,
-    -- e.g. '500g · Extra hot' (same wording as the website)
+    -- e.g. '500g [dot] Extra hot' (same wording as the website); chr(183) = middle dot
     v.size_label || case when v.spice_level is null then '' else
-      ' · ' || upper(left(v.spice_level::text, 1)) || replace(substr(v.spice_level::text, 2), '_', ' ')
+      ' ' || chr(183) || ' ' || upper(left(v.spice_level::text, 1)) || replace(substr(v.spice_level::text, 2), '_', ' ')
     end,
     vp.amount_minor, b.quantity
   from b

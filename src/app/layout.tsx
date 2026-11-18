@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Suya Factory",
-  description: "Authentic flame-grilled suya, delivered across Nigeria and Ghana.",
+  description: "Spicy beef kilishi, hygienically prepared and delivered across Nigeria and Ghana.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

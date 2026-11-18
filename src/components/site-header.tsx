@@ -3,6 +3,13 @@ import { Suspense } from "react";
 import { getCurrentUser, isStaff } from "@/lib/auth";
 import { CartLink } from "@/components/cart-link";
 import { CountrySwitcher } from "@/components/country-switcher";
+import { getCatalog } from "@/lib/catalog";
+
+// The cart icon needs to know what's still for sale (the catalogue is cached, so this is quick).
+async function CartLinkWithCatalog() {
+  const catalog = await getCatalog();
+  return <CartLink validIds={catalog.flatMap((p) => p.variants.map((v) => v.id))} />;
+}
 
 // Parts that depend on the visitor (login, country) sit in their own
 // <Suspense>, so the rest of the page can load without waiting for them.
@@ -38,7 +45,9 @@ export function SiteHeader() {
           <Suspense fallback={<span className="text-stone-400">…</span>}>
             <UserLinks />
           </Suspense>
-          <CartLink />
+          <Suspense fallback={<CartLink />}>
+            <CartLinkWithCatalog />
+          </Suspense>
         </nav>
       </div>
     </header>

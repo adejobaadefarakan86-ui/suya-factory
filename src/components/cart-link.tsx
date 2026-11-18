@@ -1,9 +1,16 @@
 "use client";
 import Link from "next/link";
-import { useCartCount } from "@/lib/cart";
+import { useCartLines, usePruneCart } from "@/lib/cart";
 
-export function CartLink() {
-  const count = useCartCount();
+/** Header cart icon. `validIds` = every variant still for sale; anything else
+ *  in the browser's cart is removed and not counted. */
+export function CartLink({ validIds }: { validIds?: string[] }) {
+  usePruneCart(validIds);
+  const valid = validIds ? new Set(validIds) : null;
+  const count = useCartLines()
+    .filter((l) => !valid || valid.has(l.variantId))
+    .reduce((sum, l) => sum + l.quantity, 0);
+
   return (
     <Link href="/cart" className="relative flex items-center gap-1 hover:text-orange-700" aria-label={`Cart, ${count} items`}>
       <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">

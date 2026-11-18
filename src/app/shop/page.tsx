@@ -8,7 +8,7 @@ export default function ShopPage() {
     <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-10">
       <h1 className="text-3xl font-bold text-stone-900">Shop</h1>
       <p className="mt-1 mb-8 text-stone-600">
-        Flame-grilled in our Nigerian kitchen. Choose your size and spice level.
+        Spicy beef kilishi in small and big packs. Need 1kg or more? Ask us about bulk orders.
       </p>
       <Suspense fallback={<ProductGridSkeleton />}>
         <ProductGrid />

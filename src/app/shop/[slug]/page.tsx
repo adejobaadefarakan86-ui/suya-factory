@@ -63,13 +63,24 @@ async function PricedBuyBox({ slug }: { slug: string }) {
   if (!product) return null;
   const { currency, name } = COUNTRIES[country];
 
-  // Send the browser only what it needs: each variant's price in ONE currency.
-  const variants: BuyBoxVariant[] = product.variants.map((v) => ({
-    id: v.id,
-    sizeLabel: v.sizeLabel,
-    spiceLevel: v.spiceLevel,
-    price: v.prices[currency] ?? null,
-  }));
+  // Only the packs sold in this country (e.g. 50g/100g in Nigeria, 80g/180g in Ghana),
+  // each with its price in ONE currency.
+  const variants: BuyBoxVariant[] = product.variants
+    .filter((v) => v.prices[currency] !== undefined)
+    .map((v) => ({
+      id: v.id,
+      sizeLabel: v.sizeLabel,
+      spiceLevel: v.spiceLevel,
+      price: v.prices[currency]!,
+    }));
+
+  if (variants.length === 0) {
+    return (
+      <p className="mt-6 rounded-xl bg-amber-50 p-4 text-amber-900">
+        Sorry, this product isn&apos;t available in {name} yet.
+      </p>
+    );
+  }
 
   return <BuyBox productName={product.name} variants={variants} currency={currency} countryName={name} />;
 }

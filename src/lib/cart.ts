@@ -3,7 +3,7 @@
 // It stores ONLY which variants and how many. Prices are always looked up
 // fresh from the catalogue, so switching country shows the right currency
 // and nobody can edit a price in their browser.
-import { useSyncExternalStore } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 
 export type CartLine = { variantId: string; quantity: number };
 
@@ -87,7 +87,23 @@ export const cart = {
   clear() {
     update(EMPTY);
   },
+  /** Drop items that are no longer for sale (e.g. a product was switched off). */
+  prune(validIds: readonly string[]) {
+    load();
+    const valid = new Set(validIds);
+    const kept = lines.filter((l) => valid.has(l.variantId));
+    if (kept.length !== lines.length) update(kept);
+  },
 };
+
+/** Keeps the cart free of discontinued items while a component is on screen. */
+export function usePruneCart(validIds: readonly string[] | undefined) {
+  const key = validIds?.join(",");
+  useEffect(() => {
+    if (validIds) cart.prune(validIds);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- re-run only when the list's contents change
+  }, [key]);
+}
 
 /** React hook: the current cart lines. Empty on the server and on first paint. */
 export function useCartLines() {

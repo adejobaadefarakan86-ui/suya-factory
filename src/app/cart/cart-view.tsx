@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { cart, MAX_QTY, useCartLines } from "@/lib/cart";
+import { cart, MAX_QTY, useCartLines, usePruneCart } from "@/lib/cart";
 import { formatMoney, type Currency } from "@/lib/money";
 
 export type CartItemInfo = {
@@ -20,6 +20,7 @@ export function CartView({
   countryName: string;
 }) {
   const lines = useCartLines();
+  usePruneCart(Object.keys(items)); // remove discontinued items from the browser's cart
 
   // Skip anything that's no longer on sale (e.g. a product was removed).
   const rows = lines

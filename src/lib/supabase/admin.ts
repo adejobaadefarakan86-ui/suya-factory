@@ -2,7 +2,8 @@
 // "server-only" makes the build FAIL if browser code ever imports this file.
 // Its only jobs: record payment results after the provider has confirmed them
 // (src/lib/payments.ts) and read orders for staff Telegram alerts
-// (src/lib/staff-alerts.ts). Don't use it for anything else.
+// (src/lib/staff-alerts.ts) and supermarket stock from staff Telegram commands
+// (src/app/api/telegram/webhook/route.ts). Don't use it for anything else.
 import "server-only";
 import { createClient } from "@supabase/supabase-js";
 

@@ -2,6 +2,8 @@ import { Suspense } from "react";
 import { getCatalog, variantLabel } from "@/lib/catalog";
 import { getCountry } from "@/lib/country";
 import { COUNTRIES } from "@/lib/countries";
+import { SELLS_VIA_SUPERMARKETS } from "@/lib/stores";
+import { SupermarketNotice } from "@/components/supermarket-notice";
 import { getCurrentUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import type { CartItemInfo } from "../cart/cart-view";
@@ -21,6 +23,7 @@ export default function CheckoutPage() {
 }
 
 async function PricedCheckout() {
+  if (SELLS_VIA_SUPERMARKETS[await getCountry()]) return <SupermarketNotice />;
   const [catalog, country, user] = await Promise.all([getCatalog(), getCountry(), getCurrentUser()]);
   const { currency, name: countryName } = COUNTRIES[country];
 

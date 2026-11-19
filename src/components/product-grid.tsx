@@ -4,6 +4,7 @@ import { getCountry } from "@/lib/country";
 import { COUNTRIES } from "@/lib/countries";
 import { formatMoney } from "@/lib/money";
 import { ProductImage } from "@/components/product-image";
+import { SELLS_VIA_SUPERMARKETS } from "@/lib/stores";
 
 /** Product cards with "From" prices in the visitor's currency.
  *  Reads the country cookie, so always render it inside <Suspense>. */
@@ -32,9 +33,13 @@ export async function ProductGrid() {
               <div className="p-4">
                 <p className="text-xs uppercase tracking-wide text-stone-500">{product.category?.name}</p>
                 <h3 className="font-semibold text-stone-900 group-hover:text-orange-700">{product.name}</h3>
-                <p className="mt-1 text-sm text-stone-700">
-                  From <span className="font-semibold">{formatMoney(from, currency)}</span>
-                </p>
+                {SELLS_VIA_SUPERMARKETS[country] ? (
+                  <p className="mt-1 text-sm text-stone-700">In supermarkets near you</p>
+                ) : (
+                  <p className="mt-1 text-sm text-stone-700">
+                    From <span className="font-semibold">{formatMoney(from, currency)}</span>
+                  </p>
+                )}
               </div>
             </Link>
           </li>

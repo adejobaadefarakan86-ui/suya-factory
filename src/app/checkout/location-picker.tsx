@@ -45,10 +45,15 @@ export function LocationPicker({
   country,
   value,
   onChange,
+  emptyTitle = "Add delivery address",
+  emptyHint = "Search a place or use your current location",
 }: {
   country: CountryCode;
   value: PickedLocation | null;
   onChange: (location: PickedLocation) => void;
+  /** Wording on the row before a place is chosen. */
+  emptyTitle?: string;
+  emptyHint?: string;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -70,8 +75,8 @@ export function LocationPicker({
             </>
           ) : (
             <>
-              <span className="block font-semibold text-stone-900">Add delivery address</span>
-              <span className="block text-sm text-stone-500">Search a place or use your current location</span>
+              <span className="block font-semibold text-stone-900">{emptyTitle}</span>
+              <span className="block text-sm text-stone-500">{emptyHint}</span>
             </>
           )}
         </span>

@@ -26,11 +26,14 @@ export function BuyBox({
   variants,
   currency,
   countryName,
+  inSupermarkets = false,
 }: {
   productName: string;
   variants: BuyBoxVariant[];
   currency: Currency;
   countryName: string;
+  /** Sold through supermarkets in this country: show sizes, then "find a supermarket". */
+  inSupermarkets?: boolean;
 }) {
   const sizes = unique(variants.map((v) => v.sizeLabel));
   const [size, setSize] = useState(sizes[0]);
@@ -47,6 +50,24 @@ export function BuyBox({
     if (!variant || variant.price === null) return;
     cart.add(variant.id, quantity);
     setAdded(true);
+  }
+
+  if (inSupermarkets) {
+    return (
+      <div className="mt-6 space-y-4">
+        <p className="text-sm text-stone-700">
+          <span className="font-medium">Pack sizes:</span> {sizes.join(", ")}
+        </p>
+        <p className="text-stone-700">
+          In {countryName}, {productName} is sold in supermarkets. Find the one nearest you, buy from them, and send a
+          rider or pick it up yourself.
+        </p>
+        <Link href="/where-to-buy"
+          className="block w-full rounded-lg bg-orange-700 px-4 py-3 text-center font-semibold text-white hover:bg-orange-800">
+          📍 Find a supermarket near you
+        </Link>
+      </div>
+    );
   }
 
   return (

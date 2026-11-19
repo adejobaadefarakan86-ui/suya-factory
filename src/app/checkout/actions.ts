@@ -4,7 +4,8 @@ import { after } from "next/server";
 // We pass only WHAT the customer wants; the database works out every price.
 import { createClient } from "@/lib/supabase/server";
 import { createPublicClient } from "@/lib/supabase/public";
-import { isCountry } from "@/lib/countries";
+import { COUNTRIES, isCountry } from "@/lib/countries";
+import { SELLS_VIA_SUPERMARKETS } from "@/lib/stores";
 import { alertNeedsDeliveryPrice } from "@/lib/staff-alerts";
 
 export type CheckoutValues = {
@@ -80,6 +81,9 @@ export async function placeOrder(_prev: CheckoutState, formData: FormData): Prom
 
   const country = formData.get("country");
   if (!isCountry(country)) return fail("Please choose your country again.");
+  if (SELLS_VIA_SUPERMARKETS[country]) {
+    return fail(`In ${COUNTRIES[country].name}, our kilishi is sold in supermarkets. Please use “Where to buy” to find one near you.`);
+  }
 
   let items: unknown;
   try {

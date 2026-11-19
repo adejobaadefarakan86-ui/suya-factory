@@ -1,9 +1,11 @@
 // Telegram alerts to the staff group: new paid order, a Ghana order that needs a
-// delivery price, and new bulk enquiries. Server only.
+// delivery price, new bulk enquiries, supermarket pickups and out-of-stock
+// reports. Server only.
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { formatMoney, type Currency } from "@/lib/money";
 import { esc, sendTelegram, telegramConfigured } from "@/lib/telegram";
+import { storeTitle, type Store } from "@/lib/stores";
 
 const site = () => process.env.NEXT_PUBLIC_SITE_URL ?? "";
 
@@ -81,6 +83,38 @@ export async function alertNeedsDeliveryPrice(orderNumber: string) {
   if (!order) return;
   await sendTelegram(
     `🟡 <b>New order ${esc(order.order_number)}: needs a delivery price</b> · kilishi ${formatMoney(order.subtotal_minor, order.currency)}\n\n${orderLines(order)}`,
+  );
+}
+
+/** A customer says a supermarket has run out of kilishi. */
+export async function alertOutOfStockReport(store: Store) {
+  if (!telegramConfigured()) return;
+  await sendTelegram(
+    [
+      `🔴 <b>Customer says ${esc(storeTitle(store))} is out of kilishi</b>`,
+      "",
+      `Please check, then mark it: /out ${store.storeNo} (or /in ${store.storeNo} if they still have it).`,
+      store.phone ? `📞 Store: +${store.phone}` : "",
+      `🔗 <a href="${site()}/admin/stores">Open supermarkets</a>`,
+    ].filter(Boolean).join("\n"),
+  );
+}
+
+/** A customer sent their rider's details to a supermarket (= a sale through the app). */
+export async function alertStorePickup(
+  store: Store,
+  p: { code: string; customerName: string; customerPhone: string; paidFrom: string; riderName: string; riderPhone: string; riderPlate: string; deliveryCompany: string },
+) {
+  if (!telegramConfigured()) return;
+  const rider = [esc(p.riderName), esc(p.riderPhone), p.riderPlate ? esc(p.riderPlate.toUpperCase()) : ""].filter(Boolean).join(" · ");
+  await sendTelegram(
+    [
+      `🛍️ <b>Pickup at ${esc(storeTitle(store))}</b> · code ${esc(p.code)}`,
+      "",
+      `👤 ${esc(p.customerName)} · 📞 ${esc(p.customerPhone)}`,
+      p.paidFrom ? `💳 Paid from: ${esc(p.paidFrom)}` : "",
+      `🛵 ${rider}${p.deliveryCompany ? ` (${esc(p.deliveryCompany)})` : ""}`,
+    ].filter(Boolean).join("\n"),
   );
 }
 

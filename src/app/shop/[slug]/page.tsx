@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { getCatalog, getProduct } from "@/lib/catalog";
 import { getCountry } from "@/lib/country";
 import { COUNTRIES } from "@/lib/countries";
+import { SELLS_VIA_SUPERMARKETS } from "@/lib/stores";
 import { ProductImage } from "@/components/product-image";
 import { BuyBox, type BuyBoxVariant } from "./buy-box";
 
@@ -90,5 +91,8 @@ async function PricedBuyBox({ slug }: { slug: string }) {
     );
   }
 
-  return <BuyBox productName={product.name} variants={variants} currency={currency} countryName={name} />;
+  return (
+    <BuyBox productName={product.name} variants={variants} currency={currency} countryName={name}
+      inSupermarkets={SELLS_VIA_SUPERMARKETS[country]} />
+  );
 }

@@ -2,6 +2,8 @@ import { Suspense } from "react";
 import { getCatalog, variantLabel } from "@/lib/catalog";
 import { getCountry } from "@/lib/country";
 import { COUNTRIES } from "@/lib/countries";
+import { SELLS_VIA_SUPERMARKETS } from "@/lib/stores";
+import { SupermarketNotice } from "@/components/supermarket-notice";
 import { CartView, type CartItemInfo } from "./cart-view";
 
 export const metadata = { title: "Your cart · Suya Factory" };
@@ -20,6 +22,7 @@ export default function CartPage() {
 // The cart itself lives in the browser; the server supplies today's names
 // and prices in the visitor's currency for every variant.
 async function PricedCart() {
+  if (SELLS_VIA_SUPERMARKETS[await getCountry()]) return <SupermarketNotice />;
   const [catalog, country] = await Promise.all([getCatalog(), getCountry()]);
   const { currency, name } = COUNTRIES[country];
 

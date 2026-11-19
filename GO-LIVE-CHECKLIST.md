@@ -18,6 +18,8 @@ Things that are set up for development and MUST change before real customers use
 ## App settings
 - [ ] Set `NEXT_PUBLIC_SITE_URL` to the live address in Vercel's environment variables.
 - [ ] Add `SUPABASE_SECRET_KEY` and `PAYSTACK_SECRET_KEY` to Vercel's environment variables (never `NEXT_PUBLIC_`).
+- [ ] Map + address search use free services (OpenFreeMap tiles, Photon search). If checkout traffic grows a lot,
+      move search to a paid provider so we stay within Photon's fair-use limits.
 
 ## Data
 - [ ] Replace the sample delivery zones and fees with the real ones.

@@ -11,6 +11,12 @@ import type { CartItemInfo } from "../cart/cart-view";
 import { placeOrder, type CheckoutState } from "./actions";
 import { LocationPicker, type PickedLocation } from "./location-picker";
 
+// "KFC Ikeja, 12 Obafemi Awolowo Way, Ikeja": the place name plus Google's address.
+function addressLine(loc: PickedLocation) {
+  const line = loc.address.startsWith(loc.name) ? loc.address : `${loc.name}, ${loc.address}`;
+  return line.slice(0, 200);
+}
+
 const inputClass =
   "w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-stone-900 outline-none focus:border-orange-600 focus:ring-2 focus:ring-orange-200";
 
@@ -90,6 +96,9 @@ export function CheckoutForm({
       <input type="hidden" name="lat" value={location?.lat ?? ""} />
       <input type="hidden" name="lng" value={location?.lng ?? ""} />
       <input type="hidden" name="accuracy" value={location?.accuracy ?? ""} />
+      {/* Filled in from the place the customer picked on the map */}
+      <input type="hidden" name="line1" value={location ? addressLine(location) : ""} />
+      <input type="hidden" name="city" value={location ? location.city || location.address.split(",").at(-2)?.trim() || countryName : ""} />
 
       <div className="space-y-6">
         <fieldset className="space-y-4 rounded-2xl border border-stone-200 bg-white p-6">
@@ -120,20 +129,18 @@ export function CheckoutForm({
               ))}
             </select>
           </label>
-          <div>
-            <span className="mb-1 block text-sm font-medium text-stone-700">Exact delivery location</span>
-            <LocationPicker country={country} value={location} onChange={setLocation} />
-          </div>
-          <Field label="Street address" name="line1" autoComplete="address-line1" defaultValue={v?.line1} required maxLength={200} />
-          <Field label="Flat, floor, estate (optional)" name="line2" autoComplete="address-line2" defaultValue={v?.line2} maxLength={200} />
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="City / town" name="city" autoComplete="address-level2" defaultValue={v?.city} required maxLength={100} />
-            <Field label="Nearest landmark (optional)" name="landmark" defaultValue={v?.landmark} maxLength={200} />
-          </div>
-          <label className="block">
-            <span className="mb-1 block text-sm font-medium text-stone-700">Notes for the rider (optional)</span>
-            <textarea name="notes" rows={2} maxLength={500} defaultValue={v?.notes} className={inputClass} />
-          </label>
+          <LocationPicker country={country} value={location} onChange={setLocation} />
+          {location && (
+            <>
+              <Field label="House / flat number, estate (optional)" name="line2" autoComplete="address-line2" defaultValue={v?.line2} maxLength={200}
+                placeholder="e.g. Flat 3B, Block 4" />
+              <label className="block">
+                <span className="mb-1 block text-sm font-medium text-stone-700">Notes for the rider (optional)</span>
+                <textarea name="notes" rows={2} maxLength={500} defaultValue={v?.notes} className={inputClass}
+                  placeholder="e.g. Blue gate opposite the pharmacy" />
+              </label>
+            </>
+          )}
         </fieldset>
       </div>
 
@@ -171,7 +178,7 @@ export function CheckoutForm({
           {pending ? "Placing order…" : "Place order"}
         </button>
         <p className="text-xs text-stone-500">
-          {!location ? "Set your delivery pin on the map to continue. " : ""}Nothing is charged yet.
+          {!location ? "Add your delivery address to continue. " : ""}Nothing is charged yet.
         </p>
         <Link href="/cart" className="block text-center text-sm text-stone-600 hover:text-orange-700">← Back to cart</Link>
       </aside>

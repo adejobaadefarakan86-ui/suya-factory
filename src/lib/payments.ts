@@ -1,8 +1,10 @@
 // The ONE place that decides a payment's result.
 // Used by both the customer's return from Paystack and Paystack's webhook.
 import "server-only";
+import { after } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { verifyTransaction } from "@/lib/paystack";
+import { alertPaidOrder } from "@/lib/staff-alerts";
 
 export type PaymentOutcome = "success" | "failed" | "pending";
 
@@ -28,5 +30,9 @@ export async function settlePaystackPayment(reference: string): Promise<PaymentO
 
   const result = data as { payment_status: string; problem?: string };
   if (result.problem) console.error(`Payment ${reference} problem: ${result.problem}`, { amount: tx.amount, currency: tx.currency });
-  return result.payment_status === "success" ? "success" : "failed";
+  if (result.payment_status !== "success") return "failed";
+
+  // Tell the staff on Telegram (once per order), after the response is sent.
+  after(() => alertPaidOrder(reference));
+  return "success";
 }

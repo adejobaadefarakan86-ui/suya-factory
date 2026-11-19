@@ -1,7 +1,9 @@
 "use server";
+import { after } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { isCountry } from "@/lib/countries";
 import { BULK_MIN_KG } from "@/lib/contacts";
+import { alertBulkEnquiry } from "@/lib/staff-alerts";
 
 export type EnquiryValues = {
   name: string;
@@ -69,5 +71,6 @@ export async function sendEnquiry(_prev: EnquiryState, formData: FormData): Prom
     console.error("bulk enquiry insert failed:", error);
     return fail("We couldn't send your enquiry. Please try again, or contact us on WhatsApp.");
   }
+  after(() => alertBulkEnquiry({ ...values, quantityKg: Math.round(qty * 10) / 10 }));
   return { sent: true };
 }

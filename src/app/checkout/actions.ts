@@ -1,9 +1,11 @@
 "use server";
+import { after } from "next/server";
 // Sends the order to the database's place_order() function.
 // We pass only WHAT the customer wants; the database works out every price.
 import { createClient } from "@/lib/supabase/server";
 import { createPublicClient } from "@/lib/supabase/public";
 import { isCountry } from "@/lib/countries";
+import { alertNeedsDeliveryPrice } from "@/lib/staff-alerts";
 
 export type CheckoutValues = {
   name: string;
@@ -117,5 +119,9 @@ export async function placeOrder(_prev: CheckoutState, formData: FormData): Prom
 
   // Automatic delivery price: the database checked that the total we sent
   // included exactly its own fee, so the order is ready to pay right away.
-  return { token: order.access_token, orderNumber: order.order_number, payNow: Number(formData.get("deliveryFee")) > 0 };
+  const payNow = Number(formData.get("deliveryFee")) > 0;
+  // No automatic price (Ghana): staff must price the delivery, so tell them now.
+  // (Paid orders are announced when the payment succeeds.)
+  if (!payNow) after(() => alertNeedsDeliveryPrice(order.order_number));
+  return { token: order.access_token, orderNumber: order.order_number, payNow };
 }

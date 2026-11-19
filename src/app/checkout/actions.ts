@@ -27,7 +27,9 @@ const MESSAGES: Record<string, string> = {
   phone: "Please enter a valid phone number (7 to 15 digits).",
   address: "Please enter your street address and city.",
   too_long: "One of the fields is too long. Please shorten it.",
-  zone: "Please choose a delivery area.",
+  outside_lagos:
+    "We only deliver regular orders inside Lagos State. For delivery outside Lagos, please send us a bulk order request.",
+  bulk: "Orders of 1kg or more are bulk orders with special pricing. Please send us a bulk order request.",
   empty: "Your cart is empty.",
   too_many: "That's a lot of different items! Please split it into two orders.",
   quantity: "You can order up to 20 of each item.",
@@ -71,7 +73,6 @@ export async function placeOrder(_prev: CheckoutState, formData: FormData): Prom
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("place_order", {
     p_country: country,
-    p_zone_id: text(formData, "zoneId") || null,
     p_contact_name: values.name,
     p_contact_email: values.email,
     p_contact_phone: values.phone,
@@ -87,7 +88,6 @@ export async function placeOrder(_prev: CheckoutState, formData: FormData): Prom
 
   if (error) {
     const code = error.message.startsWith("SF:") ? error.message.slice(3) : "";
-    if (code === "zone" && !formData.get("zoneId")) return fail(MESSAGES.zone);
     if (!MESSAGES[code]) console.error("place_order failed:", error);
     return fail(MESSAGES[code] ?? "We couldn't place your order. Please try again.");
   }

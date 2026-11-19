@@ -2,12 +2,14 @@
 import Link from "next/link";
 import { cart, MAX_QTY, useCartLines, usePruneCart } from "@/lib/cart";
 import { formatMoney, type Currency } from "@/lib/money";
+import { BulkNotice, BULK_MIN_GRAMS, cartGrams } from "@/components/bulk-notice";
 
 export type CartItemInfo = {
   productName: string;
   productSlug: string;
   label: string;
   price: number | null; // null = not sold in this country
+  grams: number;
 };
 
 export function CartView({
@@ -29,6 +31,8 @@ export function CartView({
 
   const unavailable = rows.filter((r) => r.info.price === null);
   const subtotal = rows.reduce((sum, r) => sum + (r.info.price ?? 0) * r.quantity, 0);
+  const grams = cartGrams(rows);
+  const bulk = grams >= BULK_MIN_GRAMS;
 
   if (rows.length === 0) {
     return (
@@ -89,7 +93,13 @@ export function CartView({
           </p>
         )}
 
-        {unavailable.length > 0 ? (
+        {bulk && (
+          <div className="mt-4">
+            <BulkNotice reason="weight" grams={grams} />
+          </div>
+        )}
+
+        {unavailable.length > 0 || bulk ? (
           <button type="button" disabled
             className="mt-4 w-full cursor-not-allowed rounded-lg bg-stone-300 px-4 py-3 font-semibold text-stone-600">
             Go to checkout

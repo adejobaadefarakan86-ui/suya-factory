@@ -36,7 +36,7 @@ export type OrderView = {
     line2: string | null;
     city: string;
     landmark: string | null;
-    zone_name: string;
+    zone_name?: string; // only on orders from before the map pin
     lat?: number;
     lng?: number;
     accuracy_m?: number | null;

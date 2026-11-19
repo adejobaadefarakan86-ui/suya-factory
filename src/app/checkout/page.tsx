@@ -2,7 +2,6 @@ import { Suspense } from "react";
 import { getCatalog, variantLabel } from "@/lib/catalog";
 import { getCountry } from "@/lib/country";
 import { COUNTRIES } from "@/lib/countries";
-import { getZones } from "@/lib/zones";
 import { getCurrentUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import type { CartItemInfo } from "../cart/cart-view";
@@ -22,12 +21,7 @@ export default function CheckoutPage() {
 }
 
 async function PricedCheckout() {
-  const [catalog, country, zones, user] = await Promise.all([
-    getCatalog(),
-    getCountry(),
-    getZones(),
-    getCurrentUser(),
-  ]);
+  const [catalog, country, user] = await Promise.all([getCatalog(), getCountry(), getCurrentUser()]);
   const { currency, name: countryName } = COUNTRIES[country];
 
   // Today's names and prices for every variant, in this visitor's currency.
@@ -39,6 +33,7 @@ async function PricedCheckout() {
         productSlug: product.slug,
         label: variantLabel(v),
         price: v.prices[currency] ?? null,
+        grams: v.grams,
       };
     }
   }
@@ -54,7 +49,6 @@ async function PricedCheckout() {
   return (
     <CheckoutForm
       items={items}
-      zones={zones.filter((z) => z.country === country)}
       country={country}
       countryName={countryName}
       currency={currency}

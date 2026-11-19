@@ -11,6 +11,7 @@ export type CatalogVariant = {
   sku: string | null;
   sizeLabel: string;
   spiceLevel: SpiceLevel | null;
+  grams: number; // pack weight, used for the 1kg bulk-order limit
   prices: Partial<Record<Currency, number>>; // in kobo / pesewas
 };
 
@@ -36,6 +37,7 @@ type Row = {
     sku: string | null;
     size_label: string;
     spice_level: SpiceLevel | null;
+    weight_grams: number | null;
     variant_prices: { currency: Currency; amount_minor: number }[];
   }[];
 };
@@ -50,7 +52,7 @@ export async function getCatalog(): Promise<CatalogProduct[]> {
   const { data, error } = await supabase
     .from("products")
     .select(
-      "id, name, slug, description, image_urls, categories(name, slug, sort_order), product_variants(id, sku, size_label, spice_level, sort_order, variant_prices(currency, amount_minor))",
+      "id, name, slug, description, image_urls, categories(name, slug, sort_order), product_variants(id, sku, size_label, spice_level, weight_grams, sort_order, variant_prices(currency, amount_minor))",
     )
     .order("name")
     .order("sort_order", { referencedTable: "product_variants" });
@@ -72,6 +74,7 @@ export async function getCatalog(): Promise<CatalogProduct[]> {
         sku: v.sku,
         sizeLabel: v.size_label,
         spiceLevel: v.spice_level,
+        grams: v.weight_grams ?? 0,
         prices: Object.fromEntries(v.variant_prices.map((pr) => [pr.currency, pr.amount_minor])),
       })),
     }))

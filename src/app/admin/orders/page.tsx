@@ -138,7 +138,7 @@ async function OrderList({ searchParams }: { searchParams: PageProps<"/admin/ord
                   </td>
                   <td className="whitespace-nowrap px-4 py-2 text-stone-600">{formatOrderDate(o.created_at, o.country)}</td>
                   <td className="px-4 py-2">{o.contact_name}</td>
-                  <td className="px-4 py-2 text-stone-600">{o.delivery_address.city} · {o.delivery_address.zone_name}</td>
+                  <td className="px-4 py-2 text-stone-600">{[o.delivery_address.city, o.delivery_address.zone_name].filter(Boolean).join(" · ")}</td>
                   <td className="px-4 py-2 text-right tabular-nums">{o.order_items.reduce((s, i) => s + i.quantity, 0)}</td>
                   <td className="px-4 py-2 text-right font-semibold tabular-nums">{formatMoney(o.total_minor, o.currency)}</td>
                 </tr>

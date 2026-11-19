@@ -182,7 +182,7 @@ async function OrderDetails({ params, searchParams }: Pick<OrderPageProps, "para
         <dl className="mt-2 space-y-1 border-t border-stone-200 pt-3 text-sm">
           {order.delivery_fee_minor > 0 && (
             // Older orders, from before delivery was paid to the rider.
-            <div className="flex justify-between"><dt>Delivery ({a.zone_name})</dt><dd className="tabular-nums">{money(order.delivery_fee_minor)}</dd></div>
+            <div className="flex justify-between"><dt>Delivery{a.zone_name ? ` (${a.zone_name})` : ""}</dt><dd className="tabular-nums">{money(order.delivery_fee_minor)}</dd></div>
           )}
           <div className="flex justify-between pt-1 text-lg font-bold"><dt>Paid online</dt><dd className="tabular-nums">{money(order.total_minor)}</dd></div>
           {order.delivery_fee_minor === 0 && (
@@ -200,7 +200,7 @@ async function OrderDetails({ params, searchParams }: Pick<OrderPageProps, "para
           <p>{order.contact_name}</p>
           <p>{a.line1}</p>
           {a.line2 && <p>{a.line2}</p>}
-          <p>{a.city} · {a.zone_name}</p>
+          <p>{[a.city, a.zone_name].filter(Boolean).join(" · ")}</p>
           {a.landmark && <p className="text-stone-500">Near {a.landmark}</p>}
           {a.lat !== undefined && <p className="mt-1 text-green-700">📍 Exact location pinned</p>}
         </div>

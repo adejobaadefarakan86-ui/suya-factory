@@ -5,7 +5,8 @@ import { useActionState, useEffect, useState } from "react";
 import { cart, useCartLines, usePruneCart } from "@/lib/cart";
 import { formatMoney, type Currency } from "@/lib/money";
 import type { CountryCode } from "@/lib/countries";
-import type { Zone } from "@/lib/zones";
+import { isInLagos } from "@/lib/lagos";
+import { BulkNotice, BULK_MIN_GRAMS, cartGrams } from "@/components/bulk-notice";
 import { Field, buttonClass } from "@/components/field";
 import type { CartItemInfo } from "../cart/cart-view";
 import { placeOrder, type CheckoutState } from "./actions";
@@ -22,7 +23,6 @@ const inputClass =
 
 export function CheckoutForm({
   items,
-  zones,
   country,
   countryName,
   currency,
@@ -30,7 +30,6 @@ export function CheckoutForm({
   loggedIn,
 }: {
   items: Record<string, CartItemInfo>;
-  zones: Zone[];
   country: CountryCode;
   countryName: string;
   currency: Currency;
@@ -40,7 +39,6 @@ export function CheckoutForm({
   const router = useRouter();
   const lines = useCartLines();
   usePruneCart(Object.keys(items)); // remove discontinued items from the browser's cart
-  const [zoneId, setZoneId] = useState("");
   const [location, setLocation] = useState<PickedLocation | null>(null);
   const [state, action, pending] = useActionState<CheckoutState, FormData>(placeOrder, undefined);
 
@@ -82,7 +80,19 @@ export function CheckoutForm({
     );
   }
 
-  const zone = zones.find((z) => z.id === zoneId) ?? null;
+  // 1kg+ is a bulk order: nothing to fill in here.
+  const grams = cartGrams(rows);
+  if (grams >= BULK_MIN_GRAMS) {
+    return (
+      <div className="mt-6 max-w-xl space-y-3">
+        <BulkNotice reason="weight" grams={grams} />
+        <Link href="/cart" className="inline-block text-sm text-stone-600 hover:text-orange-700">← Back to cart</Link>
+      </div>
+    );
+  }
+
+  // Nigeria: regular orders are delivered inside Lagos State only.
+  const outsideLagos = country === "NG" && location !== null && !isInLagos(location.lat, location.lng);
   // Paid online: the kilishi only. The delivery fee is paid to the rider on arrival.
   const total = rows.reduce((sum, r) => sum + (r.info.price ?? 0) * r.quantity, 0);
   const v = failed?.values;
@@ -120,17 +130,9 @@ export function CheckoutForm({
 
         <fieldset className="space-y-4 rounded-2xl border border-stone-200 bg-white p-6">
           <legend className="px-1 text-lg font-semibold text-stone-900">Delivery in {countryName}</legend>
-          <label className="block">
-            <span className="mb-1 block text-sm font-medium text-stone-700">Delivery area</span>
-            <select name="zoneId" required value={zoneId} onChange={(e) => setZoneId(e.target.value)} className={inputClass}>
-              <option value="" disabled>Choose your area…</option>
-              {zones.map((z) => (
-                <option key={z.id} value={z.id}>{z.name}</option>
-              ))}
-            </select>
-          </label>
           <LocationPicker country={country} value={location} onChange={setLocation} />
-          {location && (
+          {outsideLagos && <BulkNotice reason="outside_lagos" />}
+          {location && !outsideLagos && (
             <>
               <Field label="House / flat number, estate (optional)" name="line2" autoComplete="address-line2" defaultValue={v?.line2} maxLength={200}
                 placeholder="e.g. Flat 3B, Block 4" />
@@ -174,7 +176,7 @@ export function CheckoutForm({
           <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-800">{failed.error}</p>
         )}
 
-        <button type="submit" disabled={pending || !zone || !location} className={buttonClass}>
+        <button type="submit" disabled={pending || !location || outsideLagos} className={buttonClass}>
           {pending ? "Placing order…" : "Place order"}
         </button>
         <p className="text-xs text-stone-500">

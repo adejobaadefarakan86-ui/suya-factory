@@ -31,6 +31,7 @@ async function PricedCart() {
         productSlug: product.slug,
         label: variantLabel(v),
         price: v.prices[currency] ?? null,
+        grams: v.grams,
       };
     }
   }

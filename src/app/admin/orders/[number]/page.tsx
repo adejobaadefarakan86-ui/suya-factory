@@ -29,7 +29,7 @@ type Order = {
   country: CountryCode;
   currency: Currency;
   delivery_address: {
-    line1: string; line2: string | null; city: string; landmark: string | null; zone_name: string;
+    line1: string; line2: string | null; city: string; landmark: string | null; zone_name?: string; // only on orders from before the map pin
     lat?: number; lng?: number; accuracy_m?: number | null;
   };
   notes: string | null;
@@ -138,7 +138,7 @@ async function OrderDetail({ params }: { params: PageProps<"/admin/orders/[numbe
               <p className="font-medium">{o.contact_name}</p>
               <p>{a.line1}</p>
               {a.line2 && <p>{a.line2}</p>}
-              <p>{a.city} · {a.zone_name}</p>
+              <p>{[a.city, a.zone_name].filter(Boolean).join(" · ")}</p>
               {a.landmark && <p className="text-stone-500">Near {a.landmark}</p>}
               {hasPin ? (
                 <div className="mt-3 flex flex-wrap gap-2">

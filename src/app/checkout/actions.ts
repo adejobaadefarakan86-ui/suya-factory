@@ -2,6 +2,7 @@
 // Sends the order to the database's place_order() function.
 // We pass only WHAT the customer wants; the database works out every price.
 import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import { isCountry } from "@/lib/countries";
 
 export type CheckoutValues = {
@@ -17,8 +18,27 @@ export type CheckoutValues = {
 
 export type CheckoutState =
   | { error: string; values: CheckoutValues }
-  | { token: string; orderNumber: string }
+  | { token: string; orderNumber: string; payNow: boolean }
   | undefined;
+
+export type DeliveryQuote = { feeMinor: number; km: number } | null;
+
+/**
+ * The automatic delivery price to a pin, worked out by the database (the same
+ * function place_order uses, so what's shown is exactly what's charged).
+ * null = no automatic price in this country (staff quote it after ordering).
+ */
+export async function quoteDelivery(country: string, lat: number, lng: number): Promise<DeliveryQuote> {
+  if (!isCountry(country) || !Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+  const supabase = createPublicClient();
+  const [fee, km] = await Promise.all([
+    supabase.rpc("delivery_fee", { p_country: country, p_lat: lat, p_lng: lng }),
+    supabase.rpc("delivery_km", { p_country: country, p_lat: lat, p_lng: lng }),
+  ]);
+  if (fee.error || km.error) throw new Error(`delivery quote failed: ${fee.error?.message ?? km.error?.message}`);
+  if (fee.data === null || km.data === null) return null;
+  return { feeMinor: Number(fee.data), km: Number(km.data) };
+}
 
 // The database raises 'SF:<code>'; these are the friendly versions.
 const MESSAGES: Record<string, string> = {
@@ -95,5 +115,7 @@ export async function placeOrder(_prev: CheckoutState, formData: FormData): Prom
   const order = (data as { order_number: string; access_token: string }[] | null)?.[0];
   if (!order) return fail("We couldn't place your order. Please try again.");
 
-  return { token: order.access_token, orderNumber: order.order_number };
+  // Automatic delivery price: the database checked that the total we sent
+  // included exactly its own fee, so the order is ready to pay right away.
+  return { token: order.access_token, orderNumber: order.order_number, payNow: Number(formData.get("deliveryFee")) > 0 };
 }

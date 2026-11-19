@@ -91,7 +91,7 @@ async function OrderDetail({ params }: { params: PageProps<"/admin/orders/[numbe
   // A ready-written WhatsApp message that fits where the order is.
   const waMessage =
     o.status === "pending_payment" && o.delivery_quote_minor !== null
-      ? `Hi ${firstName}, this is Suya Factory. The delivery fee for your order ${o.order_number} is ${money(o.delivery_quote_minor)} (paid to the rider on arrival). You can accept and pay here: ${customerPage}`
+      ? `Hi ${firstName}, this is Suya Factory. The delivery fee for your order ${o.order_number} is ${money(o.delivery_quote_minor)}${o.delivery_fee_minor > 0 ? "" : " (paid to the rider on arrival)"}. You can accept and pay here: ${customerPage}`
       : o.status === "out_for_delivery" && o.rider_name
         ? `Hi ${firstName}, your Suya Factory order ${o.order_number} is on the way with ${o.rider_name}. Follow it here: ${customerPage}`
         : `Hi ${firstName}, this is Suya Factory about your order ${o.order_number}.`;
@@ -120,7 +120,7 @@ async function OrderDetail({ params }: { params: PageProps<"/admin/orders/[numbe
             </ul>
             <dl className="mt-2 space-y-1 border-t border-stone-200 pt-2 text-sm">
               {o.delivery_fee_minor > 0 && (
-                <div className="flex justify-between"><dt>Delivery charged online (older order)</dt><dd className="tabular-nums">{money(o.delivery_fee_minor)}</dd></div>
+                <div className="flex justify-between"><dt>Delivery (paid online)</dt><dd className="tabular-nums">{money(o.delivery_fee_minor)}</dd></div>
               )}
               <div className="flex justify-between font-bold"><dt>Paid online</dt><dd className="tabular-nums">{money(o.total_minor)}</dd></div>
               {o.delivery_fee_minor === 0 && (

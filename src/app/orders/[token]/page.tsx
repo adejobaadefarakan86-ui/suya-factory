@@ -59,6 +59,8 @@ async function OrderDetails({ params, searchParams }: Pick<OrderPageProps, "para
   // Ghana (GHS) online payment waits for a provider that supports mobile money.
   const canPayOnline = order.currency === "NGN";
   const quote = order.delivery_quote_minor;
+  // Delivery paid online with the kilishi (automatic price) vs. paid to the rider.
+  const deliveryOnline = order.delivery_fee_minor > 0;
 
   // Result of an action, passed back in the link (?payment=...). Display only.
   const { payment } = await searchParams;
@@ -98,9 +100,13 @@ async function OrderDetails({ params, searchParams }: Pick<OrderPageProps, "para
       {order.status === "pending_payment" && quote !== null && (
         <div className="mt-6 space-y-4 rounded-2xl border-2 border-orange-200 bg-orange-50 p-5 text-orange-950">
           <div>
-            <p className="text-sm">Delivery fee to your location</p>
-            <p className="text-3xl font-bold tabular-nums">{money(quote)}</p>
-            <p className="text-sm">Paid to the rider when they arrive.{order.delivery_quote_note ? ` ${order.delivery_quote_note}` : ""}</p>
+            <p className="text-sm">{deliveryOnline ? "Total to pay" : "Delivery fee to your location"}</p>
+            <p className="text-3xl font-bold tabular-nums">{money(deliveryOnline ? order.total_minor : quote)}</p>
+            <p className="text-sm">
+              {deliveryOnline
+                ? `Kilishi ${money(order.subtotal_minor)} + delivery ${money(order.delivery_fee_minor)}.`
+                : `Paid to the rider when they arrive.${order.delivery_quote_note ? ` ${order.delivery_quote_note}` : ""}`}
+            </p>
             {order.quote_expires_at && !order.quote_expired && (
               <p className="mt-1 text-xs text-orange-900/70">Price valid until {when(order.quote_expires_at)}.</p>
             )}
@@ -115,11 +121,15 @@ async function OrderDetails({ params, searchParams }: Pick<OrderPageProps, "para
             </form>
           ) : canPayOnline ? (
             <form action={payWithPaystack.bind(null, token)} className="space-y-3">
-              <label className="flex items-start gap-2 text-sm">
-                <input type="checkbox" name="acceptDelivery" value="yes" required className="mt-0.5 h-4 w-4 accent-orange-700" />
-                <span>I accept the delivery fee of <strong>{money(quote)}</strong>, which I&apos;ll pay to the rider on arrival.</span>
-              </label>
-              <PayButton label={`Pay ${money(order.total_minor)} for my kilishi`} />
+              {deliveryOnline ? (
+                <input type="hidden" name="acceptDelivery" value="yes" />
+              ) : (
+                <label className="flex items-start gap-2 text-sm">
+                  <input type="checkbox" name="acceptDelivery" value="yes" required className="mt-0.5 h-4 w-4 accent-orange-700" />
+                  <span>I accept the delivery fee of <strong>{money(quote)}</strong>, which I&apos;ll pay to the rider on arrival.</span>
+                </label>
+              )}
+              <PayButton label={deliveryOnline ? `Pay ${money(order.total_minor)}` : `Pay ${money(order.total_minor)} for my kilishi`} />
               <p className="text-xs">Card, bank transfer or USSD, securely through Paystack.</p>
             </form>
           ) : (
@@ -152,7 +162,7 @@ async function OrderDetails({ params, searchParams }: Pick<OrderPageProps, "para
           <p className="mt-1 text-sm">
             {order.status === "paid" ? "We're getting your order ready." : "Your kilishi is being packed."} You&apos;ll see your
             rider&apos;s details here once it&apos;s on the way.
-            {quote !== null && <> Delivery fee to pay the rider: <strong>{money(quote)}</strong>.</>}
+            {quote !== null && !deliveryOnline && <> Delivery fee to pay the rider: <strong>{money(quote)}</strong>.</>}
           </p>
         </div>
       )}
@@ -181,7 +191,7 @@ async function OrderDetails({ params, searchParams }: Pick<OrderPageProps, "para
         </ul>
         <dl className="mt-2 space-y-1 border-t border-stone-200 pt-3 text-sm">
           {order.delivery_fee_minor > 0 && (
-            // Older orders, from before delivery was paid to the rider.
+            // Delivery paid online (automatic price, or older zone-based orders).
             <div className="flex justify-between"><dt>Delivery{a.zone_name ? ` (${a.zone_name})` : ""}</dt><dd className="tabular-nums">{money(order.delivery_fee_minor)}</dd></div>
           )}
           <div className="flex justify-between pt-1 text-lg font-bold"><dt>Paid online</dt><dd className="tabular-nums">{money(order.total_minor)}</dd></div>

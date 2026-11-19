@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
 import { getCurrentUser, isStaff } from "@/lib/auth";
@@ -34,8 +35,9 @@ export function SiteHeader() {
   return (
     <header className="border-b border-stone-200 bg-white">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3">
-        <Link href="/" className="text-lg font-extrabold text-orange-700">
-          Suya Factory
+        <Link href="/" className="flex shrink-0 items-center gap-2 text-lg font-extrabold text-stone-900">
+          <Image src="/images/logo-mark.png" alt="" width={36} height={36} className="rounded-lg" priority />
+          <span className="hidden sm:inline">Suya Factory</span>
         </Link>
         <nav className="flex items-center gap-3 text-sm text-stone-700 sm:gap-5">
           <Link href="/shop" className="hover:text-orange-700">Shop</Link>

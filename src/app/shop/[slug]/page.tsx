@@ -44,7 +44,19 @@ async function ProductDetail({ params }: { params: PageProps<"/shop/[slug]">["pa
 
   return (
     <div className="mt-6 grid gap-8 md:grid-cols-2">
-      <ProductImage name={product.name} index={index} className="rounded-2xl" />
+      <div>
+        <ProductImage name={product.name} src={product.imageUrls[0]} index={index} className="rounded-2xl"
+          sizes="(min-width: 768px) 480px, 100vw" priority />
+        {product.imageUrls.length > 1 && (
+          <ul className="mt-3 grid grid-cols-3 gap-3">
+            {product.imageUrls.slice(1, 4).map((src) => (
+              <li key={src}>
+                <ProductImage name={product.name} src={src} className="rounded-xl" sizes="160px" />
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
       <div>
         <p className="text-sm uppercase tracking-wide text-stone-500">{product.category?.name}</p>
         <h1 className="text-3xl font-bold text-stone-900">{product.name}</h1>

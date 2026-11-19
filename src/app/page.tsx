@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
 import { ProductGrid, ProductGridSkeleton } from "@/components/product-grid";
@@ -7,13 +8,17 @@ import { SELLS_VIA_SUPERMARKETS } from "@/lib/stores";
 export default function HomePage() {
   return (
     <main className="flex-1">
-      <section className="bg-gradient-to-br from-stone-900 via-red-950 to-orange-900 text-white">
-        <div className="mx-auto max-w-6xl px-4 py-20">
+      <section className="relative overflow-hidden bg-stone-950 text-white">
+        <Image src="/images/kilishi-closeup.webp" alt="" fill priority sizes="100vw" className="object-cover opacity-45" />
+        <div className="absolute inset-0 bg-gradient-to-r from-stone-950 via-stone-950/80 to-stone-950/20" />
+        <Image src="/images/logo.webp" alt="Suya Factory: no rules, just bite…" width={220} height={234}
+          className="absolute right-8 top-1/2 hidden -translate-y-1/2 rounded-3xl lg:block" />
+        <div className="relative mx-auto max-w-6xl px-4 py-20">
           <p className="text-sm font-semibold uppercase tracking-widest text-orange-300">
             Nigeria · Ghana
           </p>
           <h1 className="mt-3 max-w-2xl text-4xl font-extrabold leading-tight sm:text-6xl">
-            Spicy beef kilishi, delivered.
+            Spicy beef kilishi.<br />No rules, just bite.
           </h1>
           <p className="mt-4 max-w-xl text-lg text-stone-200">
             A satisfying mix of soft and crunchy, prepared in a clean, hygienic kitchen and professionally

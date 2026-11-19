@@ -29,7 +29,7 @@ export async function ProductGrid() {
               href={`/shop/${product.slug}`}
               className="group block overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
             >
-              <ProductImage name={product.name} index={i} />
+              <ProductImage name={product.name} src={product.imageUrls[0]} index={i} />
               <div className="p-4">
                 <p className="text-xs uppercase tracking-wide text-stone-500">{product.category?.name}</p>
                 <h3 className="font-semibold text-stone-900 group-hover:text-orange-700">{product.name}</h3>

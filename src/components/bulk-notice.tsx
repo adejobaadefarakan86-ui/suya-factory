@@ -12,18 +12,18 @@ const kg = (grams: number) => `${(grams / 1000).toLocaleString("en", { maximumFr
 
 /**
  * Shown instead of checkout when a regular order would be 1kg+ (a bulk order),
- * or when the delivery pin is outside Lagos State.
+ * or when the delivery pin is outside our delivery region (Lagos State / Greater Accra).
  */
-export function BulkNotice({ reason, grams }: { reason: "weight" | "outside_lagos"; grams?: number }) {
+export function BulkNotice({ reason, grams, area }: { reason: "weight" | "outside_area"; grams?: number; area?: string }) {
   return (
     <div className="rounded-2xl border border-orange-200 bg-orange-50 p-5 text-orange-950">
       <p className="font-semibold">
-        {reason === "weight" ? `${kg(grams ?? 0)} is a bulk order` : "This address is outside Lagos State"}
+        {reason === "weight" ? `${kg(grams ?? 0)} is a bulk order` : `This address is outside ${area}`}
       </p>
       <p className="mt-1 text-sm text-orange-900">
         {reason === "weight"
           ? `Orders of ${BULK_MIN_KG}kg and above get bulk pricing and are arranged with our team directly. Reduce your cart below ${BULK_MIN_KG}kg, or send us a bulk request.`
-          : `Regular orders are delivered within Lagos only. For delivery outside Lagos, send us a bulk order request (${BULK_MIN_KG}kg and above) and we'll arrange it with you.`}
+          : `Regular orders are delivered within ${area} only. For delivery outside ${area}, send us a bulk order request (${BULK_MIN_KG}kg and above) and we'll arrange it with you.`}
       </p>
       <Link
         href="/bulk-orders"

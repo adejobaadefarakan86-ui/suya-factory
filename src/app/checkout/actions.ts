@@ -27,8 +27,8 @@ const MESSAGES: Record<string, string> = {
   phone: "Please enter a valid phone number (7 to 15 digits).",
   address: "Please enter your street address and city.",
   too_long: "One of the fields is too long. Please shorten it.",
-  outside_lagos:
-    "We only deliver regular orders inside Lagos State. For delivery outside Lagos, please send us a bulk order request.",
+  outside_area:
+    "We only deliver regular orders inside Lagos State (Nigeria) and Greater Accra (Ghana). For anywhere else, please send us a bulk order request.",
   bulk: "Orders of 1kg or more are bulk orders with special pricing. Please send us a bulk order request.",
   empty: "Your cart is empty.",
   too_many: "That's a lot of different items! Please split it into two orders.",

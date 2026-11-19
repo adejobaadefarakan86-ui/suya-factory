@@ -5,7 +5,7 @@ import { useActionState, useEffect, useState } from "react";
 import { cart, useCartLines, usePruneCart } from "@/lib/cart";
 import { formatMoney, type Currency } from "@/lib/money";
 import type { CountryCode } from "@/lib/countries";
-import { isInLagos } from "@/lib/lagos";
+import { isInServiceArea, SERVICE_AREAS } from "@/lib/service-areas";
 import { BulkNotice, BULK_MIN_GRAMS, cartGrams } from "@/components/bulk-notice";
 import { Field, buttonClass } from "@/components/field";
 import type { CartItemInfo } from "../cart/cart-view";
@@ -91,8 +91,8 @@ export function CheckoutForm({
     );
   }
 
-  // Nigeria: regular orders are delivered inside Lagos State only.
-  const outsideLagos = country === "NG" && location !== null && !isInLagos(location.lat, location.lng);
+  // Regular orders are delivered inside our home region only (Lagos State / Greater Accra).
+  const outsideArea = location !== null && !isInServiceArea(country, location.lat, location.lng);
   // Paid online: the kilishi only. The delivery fee is paid to the rider on arrival.
   const total = rows.reduce((sum, r) => sum + (r.info.price ?? 0) * r.quantity, 0);
   const v = failed?.values;
@@ -131,8 +131,8 @@ export function CheckoutForm({
         <fieldset className="space-y-4 rounded-2xl border border-stone-200 bg-white p-6">
           <legend className="px-1 text-lg font-semibold text-stone-900">Delivery in {countryName}</legend>
           <LocationPicker country={country} value={location} onChange={setLocation} />
-          {outsideLagos && <BulkNotice reason="outside_lagos" />}
-          {location && !outsideLagos && (
+          {outsideArea && <BulkNotice reason="outside_area" area={SERVICE_AREAS[country].name} />}
+          {location && !outsideArea && (
             <>
               <Field label="House / flat number, estate (optional)" name="line2" autoComplete="address-line2" defaultValue={v?.line2} maxLength={200}
                 placeholder="e.g. Flat 3B, Block 4" />
@@ -176,7 +176,7 @@ export function CheckoutForm({
           <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-800">{failed.error}</p>
         )}
 
-        <button type="submit" disabled={pending || !location || outsideLagos} className={buttonClass}>
+        <button type="submit" disabled={pending || !location || outsideArea} className={buttonClass}>
           {pending ? "Placing order…" : "Place order"}
         </button>
         <p className="text-xs text-stone-500">

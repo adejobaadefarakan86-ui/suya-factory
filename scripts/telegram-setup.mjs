@@ -1,7 +1,8 @@
 // Connects the staff Telegram group. Run:  node scripts/telegram-setup.mjs
 //
 // 1. Needs TELEGRAM_BOT_TOKEN in .env.local (from @BotFather).
-// 2. Add the bot to your staff group and send any message in the group.
+// 2. Add the bot to your staff group and send any message in the group
+//    (or, with no group, open the bot yourself and tap Start).
 // 3. Run this: it finds the group, saves TELEGRAM_CHAT_ID in .env.local and
 //    sends a test message. The token itself is never printed.
 import { readFileSync, writeFileSync } from "node:fs";
@@ -30,13 +31,32 @@ console.log(`Bot: @${me.username}`);
 
 const updates = await call("getUpdates");
 const groups = new Map();
+const privateChats = new Map();
 for (const u of updates) {
   const chat = (u.message ?? u.my_chat_member ?? u.channel_post)?.chat;
-  if (chat && chat.type !== "private") groups.set(chat.id, chat.title);
+  if (!chat) continue;
+  if (chat.type === "private") {
+    privateChats.set(chat.id, [chat.first_name, chat.last_name].filter(Boolean).join(" ") || "private chat");
+  } else {
+    groups.set(chat.id, chat.title);
+  }
+}
+
+// No group (e.g. the Telegram account can't create one): fall back to a
+// one-to-one chat with the bot. Re-run later after adding the bot to a group
+// to move the alerts there.
+if (groups.size === 0 && privateChats.size === 1) {
+  const [[id, name]] = [...privateChats];
+  groups.set(id, `${name} (private chat)`);
 }
 
 if (groups.size === 0) {
-  console.log("No group found yet. Add the bot to your staff group, send a message in the group, then run this again.");
+  if (privateChats.size > 1) {
+    console.log("Several people have messaged the bot and there's no group. Set TELEGRAM_CHAT_ID by hand:");
+    for (const [id, name] of privateChats) console.log(`  ${name}: ${id}`);
+  } else {
+    console.log("No chat found yet. Add the bot to your staff group and send a message there (or open the bot and tap Start), then run this again.");
+  }
   process.exit(0);
 }
 if (groups.size > 1) {

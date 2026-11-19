@@ -1,5 +1,7 @@
 "use server";
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
+import { announceStockChange } from "@/lib/stock-telegram";
 import { requireStaff } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { toInternationalDigits } from "@/lib/contacts";
@@ -61,11 +63,13 @@ export async function saveStore(_prev: StoreFormState, formData: FormData): Prom
   return { ok: id ? "Saved." : "Supermarket added." };
 }
 
-/** Staff mark a store in / out of stock. */
+/** Staff mark a store in / out of stock (admin page and the /stock page). The chat is told. */
 export async function setStock(storeId: string, inStock: boolean) {
-  await requireStaff("/admin/stores");
+  await requireStaff("/stock");
   const supabase = await createClient();
   const { error } = await supabase.rpc("set_store_stock", { p_store_id: storeId, p_in_stock: inStock });
   if (error) console.error("set_store_stock failed:", error);
+  else after(() => announceStockChange(storeId));
   revalidatePath("/admin/stores");
+  revalidatePath("/stock");
 }

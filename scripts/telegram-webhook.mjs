@@ -1,4 +1,4 @@
-// Turns on the staff chat commands (/stores, /out 3, /in 3) once the site is
+// Turns on the staff chat stock buttons and commands (/stock, /out 3, /in 3) once the site is
 // live on the internet. Run:  node scripts/telegram-webhook.mjs https://your-site.com
 //
 // - Creates TELEGRAM_WEBHOOK_SECRET in .env.local if it's missing. The live
@@ -50,10 +50,10 @@ if (!secret) {
 }
 
 const url = `${arg.replace(/\/$/, "")}/api/telegram/webhook`;
-await call("setWebhook", { url, secret_token: secret, allowed_updates: ["message"] });
+await call("setWebhook", { url, secret_token: secret, allowed_updates: ["message", "callback_query"] });
 await call("setMyCommands", {
   commands: [
-    { command: "stores", description: "List supermarkets and their stock" },
+    { command: "stock", description: "Supermarket stock list with tap buttons" },
     { command: "out", description: "Mark a supermarket out of stock, e.g. /out 3" },
     { command: "in", description: "Mark a supermarket restocked, e.g. /in 3" },
   ],

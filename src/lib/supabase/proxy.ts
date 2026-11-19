@@ -38,7 +38,7 @@ export async function updateSession(request: NextRequest) {
   // Quick first check: not logged in at all? Send to login before loading
   // the page. (Pages still do the full role check themselves.)
   const path = request.nextUrl.pathname;
-  if (!data?.claims && (path.startsWith("/admin") || path.startsWith("/account"))) {
+  if (!data?.claims && (path.startsWith("/admin") || path.startsWith("/account") || path === "/stock")) {
     const loginUrl = request.nextUrl.clone();
     loginUrl.pathname = "/login";
     loginUrl.search = `?next=${encodeURIComponent(path)}`;

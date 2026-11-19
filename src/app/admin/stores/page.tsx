@@ -25,6 +25,7 @@ type Row = {
   in_stock: boolean;
   stock_updated_at: string;
   out_reported_at: string | null;
+  stock_updated_by: string | null;
   active: boolean;
 };
 
@@ -51,8 +52,9 @@ export default function AdminStoresPage() {
     <>
       <h1 className="text-2xl font-bold text-stone-900">Supermarkets (Nigeria)</h1>
       <p className="mt-1 max-w-2xl text-sm text-stone-600">
-        Customers see the nearest supermarket that has kilishi. Keep the stock up to date here, or in the staff
-        Telegram chat with <code>/stores</code>, <code>/out 3</code> and <code>/in 3</code>.
+        Customers see the nearest supermarket that has kilishi. Staff keep the stock up to date on the{" "}
+        <a href="/stock" className="font-medium text-orange-700 underline">stock page</a> (easy on a phone) or with the
+        tap buttons in the staff Telegram chat (<code>/stock</code>).
       </p>
       <AutoRefresh seconds={60} />
       <Suspense fallback={<p className="mt-4 text-sm text-stone-400">Loading…</p>}>
@@ -106,7 +108,7 @@ async function Stores() {
                     {r.packs && <span className="ml-3">{r.packs}</span>}
                   </p>
                   <p className="mt-1 text-xs text-stone-500">
-                    {weekCount(r.id)} app pickups in the last 7 days · stock updated {formatOrderDate(r.stock_updated_at, "NG")}
+                    {weekCount(r.id)} app pickups in the last 7 days · stock updated {formatOrderDate(r.stock_updated_at, "NG")}{r.stock_updated_by ? ` by ${r.stock_updated_by}` : ""}
                   </p>
                   {r.in_stock && r.out_reported_at && (
                     <p className="mt-1 text-sm font-medium text-amber-700">

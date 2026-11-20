@@ -223,10 +223,10 @@ export function CheckoutForm({
         )}
         {riderFee?.ownRider && (
           <div className="rounded-lg bg-sky-50 p-3 text-sm text-sky-950">
-            <p className="font-semibold">🛵 You book your own rider (Bolt or Yango)</p>
+            <p className="font-semibold">🛵 You book your own rider (Bolt, Uber, Yango, Qargo…)</p>
             <ol className="mt-1 list-decimal space-y-0.5 pl-5">
               <li>Pay for your kilishi by Mobile Money.</li>
-              <li>Once we confirm it, book a Bolt or Yango delivery from our pickup point (we show you the address).</li>
+              <li>Once we confirm it, book a delivery in your app from our pickup point (we show you the address).</li>
               <li>Pay the rider in the app or in cash, like any ride.</li>
             </ol>
           </div>

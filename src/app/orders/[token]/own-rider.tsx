@@ -24,6 +24,9 @@ export function OwnRiderStep({
 }) {
   const [copied, setCopied] = useState(false);
   const [company, setCompany] = useState(current?.company ?? "");
+  // "Other app…": the customer types the app's name.
+  const [otherMode, setOtherMode] = useState(false);
+  const isListed = companies.some((c) => c.name === company);
   // Which phone this is decides the link (app on Android, App Store on iPhone). "" while rendering on the server.
   const userAgent = useSyncExternalStore(noop, () => navigator.userAgent, () => "");
 
@@ -42,7 +45,7 @@ export function OwnRiderStep({
       <section className="rounded-2xl border-2 border-orange-200 bg-white p-5">
         <h2 className="text-lg font-bold text-stone-900">{current ? "Change your rider" : "Now book your rider"}</h2>
         <p className="mt-1 text-sm text-stone-600">
-          In Bolt or Yango, use this as the <strong>pickup</strong> and your own address as the drop-off. You pay the
+          In your delivery app, use this as the <strong>pickup</strong> and your own address as the drop-off. You pay the
           rider in the app or in cash.
         </p>
         <div className="mt-3 rounded-xl bg-stone-50 p-4">
@@ -59,7 +62,7 @@ export function OwnRiderStep({
           </div>
         </div>
         <p className="mt-4 text-sm font-medium text-stone-700">Open your app:</p>
-        <ul className="mt-2 grid gap-2 sm:grid-cols-3">
+        <ul className="mt-2 grid gap-2 sm:grid-cols-2">
           {companies.map((c) => (
             <li key={c.id}>
               <a href={appLink(c, userAgent, pickup, dropoff)} onClick={() => setCompany(c.name)}
@@ -87,11 +90,23 @@ export function OwnRiderStep({
           <label className="block"><span className="mb-1 block text-sm font-medium text-stone-700">Bike / car number <span className="font-normal text-stone-500">(if shown)</span></span>
             <input name="riderPlate" maxLength={20} defaultValue={current?.plate ?? ""} className={input} placeholder="e.g. GR 1234-24" /></label>
           <label className="block"><span className="mb-1 block text-sm font-medium text-stone-700">App</span>
-            <select name="riderCompany" value={company} onChange={(e) => setCompany(e.target.value)} className={input}>
+            <select value={isListed ? company : company === "" && !otherMode ? "" : "Other"}
+              onChange={(e) => {
+                const v = e.target.value;
+                setOtherMode(v === "Other");
+                setCompany(v === "Other" ? "" : v);
+              }} className={input}>
               <option value="">Choose…</option>
               {companies.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
-              <option value="Other">Other</option>
+              <option value="Other">Other app…</option>
             </select></label>
+          {!isListed && (otherMode || company !== "") && (
+            <label className="block sm:col-span-2"><span className="mb-1 block text-sm font-medium text-stone-700">Which app?</span>
+              <input value={company} onChange={(e) => setCompany(e.target.value)} maxLength={50} required
+                className={input} placeholder="e.g. the name of the delivery app you used" /></label>
+          )}
+          {/* What's sent: the app picked from the list, or the name typed for "Other". */}
+          <input type="hidden" name="riderCompany" value={company} />
         </div>
         <PayButton label={current ? "Update rider" : "Send rider details"} pendingLabel="Sending…" />
       </form>

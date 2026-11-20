@@ -115,7 +115,7 @@ async function OrderDetails({ params, searchParams }: Pick<OrderPageProps, "para
             <div>
               <p className="text-sm">To pay by MoMo</p>
               <p className="text-3xl font-bold tabular-nums">{money(order.total_minor)}</p>
-              <p className="text-sm">After we confirm it, you book your own Bolt or Yango rider to collect it from us.</p>
+              <p className="text-sm">After we confirm it, you book your own rider (Bolt, Uber, Yango, Qargo…) to collect it from us.</p>
             </div>
           ) : (
           <div>
@@ -380,7 +380,7 @@ function MomoPay({ order, token, quote }: { order: OrderView; token: string; quo
       <label className="flex items-start gap-2 text-sm">
         <input type="checkbox" name="acceptDelivery" value="yes" required className="mt-0.5 h-4 w-4 accent-orange-700" />
         {order.own_rider
-          ? <span>I&apos;ll book and pay my own rider (Bolt or Yango) once my payment is confirmed.</span>
+          ? <span>I&apos;ll book and pay my own rider (Bolt, Uber, Yango, Qargo or any app) once my payment is confirmed.</span>
           : <span>I accept the Dawurobo delivery fee of <strong>{money(quote)}</strong>, which I&apos;ll pay to the rider on arrival.</span>}
       </label>
       <PayButton label={`I've sent ${money(order.total_minor)} by MoMo`} pendingLabel="Sending…" />

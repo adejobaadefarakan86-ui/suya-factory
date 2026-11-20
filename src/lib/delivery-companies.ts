@@ -45,7 +45,8 @@ export const DELIVERY_COMPANIES: DeliveryCompany[] = [
  * Ghana: apps customers book their own rider with, from Gloria (our pickup
  * point) to their door. They pay the rider in the app or in cash.
  * Checked 2026-11-20 on the App Store / Play Store and each company's Ghana page:
- * Bolt ("Send"), Uber ("Send a package"), Yango ("Delivery") work in Ghana.
+ * Bolt ("Send"), Uber ("Send a package"), Yango ("Delivery") work in Ghana; Qargo is a Ghanaian
+ * courier our team uses. Any other app: the customer picks "Other app…" and types its name.
  * Only the most used apps that fit (customer books a parcel rider now and pays them). Checked and
  * left out: inDrive, Shaxi (rides only in Ghana), Chowdeck GH (food only), Swoove (business/next-day),
  * ShaQ Express (small, unsure it still runs), OyaMove (closed: domain for sale, not in the stores).
@@ -75,6 +76,15 @@ export const GH_DELIVERY_COMPANIES: DeliveryCompany[] = [
     note: "Choose “Delivery” (courier for packages).",
     android: "com.yandex.yango",
     ios: "https://apps.apple.com/gh/app/id1437157286",
+  },
+  {
+    // Ghanaian courier our team uses. App Store: 4.7★ from 1.3k ratings, actively updated (Nov 2026).
+    id: "qargo",
+    name: "Qargo",
+    url: "https://orderqargo.com/",
+    note: "Ghanaian courier. Choose express delivery.",
+    android: "com.orderqargo",
+    ios: "https://apps.apple.com/gh/app/id1637942622",
   },
 ];
 

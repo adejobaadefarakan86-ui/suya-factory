@@ -21,9 +21,10 @@ export type DeliveryCompany = {
 
 /**
  * Nigeria (Lagos): from the supermarket to the customer's door. Checked 2026-11-20:
- * Bolt Send (6M+ Nigerian deliveries in 2026), inDrive Courier, GIGGo (GIG Logistics).
+ * Bolt Send (6M+ Nigerian deliveries in 2026) and inDrive Courier only (owner: keep it simple).
+ * Any other app: "Other app…", and the rider details are still required.
  * Left out: Uber (left Nigeria on 2 Sep 2026), Kwik Delivery (reported bankrupt, May 2025),
- * Chowdeck (team found its app does not book a rider the way Bolt / inDrive do).
+ * Chowdeck (does not book a rider the way Bolt / inDrive do), GIGGo (too many steps: wallet top-up first).
  */
 export const DELIVERY_COMPANIES: DeliveryCompany[] = [
   {
@@ -34,15 +35,6 @@ export const DELIVERY_COMPANIES: DeliveryCompany[] = [
     android: "ee.mtakso.client",
     androidScheme: "bolt",
     ios: "https://apps.apple.com/ng/app/id675033630",
-  },
-  {
-    // GIG Logistics on-demand pickup (500K+ Play downloads; App Store 4.2★ from 3.9k). Link name untested.
-    id: "giggo",
-    name: "GIGGo",
-    url: "https://giglogistics.com/giggo/",
-    note: "Book a pickup (bike for small parcels).",
-    android: "ng.giglogistics.giglgo",
-    ios: "https://apps.apple.com/ng/app/id1481825041",
   },
   {
     id: "indrive",

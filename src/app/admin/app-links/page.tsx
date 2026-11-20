@@ -15,7 +15,6 @@ const APPS: { name: string; pkg: string; schemes: string[] }[] = [
   { name: "Yango", pkg: "com.yandex.yango", schemes: ["yango", "yandextaxi", "yangotaxi"] },
   { name: "inDrive", pkg: "sinet.startup.inDriver", schemes: ["indriver", "indrive"] },
   { name: "Qargo", pkg: "com.orderqargo", schemes: ["qargo", "orderqargo"] },
-  { name: "GIGGo", pkg: "ng.giglogistics.giglgo", schemes: ["giggo", "giglogistics", "gig"] },
 ];
 
 function candidates(app: (typeof APPS)[number]): Candidate[] {

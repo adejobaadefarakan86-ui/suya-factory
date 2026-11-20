@@ -388,6 +388,9 @@ function RiderStep({
 }) {
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  // "Other app…": the customer types the app's name (kept in form.deliveryCompany).
+  const [otherApp, setOtherApp] = useState(false);
+  const listedApp = DELIVERY_COMPANIES.some((c) => c.id === form.deliveryCompany);
   // Which phone decides the link (app on Android, App Store on iPhone). "" on the server.
   const userAgent = useSyncExternalStore(noSubscribe, () => navigator.userAgent, () => "");
   const onPhone = /Android|iPhone|iPad|iPod/i.test(userAgent);
@@ -450,7 +453,7 @@ function RiderStep({
 
         <p className="mt-5 text-sm font-semibold text-stone-800">2. Open your app</p>
         <p className="mt-1 text-xs text-stone-500">Opens the app if you have it. If you see its Play Store / App Store page instead, tap <strong>Open</strong> (or <strong>Install</strong>).</p>
-        <ul className="mt-2 grid gap-2 sm:grid-cols-3">
+        <ul className="mt-2 grid gap-2 sm:grid-cols-2">
           {DELIVERY_COMPANIES.map((c) => (
             <li key={c.id}>
               <a href={appLink(c, userAgent, { lat: store.lat, lng: store.lng }, null)}
@@ -479,13 +482,26 @@ function RiderStep({
             <input required type="tel" maxLength={20} value={form.riderPhone} onChange={set("riderPhone")} className={input} /></label>
           <label className="block"><span className="mb-1 block text-sm font-medium text-stone-700">Bike / car plate number <span className="font-normal text-stone-500">(if you have it)</span></span>
             <input maxLength={20} value={form.riderPlate} onChange={set("riderPlate")} className={input} placeholder="e.g. LSR-123-AB" /></label>
-          <label className="block"><span className="mb-1 block text-sm font-medium text-stone-700">Delivery company</span>
-            <select value={form.deliveryCompany} onChange={set("deliveryCompany")} className={input}>
+          <label className="block"><span className="mb-1 block text-sm font-medium text-stone-700">Delivery app</span>
+            <select required value={listedApp ? form.deliveryCompany : otherApp || form.deliveryCompany ? "other" : ""}
+              onChange={(e) => {
+                const v = e.target.value;
+                setOtherApp(v === "other");
+                setForm((f) => ({ ...f, deliveryCompany: v === "other" ? "" : v }));
+              }} className={input}>
               <option value="">Choose…</option>
               {DELIVERY_COMPANIES.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-              <option value="Other">Other</option>
+              <option value="other">Other app…</option>
             </select></label>
+          {!listedApp && (otherApp || form.deliveryCompany !== "") && (
+            <label className="block sm:col-span-2"><span className="mb-1 block text-sm font-medium text-stone-700">Which app?</span>
+              <input required maxLength={50} value={form.deliveryCompany} onChange={set("deliveryCompany")} className={input}
+                placeholder="The name of the delivery app you used" /></label>
+          )}
         </div>
+        <p className="text-xs text-stone-600">
+          We need your rider&apos;s name and phone before the supermarket can hand over your kilishi.
+        </p>
         {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
         <button disabled={pending} className="w-full rounded-lg bg-orange-700 px-4 py-2.5 font-semibold text-white hover:bg-orange-800 disabled:opacity-60">
           {pending ? "Please wait…" : "Next: send to the supermarket"}

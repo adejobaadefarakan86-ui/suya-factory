@@ -348,13 +348,29 @@ function MomoPay({ order, token, quote }: { order: OrderView; token: string; quo
           us on {GH_MOMO.number}.
         </p>
       )}
-      <div className="rounded-xl bg-white p-4 text-sm text-stone-800 ring-1 ring-orange-200">
+      <div className="rounded-xl bg-white p-4 text-stone-800 ring-2 ring-orange-300">
         <p className="font-semibold text-stone-900">Pay for your kilishi by Mobile Money</p>
-        <ol className="mt-2 list-decimal space-y-1 pl-5">
-          <li>Send <strong>{money(order.total_minor)}</strong> to <strong className="tabular-nums">{GH_MOMO.number}</strong></li>
-          <li>The name shows as <strong>{GH_MOMO.names[0]}</strong> or <strong>{GH_MOMO.names[1]}</strong>. Check it before you confirm.</li>
-          <li>Put <strong>{order.order_number}</strong> as the reference, if your MoMo asks for one.</li>
-        </ol>
+        <dl className="mt-3 grid gap-3 sm:grid-cols-2">
+          <div>
+            <dt className="text-xs font-semibold uppercase tracking-wide text-stone-500">Send</dt>
+            <dd className="text-2xl font-extrabold text-stone-900 tabular-nums">{money(order.total_minor)}</dd>
+          </div>
+          <div>
+            <dt className="text-xs font-semibold uppercase tracking-wide text-stone-500">To this MoMo number</dt>
+            <dd className="text-2xl font-extrabold tracking-wide text-orange-800 tabular-nums">
+              {GH_MOMO.number.replace(/^(\d{3})(\d{3})(\d{4})$/, "$1 $2 $3")}
+            </dd>
+          </div>
+          <div className="sm:col-span-2">
+            <dt className="text-xs font-semibold uppercase tracking-wide text-stone-500">Name on the account</dt>
+            <dd className="text-lg font-extrabold text-stone-900">
+              {GH_MOMO.names[0]} <span className="font-medium text-stone-500">or</span> {GH_MOMO.names[1]}
+            </dd>
+          </div>
+        </dl>
+        <p className="mt-3 text-sm">
+          Check the name before you confirm. If your MoMo asks for a reference, put <strong>{order.order_number}</strong>.
+        </p>
       </div>
       <label className="block text-sm">
         <span className="mb-1 block font-medium">MoMo transaction ID or the number you paid from (optional)</span>

@@ -199,7 +199,7 @@ export function CheckoutForm({
         <dl className="space-y-1.5 border-t border-stone-200 pt-3 text-sm">
           <div className="flex justify-between"><dt>Kilishi</dt><dd className="tabular-nums">{formatMoney(subtotal, currency)}</dd></div>
           <div className="flex justify-between gap-3">
-            <dt>Delivery{autoFee?.km ? <span className="text-stone-500"> · {autoFee.km} km</span> : null}{riderFee ? <span className="text-stone-500"> · pay the rider</span> : null}</dt>
+            <dt>Delivery{autoFee?.km ? <span className="text-stone-500"> · {autoFee.km} km</span> : null}{riderFee && !riderFee.ownRider ? <span className="text-stone-500"> · pay the rider</span> : null}</dt>
             <dd className="text-right tabular-nums">
               {quote.status === "none" && <span className="text-stone-500">{outsideArea ? "—" : "Add your address"}</span>}
               {quote.status === "loading" && <span className="inline-block h-4 w-16 animate-pulse rounded bg-stone-200 align-middle" />}
@@ -209,6 +209,7 @@ export function CheckoutForm({
                 </button>
               )}
               {quote.status === "ready" && (autoFee ? formatMoney(autoFee.feeMinor, currency)
+                : riderFee?.ownRider ? <span className="text-stone-500">Your own rider</span>
                 : riderFee ? <span className="text-stone-500">{formatMoney(riderFee.feeMinor, currency)}</span>
                 : <span className="text-stone-500">After you order</span>)}
             </dd>
@@ -220,7 +221,17 @@ export function CheckoutForm({
         {quote.status === "error" && (
           <p role="alert" className="text-sm text-red-700">We couldn&apos;t work out the delivery price. Please try again.</p>
         )}
-        {riderFee && (
+        {riderFee?.ownRider && (
+          <div className="rounded-lg bg-sky-50 p-3 text-sm text-sky-950">
+            <p className="font-semibold">🛵 You book your own rider (Bolt or Yango)</p>
+            <ol className="mt-1 list-decimal space-y-0.5 pl-5">
+              <li>Pay for your kilishi by Mobile Money.</li>
+              <li>Once we confirm it, book a Bolt or Yango delivery from our pickup point (we show you the address).</li>
+              <li>Pay the rider in the app or in cash, like any ride.</li>
+            </ol>
+          </div>
+        )}
+        {riderFee && !riderFee.ownRider && (
           <div className="rounded-lg bg-sky-50 p-3 text-sm text-sky-950">
             <p className="font-semibold">🛵 Delivered by Dawurobo: {formatMoney(riderFee.feeMinor, currency)}, paid to the rider</p>
             <p className="mt-1">

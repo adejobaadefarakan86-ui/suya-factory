@@ -10,7 +10,10 @@ import {
 import { telLink, toInternationalDigits, whatsappLink } from "@/lib/contacts";
 import { AutoRefresh } from "@/components/auto-refresh";
 import { PhoneText } from "@/components/phone-text";
-import { cancelOrder, claimMomoPayment, payWithPaystack, requestNewQuote } from "./actions";
+import { cancelOrder, claimMomoPayment, payWithPaystack, requestNewQuote, setOwnRider } from "./actions";
+import { OwnRiderStep } from "./own-rider";
+import { GH_DELIVERY_COMPANIES } from "@/lib/delivery-companies";
+import { GH_PICKUP } from "@/lib/dawurobo";
 import { after } from "next/server";
 import { GH_MOMO, syncCourierIfStale } from "@/lib/ghana-orders";
 import { PayButton } from "./pay-button";
@@ -29,6 +32,8 @@ const PAYMENT_MESSAGES: Record<string, { text: string; className: string }> = {
   too_many_attempts: { text: "There have been too many payment attempts for this order. Please contact us and we'll help.", className: "bg-red-50 text-red-900" },
   accept_delivery: { text: "Please tick the box to accept the delivery fee before paying.", className: "bg-amber-50 text-amber-900" },
   quote_expired: { text: "The delivery price has expired. Please ask for a new one below.", className: "bg-amber-50 text-amber-900" },
+  rider_name: { text: "Please enter your rider's name.", className: "bg-red-50 text-red-900" },
+  rider_phone: { text: "Please enter your rider's phone number (7 to 15 digits).", className: "bg-red-50 text-red-900" },
   cannot_cancel: { text: "This order can't be cancelled here any more. Please contact us.", className: "bg-red-50 text-red-900" },
 };
 
@@ -87,7 +92,8 @@ async function OrderDetails({ params, searchParams }: Pick<OrderPageProps, "para
       {/* Keep the status up to date by itself until the order is finished. */}
       {order.status !== "delivered" && order.status !== "cancelled" && <AutoRefresh seconds={30} />}
 
-      {message && (order.status === "pending_payment" || order.status === "awaiting_quote" || payment === "cannot_cancel") && (
+      {message && (order.status === "pending_payment" || order.status === "awaiting_quote" || payment === "cannot_cancel"
+        || ((order.status === "paid" || order.status === "preparing") && order.own_rider)) && (
         <p role="status" className={`mt-6 rounded-2xl p-4 text-sm ${message.className}`}>{message.text}</p>
       )}
 
@@ -105,6 +111,13 @@ async function OrderDetails({ params, searchParams }: Pick<OrderPageProps, "para
       {/* 2. Price ready: accept & pay, ask for a new price, or cancel */}
       {order.status === "pending_payment" && quote !== null && (
         <div className="mt-6 space-y-4 rounded-2xl border-2 border-orange-200 bg-orange-50 p-5 text-orange-950">
+          {order.own_rider ? (
+            <div>
+              <p className="text-sm">To pay by MoMo</p>
+              <p className="text-3xl font-bold tabular-nums">{money(order.total_minor)}</p>
+              <p className="text-sm">After we confirm it, you book your own Bolt or Yango rider to collect it from us.</p>
+            </div>
+          ) : (
           <div>
             <p className="text-sm">{deliveryOnline ? "Total to pay" : "Delivery fee to your location"}</p>
             <p className="text-3xl font-bold tabular-nums">{money(deliveryOnline ? order.total_minor : quote)}</p>
@@ -117,6 +130,7 @@ async function OrderDetails({ params, searchParams }: Pick<OrderPageProps, "para
               <p className="mt-1 text-xs text-orange-900/70">Price valid until {when(order.quote_expires_at)}.</p>
             )}
           </div>
+          )}
 
           {order.quote_expired ? (
             <form action={requestNewQuote.bind(null, token)}>
@@ -142,8 +156,8 @@ async function OrderDetails({ params, searchParams }: Pick<OrderPageProps, "para
             <div className="rounded-xl bg-white/70 p-4 text-sm">
               <p className="font-semibold">⏳ Thanks! We&apos;re checking your MoMo payment.</p>
               <p className="mt-1">
-                This usually takes a few minutes during the day. As soon as we see it, we book your Dawurobo rider and
-                this page updates by itself.
+                This usually takes a few minutes during the day. As soon as we see it,{" "}
+                {order.own_rider ? "this page shows you where to send your rider." : "we book your Dawurobo rider and this page updates by itself."}
               </p>
             </div>
           ) : (
@@ -166,8 +180,13 @@ async function OrderDetails({ params, searchParams }: Pick<OrderPageProps, "para
         </div>
       )}
 
+      {/* 3a. Ghana, own rider: book it, then show the pickup code */}
+      {order.own_rider && (order.status === "paid" || order.status === "preparing") && (
+        <OwnRiderSection order={order} token={token} />
+      )}
+
       {/* 3. Paid / being prepared */}
-      {(order.status === "paid" || order.status === "preparing") && (
+      {!order.own_rider && (order.status === "paid" || order.status === "preparing") && (
         <div className="mt-6 rounded-2xl bg-green-50 p-5 text-green-950">
           <p className="font-semibold">Payment received. Thank you, {firstName}!</p>
           <p className="mt-1 text-sm">
@@ -215,7 +234,9 @@ async function OrderDetails({ params, searchParams }: Pick<OrderPageProps, "para
             <div className="flex justify-between"><dt>Delivery{a.zone_name ? ` (${a.zone_name})` : ""}</dt><dd className="tabular-nums">{money(order.delivery_fee_minor)}</dd></div>
           )}
           <div className="flex justify-between pt-1 text-lg font-bold"><dt>{order.currency === "GHS" ? "Kilishi (pay by MoMo)" : "Paid online"}</dt><dd className="tabular-nums">{money(order.total_minor)}</dd></div>
-          {order.delivery_fee_minor === 0 && (
+          {order.own_rider ? (
+            <div className="flex justify-between text-stone-600"><dt>Delivery</dt><dd>Your own rider (you pay them)</dd></div>
+          ) : order.delivery_fee_minor === 0 && (
             <div className="flex justify-between text-stone-600">
               <dt>Delivery fee (pay the rider)</dt>
               <dd className="tabular-nums">{quote !== null ? money(quote) : "Being checked…"}</dd>
@@ -261,7 +282,7 @@ function Timeline({ order }: { order: OrderView }) {
         return (
           <li key={step} aria-current={i === current ? "step" : undefined}>
             <div className={`mx-auto mb-1 h-2 rounded-full ${done ? "bg-orange-600" : "bg-stone-200"}`} />
-            <span className={done ? "font-semibold text-stone-900" : "text-stone-400"}>{STEP_LABELS[i]}</span>
+            <span className={done ? "font-semibold text-stone-900" : "text-stone-400"}>{i === 1 && order.own_rider ? "Confirmed" : STEP_LABELS[i]}</span>
             {at && <span className="block text-stone-500">{formatOrderDate(at, order.country)}</span>}
           </li>
         );
@@ -309,7 +330,7 @@ function RiderCard({ order }: { order: OrderView }) {
             className="rounded-lg bg-indigo-700 px-4 py-2 font-semibold text-white hover:bg-indigo-800">🗺️ Track on map</a>
         )}
       </div>
-      {order.delivery_quote_minor !== null && (
+      {order.delivery_quote_minor !== null && !order.own_rider && (
         <p className="mt-3 text-sm">Delivery fee to pay the rider: <strong>{formatMoney(order.delivery_quote_minor, order.currency)}</strong></p>
       )}
     </section>
@@ -342,10 +363,55 @@ function MomoPay({ order, token, quote }: { order: OrderView; token: string; quo
       </label>
       <label className="flex items-start gap-2 text-sm">
         <input type="checkbox" name="acceptDelivery" value="yes" required className="mt-0.5 h-4 w-4 accent-orange-700" />
-        <span>I accept the Dawurobo delivery fee of <strong>{money(quote)}</strong>, which I&apos;ll pay to the rider on arrival.</span>
+        {order.own_rider
+          ? <span>I&apos;ll book and pay my own rider (Bolt or Yango) once my payment is confirmed.</span>
+          : <span>I accept the Dawurobo delivery fee of <strong>{money(quote)}</strong>, which I&apos;ll pay to the rider on arrival.</span>}
       </label>
       <PayButton label={`I've sent ${money(order.total_minor)} by MoMo`} pendingLabel="Sending…" />
-      <p className="text-xs">We check the payment, then book your rider straight away. Deliveries Monday to Saturday.</p>
+      <p className="text-xs">
+        {order.own_rider
+          ? "We check the payment, then this page shows where to send your rider."
+          : "We check the payment, then book your rider straight away. Deliveries Monday to Saturday."}
+      </p>
     </form>
+  );
+}
+
+/** Ghana: payment confirmed -> book your own rider -> pickup code. */
+function OwnRiderSection({ order, token }: { order: OrderView; token: string }) {
+  const rider = order.booked_rider;
+  const firstName = order.contact_name.split(" ")[0];
+  const pickup = {
+    text: `Suya Factory (${GH_PICKUP.contactPerson.split(" ")[0]}), ${GH_PICKUP.address}`,
+    mapLink: `https://www.google.com/maps/search/?api=1&query=${GH_PICKUP.lat},${GH_PICKUP.lng}`,
+    contact: `Your rider can call ${GH_PICKUP.contactPerson.split(" ")[0]} on ${GH_PICKUP.contactPhone}.`,
+  };
+  return (
+    <>
+      <div className="mt-6 rounded-2xl bg-green-50 p-5 text-green-950">
+        <p className="font-semibold">Payment received. Thank you, {firstName}!</p>
+        {rider ? (
+          <p className="mt-1 text-sm">
+            Your rider <strong>{rider.name}</strong>{rider.company ? <> ({rider.company})</> : null} is coming to collect it.
+            Tell them to say this <strong>pickup code</strong> when they arrive:
+          </p>
+        ) : (
+          <p className="mt-1 text-sm">Your kilishi is ready for pickup. Book your rider below.</p>
+        )}
+        {rider && order.pickup_code && (
+          <p className="mt-3 inline-block rounded-xl bg-white px-5 py-2 text-3xl font-bold tracking-[0.3em] text-green-900 ring-1 ring-green-200">
+            {order.pickup_code}
+          </p>
+        )}
+      </div>
+      {rider ? (
+        <details className="mt-3">
+          <summary className="cursor-pointer text-sm font-medium text-orange-700">Need a different rider?</summary>
+          <OwnRiderStep action={setOwnRider.bind(null, token)} pickup={pickup} companies={GH_DELIVERY_COMPANIES} current={rider} />
+        </details>
+      ) : (
+        <OwnRiderStep action={setOwnRider.bind(null, token)} pickup={pickup} companies={GH_DELIVERY_COMPANIES} current={null} />
+      )}
+    </>
   );
 }

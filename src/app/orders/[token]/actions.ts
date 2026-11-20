@@ -5,7 +5,7 @@ import { createPublicClient } from "@/lib/supabase/public";
 import { startPaystackPayment } from "@/lib/start-payment";
 import { isOrderToken } from "@/lib/orders";
 import { after } from "next/server";
-import { alertMomoClaim, autoQuoteGhanaOrder } from "@/lib/ghana-orders";
+import { alertMomoClaim, alertRiderBooked, autoQuoteGhanaOrder } from "@/lib/ghana-orders";
 
 /** "Pay": record a pending payment, then go to Paystack. */
 export async function payWithPaystack(token: string, formData: FormData) {
@@ -57,5 +57,28 @@ export async function claimMomoPayment(token: string, formData: FormData) {
     redirect(`/orders/${token}?payment=error`);
   }
   if (typeof data === "string") after(() => alertMomoClaim(data));
+  redirect(`/orders/${token}`);
+}
+
+/** Ghana: the customer booked their own rider. Gloria gets the details + pickup code on Telegram. */
+export async function setOwnRider(token: string, formData: FormData) {
+  if (!isOrderToken(token)) redirect("/");
+  const field = (k: string) => String(formData.get(k) ?? "").trim();
+  const db = createPublicClient();
+  const { error } = await db.rpc("set_own_rider_by_token", {
+    p_token: token,
+    p_rider_name: field("riderName"),
+    p_rider_phone: field("riderPhone"),
+    p_plate: field("riderPlate"),
+    p_company: field("riderCompany"),
+  });
+  if (error) {
+    const code = error.message.startsWith("SF:") ? error.message.slice(3) : "error";
+    if (code === "error") console.error("set_own_rider_by_token:", error.message);
+    redirect(`/orders/${token}?payment=${code === "rider_name" || code === "rider_phone" ? code : "error"}`);
+  }
+  const { data } = await db.rpc("get_order_by_token", { p_token: token });
+  const orderNumber = (data as { order_number?: string } | null)?.order_number;
+  if (orderNumber) after(() => alertRiderBooked(orderNumber));
   redirect(`/orders/${token}`);
 }

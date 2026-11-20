@@ -8,7 +8,7 @@ import { COUNTRIES, isCountry } from "@/lib/countries";
 import { SELLS_VIA_SUPERMARKETS } from "@/lib/stores";
 import { alertNeedsDeliveryPrice } from "@/lib/staff-alerts";
 import { dawuroboConfigured, estimateDelivery } from "@/lib/dawurobo";
-import { autoQuoteGhanaOrder } from "@/lib/ghana-orders";
+import { autoQuoteGhanaOrder, GH_DELIVERY } from "@/lib/ghana-orders";
 import { isInServiceArea } from "@/lib/service-areas";
 
 export type CheckoutValues = {
@@ -31,7 +31,7 @@ export type CheckoutState =
  * feeMinor + km: automatic price, paid online with the kilishi (Nigeria).
  * payRider: the courier's price (Dawurobo, Ghana), paid to the rider on arrival.
  */
-export type DeliveryQuote = { feeMinor: number; km: number | null; payRider?: boolean; when?: string } | null;
+export type DeliveryQuote = { feeMinor: number; km: number | null; payRider?: boolean; ownRider?: boolean; when?: string } | null;
 
 /**
  * The automatic delivery price to a pin, worked out by the database (the same
@@ -42,6 +42,8 @@ export async function quoteDelivery(country: string, lat: number, lng: number): 
   if (!isCountry(country) || !Number.isFinite(lat) || !Number.isFinite(lng)) return null;
   // Ghana: Dawurobo's own price (paid to their rider). If they can't answer, staff price it after ordering.
   if (country === "GH") {
+    // The customer books and pays their own rider after paying: nothing to price.
+    if (GH_DELIVERY === "own_rider") return { feeMinor: 0, km: null, payRider: true, ownRider: true };
     if (!dawuroboConfigured() || !isInServiceArea("GH", lat, lng)) return null;
     try {
       const est = await estimateDelivery(lat, lng);

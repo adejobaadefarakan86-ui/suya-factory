@@ -54,6 +54,11 @@ export type OrderView = {
   courier: "dawurobo" | null;
   courier_eta: string | null;
   courier_tracking_url: string | null;
+  /** Ghana: the customer books and pays their own rider. */
+  own_rider: boolean;
+  /** 4 digits the customer's rider says at pickup. */
+  pickup_code: string | null;
+  booked_rider: { name: string; phone: string; plate: string | null; company: string | null } | null;
   rider: { name: string; phone: string; tracking_url: string | null; stage: DeliveryStage | null } | null;
   notes: string | null;
   subtotal_minor: number;

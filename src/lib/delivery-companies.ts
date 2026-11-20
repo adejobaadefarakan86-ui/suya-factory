@@ -34,3 +34,23 @@ export const DELIVERY_COMPANIES: DeliveryCompany[] = [
     note: "Same-day parcel delivery in Lagos.",
   },
 ];
+
+/**
+ * Ghana: apps customers book their own rider with, from Gloria (our pickup
+ * point) to their door. They pay the rider in the app or in cash.
+ * ⚠️ To confirm with a real test in Accra: names of the parcel options in each app.
+ */
+export const GH_DELIVERY_COMPANIES: DeliveryCompany[] = [
+  {
+    id: "bolt",
+    name: "Bolt",
+    url: "https://bolt.eu/en-gh/rides/features/bolt-send/",
+    note: "In the Bolt app, choose “Bolt Send” (parcels, same day).",
+  },
+  {
+    id: "yango",
+    name: "Yango",
+    url: "https://delivery.yango.com/gh-en",
+    note: "In the Yango app, choose “Delivery” → “Express”.",
+  },
+];

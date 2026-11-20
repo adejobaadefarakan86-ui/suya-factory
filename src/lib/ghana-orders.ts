@@ -1,6 +1,9 @@
-// Ghana orders: Dawurobo delivery price -> customer pays MoMo to our number ->
-// staff tap "Payment received" in Telegram -> Dawurobo rider booked -> status
-// updates from Dawurobo. Server only.
+// Ghana orders. Server only.
+//   Customer pays MoMo to our number -> staff tap "Payment received" in Telegram ->
+//   the customer books their OWN rider (Bolt / Yango) with our pickup address and
+//   pays the rider -> they enter the rider's details -> Gloria gets them with a
+//   pickup code and taps "Handed to rider".
+// The Dawurobo route (we book their rider) is kept below, switched off with GH_DELIVERY.
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { formatMoney, type Currency } from "@/lib/money";
@@ -9,6 +12,9 @@ import { alertNeedsDeliveryPrice } from "@/lib/staff-alerts";
 import {
   createDelivery, DawuroboError, dawuroboConfigured, estimateDelivery, getDelivery, stageOf,
 } from "@/lib/dawurobo";
+
+/** "own_rider": the customer books and pays their own rider. "dawurobo": we book Dawurobo (next-day). */
+export const GH_DELIVERY: "own_rider" | "dawurobo" = "own_rider";
 
 /** Ghana MoMo: where customers send money for the kilishi. */
 export const GH_MOMO = {
@@ -33,12 +39,18 @@ type GhOrder = {
   courier_order_id: string | null;
   courier_status: string | null;
   courier_synced_at: string | null;
+  own_rider: boolean;
+  pickup_code: string | null;
+  rider_name: string | null;
+  rider_phone: string | null;
+  rider_plate: string | null;
+  rider_company: string | null;
   delivery_address: { line1?: string; line2?: string | null; city?: string; landmark?: string | null; lat?: number; lng?: number };
   order_items: { product_name: string; variant_label: string; quantity: number }[];
 };
 
 const FIELDS =
-  "id, order_number, status, currency, contact_name, contact_phone, subtotal_minor, total_minor, notes, delivery_quote_minor, momo_claim_ref, courier_order_id, courier_status, courier_synced_at, delivery_address, order_items(product_name, variant_label, quantity)";
+  "id, order_number, status, currency, contact_name, contact_phone, subtotal_minor, total_minor, notes, delivery_quote_minor, momo_claim_ref, courier_order_id, courier_status, courier_synced_at, own_rider, pickup_code, rider_name, rider_phone, rider_plate, rider_company, delivery_address, order_items(product_name, variant_label, quantity)";
 
 async function loadOrder(match: { id?: string; order_number?: string }) {
   let q = createAdminClient().from("orders").select(FIELDS).eq("country", "GH");
@@ -50,10 +62,21 @@ async function loadOrder(match: { id?: string; order_number?: string }) {
 
 // --- 1. Delivery price at order time ---------------------------------------------
 
-/** Price the delivery with Dawurobo straight after ordering. Falls back to staff pricing it. */
+/**
+ * Straight after ordering. Own rider: no delivery price, straight to payment.
+ * Dawurobo: price the delivery with them (falls back to staff pricing it).
+ */
 export async function autoQuoteGhanaOrder(orderNumber: string) {
   const order = await loadOrder({ order_number: orderNumber });
   if (!order || order.status !== "awaiting_quote") return;
+  if (GH_DELIVERY === "own_rider") {
+    const { error } = await createAdminClient().rpc("set_own_rider_delivery", { p_order_id: order.id });
+    if (error) {
+      console.error(`set_own_rider_delivery ${orderNumber}:`, error.message);
+      await alertNeedsDeliveryPrice(orderNumber);
+    }
+    return;
+  }
   const { lat, lng } = order.delivery_address;
   try {
     if (!dawuroboConfigured() || lat === undefined || lng === undefined) throw new Error("no Dawurobo keys or pin");
@@ -99,7 +122,9 @@ export async function alertMomoClaim(orderNumber: string) {
       "",
       ...o.order_items.map((i) => `• ${i.quantity} × ${esc(i.product_name)} (${esc(i.variant_label)})`),
       "",
-      "Received it? Tap ✅ and the Dawurobo rider is booked automatically.",
+      o.own_rider
+        ? "Received it? Tap ✅. The customer is then asked to book their own rider to collect from Gloria."
+        : "Received it? Tap ✅ and the Dawurobo rider is booked automatically.",
       `🔗 <a href="${site()}/admin/orders/${o.order_number}">Open in admin</a>`,
     ].join("\n"),
     momoButtons(o.order_number),
@@ -118,8 +143,57 @@ export async function handleMomoButton(orderNumber: string, ok: boolean, by: str
   const { data: orderId, error } = await db.rpc("confirm_momo_payment", { p_order_number: orderNumber, p_confirmed_by: by });
   if (error) return `⚠️ ${orderNumber}: couldn't confirm (${esc(error.message)}).`;
   if (!orderId) return `${orderNumber}: already confirmed earlier.`;
-  const booking = await bookCourier(String(orderId));
-  return `✅ ${orderNumber}: payment confirmed by ${esc(by)}.\n${booking}`;
+  return `✅ ${orderNumber}: payment confirmed by ${esc(by)}.\n${await afterGhanaPayment(String(orderId))}`;
+}
+
+/** A Ghana order was just paid: book Dawurobo, or wait for the customer's own rider. Line for the staff chat. */
+export async function afterGhanaPayment(orderId: string): Promise<string> {
+  const o = await loadOrder({ id: orderId });
+  if (o?.own_rider) return "🛵 The customer is now booking their own rider. You'll get the rider's details here.";
+  return bookCourier(orderId);
+}
+
+// --- Own rider: the customer tells us who's coming --------------------------------
+
+export const handButton = (orderNumber: string): Buttons => [
+  [{ text: "📦 Handed to rider", callback_data: `hand:${orderNumber}` }],
+];
+
+export function parseHandButton(data: string) {
+  const m = /^hand:([\w-]{1,40})$/.exec(data);
+  return m ? m[1] : null;
+}
+
+export async function alertRiderBooked(orderNumber: string) {
+  if (!telegramConfigured()) return;
+  const o = await loadOrder({ order_number: orderNumber });
+  if (!o?.rider_name) return;
+  await sendTelegram(
+    [
+      `🛵 <b>${esc(o.order_number)}: rider coming to Gloria</b>`,
+      "",
+      `Rider: <b>${esc(o.rider_name)}</b> · 📞 ${esc(o.rider_phone ?? "")}`,
+      ...(o.rider_plate || o.rider_company
+        ? [[o.rider_plate ? `Plate ${esc(o.rider_plate)}` : "", o.rider_company ? esc(o.rider_company) : ""].filter(Boolean).join(" · ")]
+        : []),
+      `Pickup code: <b>${esc(o.pickup_code ?? "")}</b> (the rider should say it)`,
+      "",
+      ...o.order_items.map((i) => `• ${i.quantity} × ${esc(i.product_name)} (${esc(i.variant_label)})`),
+      `For: ${esc(o.contact_name)} · 📞 ${esc(o.contact_phone)}`,
+      "",
+      "Tap 📦 when you've handed it over.",
+    ].join("\n"),
+    handButton(o.order_number),
+  );
+}
+
+/** Staff tapped "Handed to rider". */
+export async function handleHandover(orderNumber: string, by: string): Promise<string> {
+  const { data, error } = await createAdminClient().rpc("mark_handed_to_rider", { p_order_number: orderNumber, p_by: by });
+  if (error) return `⚠️ ${orderNumber}: couldn't update (${esc(error.message)}).`;
+  return data
+    ? `📦 ${orderNumber}: handed to the rider by ${esc(by)}. The customer can see it's on the way.`
+    : `${orderNumber}: nothing to change (already handed over, or no rider yet).`;
 }
 
 // --- 3. Book the Dawurobo rider -------------------------------------------------

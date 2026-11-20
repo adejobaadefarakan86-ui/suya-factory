@@ -10,7 +10,7 @@ import { timingSafeEqual } from "node:crypto";
 import { esc, sendTelegram, telegramApi } from "@/lib/telegram";
 import { storeTitle } from "@/lib/stores";
 import { parseStockButton, postStockList, setStockByNumber, STOCK_REFRESH, stockList } from "@/lib/stock-telegram";
-import { answerMomoAlert, handleMomoButton, parseMomoButton } from "@/lib/ghana-orders";
+import { answerMomoAlert, handleHandover, handleMomoButton, parseHandButton, parseMomoButton } from "@/lib/ghana-orders";
 
 type TgUser = { first_name?: string; last_name?: string; username?: string };
 type Update = {
@@ -64,6 +64,14 @@ async function onButton(q: NonNullable<Update["callback_query"]>) {
     const result = await handleMomoButton(momo.orderNumber, momo.ok, nameOf(q.from));
     await answerMomoAlert(chatId!, q.message.message_id, result);
     await telegramApi("answerCallbackQuery", { callback_query_id: q.id, text: momo.ok ? "Payment confirmed" : "Marked not received" });
+    return;
+  }
+
+  // Ghana own rider: "📦 Handed to rider"
+  const handed = parseHandButton(q.data ?? "");
+  if (handed) {
+    await answerMomoAlert(chatId!, q.message.message_id, await handleHandover(handed, nameOf(q.from)));
+    await telegramApi("answerCallbackQuery", { callback_query_id: q.id, text: "Handed over" });
     return;
   }
 

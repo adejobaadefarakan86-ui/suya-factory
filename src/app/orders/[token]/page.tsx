@@ -401,7 +401,14 @@ function OwnRiderSection({ order, token }: { order: OrderView; token: string }) 
     text: `Suya Factory (${GH_PICKUP.contactPerson.split(" ")[0]}), ${GH_PICKUP.address}`,
     mapLink: `https://www.google.com/maps/search/?api=1&query=${GH_PICKUP.lat},${GH_PICKUP.lng}`,
     contact: `Your rider can call ${GH_PICKUP.contactPerson.split(" ")[0]} on ${GH_PICKUP.contactPhone}.`,
+    lat: GH_PICKUP.lat,
+    lng: GH_PICKUP.lng,
+    label: "Suya Factory, 1st Addogono Ave",
   };
+  const a = order.delivery_address;
+  const dropoff = a.lat !== undefined && a.lng !== undefined
+    ? { lat: Number(a.lat), lng: Number(a.lng), label: [a.line1, a.line2].filter(Boolean).join(", ") }
+    : null;
   return (
     <>
       <div className="mt-6 rounded-2xl bg-green-50 p-5 text-green-950">
@@ -423,10 +430,10 @@ function OwnRiderSection({ order, token }: { order: OrderView; token: string }) 
       {rider ? (
         <details className="mt-3">
           <summary className="cursor-pointer text-sm font-medium text-orange-700">Need a different rider?</summary>
-          <OwnRiderStep action={setOwnRider.bind(null, token)} pickup={pickup} companies={GH_DELIVERY_COMPANIES} current={rider} />
+          <OwnRiderStep action={setOwnRider.bind(null, token)} pickup={pickup} companies={GH_DELIVERY_COMPANIES} current={rider} dropoff={dropoff} />
         </details>
       ) : (
-        <OwnRiderStep action={setOwnRider.bind(null, token)} pickup={pickup} companies={GH_DELIVERY_COMPANIES} current={null} />
+        <OwnRiderStep action={setOwnRider.bind(null, token)} pickup={pickup} companies={GH_DELIVERY_COMPANIES} current={null} dropoff={dropoff} />
       )}
     </>
   );

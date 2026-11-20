@@ -1,8 +1,10 @@
 "use client";
 // Ghana: after we confirm the MoMo payment, the customer books their own rider
 // (Bolt / Yango) from our pickup point, then tells us who's coming.
-import { useState } from "react";
-import type { DeliveryCompany } from "@/lib/delivery-companies";
+import { useState, useSyncExternalStore } from "react";
+import { appLink, type DeliveryCompany } from "@/lib/delivery-companies";
+
+const noop = () => () => {};
 import { PayButton } from "./pay-button";
 
 const input = "w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-stone-900";
@@ -12,14 +14,18 @@ export function OwnRiderStep({
   pickup,
   companies,
   current,
+  dropoff,
 }: {
   action: (formData: FormData) => void | Promise<void>;
-  pickup: { text: string; mapLink: string; contact: string };
+  pickup: { text: string; mapLink: string; contact: string; lat: number; lng: number; label: string };
+  dropoff: { lat: number; lng: number; label: string } | null;
   companies: DeliveryCompany[];
   current: { name: string; phone: string; plate: string | null; company: string | null } | null;
 }) {
   const [copied, setCopied] = useState(false);
   const [company, setCompany] = useState(current?.company ?? "");
+  // Which phone this is decides the link (app on Android, App Store on iPhone). "" while rendering on the server.
+  const userAgent = useSyncExternalStore(noop, () => navigator.userAgent, () => "");
 
   async function copyPickup() {
     try {
@@ -52,10 +58,13 @@ export function OwnRiderStep({
               className="rounded-lg border border-stone-300 bg-white px-3 py-2 font-medium text-stone-800 hover:bg-stone-50">Show on map</a>
           </div>
         </div>
-        <ul className="mt-4 grid gap-2 sm:grid-cols-2">
+        <p className="mt-4 text-sm font-medium text-stone-700">Open your app:</p>
+        <ul className="mt-2 grid gap-2 sm:grid-cols-3">
           {companies.map((c) => (
             <li key={c.id}>
-              <a href={c.url} target="_blank" rel="noopener noreferrer" onClick={() => setCompany(c.name)}
+              <a href={appLink(c, userAgent, pickup, dropoff)} onClick={() => setCompany(c.name)}
+                // Phones: open the app in place (Android app links don't work from a new tab). Computers: new tab.
+                {...(/Android|iPhone|iPad|iPod/i.test(userAgent) ? {} : { target: "_blank", rel: "noopener noreferrer" })}
                 className={`block h-full rounded-xl border p-3 hover:border-orange-400 ${company === c.name ? "border-orange-600 bg-orange-50" : "border-stone-200"}`}>
                 <span className="block font-semibold text-stone-900">{c.name} ↗</span>
                 <span className="mt-0.5 block text-xs text-stone-600">{c.note}</span>

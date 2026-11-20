@@ -10,8 +10,14 @@
 export type DeliveryCompany = {
   id: string;
   name: string;
-  url: string;
+  url: string; // website (computers, or when nothing better is known)
   note: string;
+  /** Google Play package id: on Android the app opens if installed, otherwise its Play Store page. */
+  android?: string;
+  /** App Store page: on iPhone it shows "Open" when the app is installed. */
+  ios?: string;
+  /** Uber only: its documented link that opens the app with pickup + drop-off filled in. */
+  uberLink?: boolean;
 };
 
 export const DELIVERY_COMPANIES: DeliveryCompany[] = [
@@ -38,19 +44,53 @@ export const DELIVERY_COMPANIES: DeliveryCompany[] = [
 /**
  * Ghana: apps customers book their own rider with, from Gloria (our pickup
  * point) to their door. They pay the rider in the app or in cash.
- * ⚠️ To confirm with a real test in Accra: names of the parcel options in each app.
+ * Checked 2026-11-20 on the App Store / Play Store and each company's Ghana page:
+ * Bolt ("Send"), Uber ("Send a package"), Yango ("Delivery") work in Ghana.
+ * Not confirmed for Ghana, so not listed: inDrive, Swoove, Shaxi.
  */
 export const GH_DELIVERY_COMPANIES: DeliveryCompany[] = [
   {
     id: "bolt",
     name: "Bolt",
     url: "https://bolt.eu/en-gh/rides/features/bolt-send/",
-    note: "In the Bolt app, choose “Bolt Send” (parcels, same day).",
+    note: "Choose “Send” (parcel delivery).",
+    android: "ee.mtakso.client",
+    ios: "https://apps.apple.com/gh/app/id675033630",
+  },
+  {
+    id: "uber",
+    name: "Uber",
+    url: "https://www.uber.com/gh/en/",
+    note: "Opens with our pickup and your address filled in. Choose “Send a package” if offered.",
+    android: "com.ubercab",
+    ios: "https://apps.apple.com/gh/app/id368677368",
+    uberLink: true,
   },
   {
     id: "yango",
     name: "Yango",
     url: "https://delivery.yango.com/gh-en",
-    note: "In the Yango app, choose “Delivery” → “Express”.",
+    note: "Choose “Delivery” (courier for packages).",
+    android: "com.yandex.yango",
+    ios: "https://apps.apple.com/gh/app/id1437157286",
   },
 ];
+
+type Point = { lat: number; lng: number; label?: string };
+
+/** The best link for this phone: the app itself where possible, else its store page, else the website. */
+export function appLink(c: DeliveryCompany, userAgent: string, pickup: Point, dropoff: Point | null) {
+  if (c.uberLink) {
+    // Documented at developer.uber.com (deep links): opens the Uber app, or m.uber.com in the browser.
+    const spot = (p: Point) => JSON.stringify({ latitude: p.lat, longitude: p.lng, ...(p.label ? { addressLine1: p.label } : {}) });
+    const q = new URLSearchParams({ pickup: spot(pickup) });
+    if (dropoff) q.set("drop[0]", spot(dropoff));
+    return `https://m.uber.com/looking?${q.toString()}`;
+  }
+  if (/Android/i.test(userAgent) && c.android) {
+    const store = `https://play.google.com/store/apps/details?id=${c.android}`;
+    return `intent://#Intent;package=${c.android};S.browser_fallback_url=${encodeURIComponent(store)};end`;
+  }
+  if (/iPhone|iPad|iPod/i.test(userAgent) && c.ios) return c.ios;
+  return c.url;
+}

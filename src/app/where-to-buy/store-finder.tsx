@@ -9,7 +9,7 @@
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { LocationPicker, type PickedLocation } from "@/app/checkout/location-picker";
 import { formatPhone, telLink, whatsappLink } from "@/lib/contacts";
-import { DELIVERY_COMPANIES } from "@/lib/delivery-companies";
+import { appLink, DELIVERY_COMPANIES } from "@/lib/delivery-companies";
 import { directionsLink, mapPinLink, roadKm, storeTitle, type Store } from "@/lib/stores";
 import { logPickup, reportOutOfStock } from "./actions";
 
@@ -387,6 +387,9 @@ function RiderStep({
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  // Which phone decides the link (app on Android, App Store on iPhone). "" on the server.
+  const userAgent = useSyncExternalStore(noSubscribe, () => navigator.userAgent, () => "");
+  const onPhone = /Android|iPhone|iPad|iPod/i.test(userAgent);
   const set = (key: keyof RiderForm) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     setForm((f) => ({ ...f, [key]: e.target.value }));
 
@@ -433,7 +436,8 @@ function RiderStep({
         <ul className="mt-2 grid gap-2 sm:grid-cols-3">
           {DELIVERY_COMPANIES.map((c) => (
             <li key={c.id}>
-              <a href={c.url} target="_blank" rel="noopener noreferrer"
+              <a href={appLink(c, userAgent, { lat: store.lat, lng: store.lng }, null)}
+                {...(onPhone ? {} : { target: "_blank", rel: "noopener noreferrer" })}
                 onClick={() => setForm((f) => ({ ...f, deliveryCompany: c.id }))}
                 className={`block h-full rounded-xl border p-3 hover:border-orange-400 ${form.deliveryCompany === c.id ? "border-orange-600 bg-orange-50" : "border-stone-200"}`}>
                 <span className="block font-semibold text-stone-900">{c.name} ↗</span>

@@ -1,12 +1,6 @@
-// Delivery companies customers can book a rider with, from the supermarket
-// to their door. The links open each company's website; on a phone that has
-// the app installed, the app usually opens instead.
-//
-// None of them let another app pre-fill the pickup address, so the customer
-// copies it from our page and pastes it in.
-//
-// ⚠️ To confirm: which of these really do parcel pickups in Lagos today, and
-// their app links. Edit this list: order = how they're shown.
+// Delivery apps customers book their own rider with. Buttons open the app
+// (appLink below); the customer copies the pickup address from our page.
+// Order = how they're shown. Only the most used apps that fit.
 export type DeliveryCompany = {
   id: string;
   name: string;
@@ -20,24 +14,33 @@ export type DeliveryCompany = {
   uberLink?: boolean;
 };
 
+/**
+ * Nigeria (Lagos): from the supermarket to the customer's door. Checked 2026-11-20:
+ * Bolt Send (6M+ Nigerian deliveries in 2026), Chowdeck Relay (packages across town).
+ * Left out: Uber (left Nigeria on 2 Sep 2026), Kwik Delivery (reported bankrupt, May 2025).
+ */
 export const DELIVERY_COMPANIES: DeliveryCompany[] = [
+  {
+    id: "bolt",
+    name: "Bolt",
+    url: "https://bolt.eu/en-ng/",
+    note: "Choose “Send” (parcel delivery).",
+    android: "ee.mtakso.client",
+    ios: "https://apps.apple.com/ng/app/id675033630",
+  },
   {
     id: "chowdeck",
     name: "Chowdeck",
-    url: "https://chowdeck.com",
-    note: "In the Chowdeck app, choose “Send a package”.",
+    url: "https://chowdeck.com/relay",
+    note: "Choose “Relay” (send a package).",
+    ios: "https://apps.apple.com/ng/app/id1530676376",
   },
   {
     id: "indrive",
     name: "inDrive",
     url: "https://indrive.com",
-    note: "In the inDrive app, choose “Courier”. You agree the price with the rider.",
-  },
-  {
-    id: "kwik",
-    name: "Kwik Delivery",
-    url: "https://kwik.delivery",
-    note: "Same-day parcel delivery in Lagos.",
+    note: "Choose “Courier”. You agree the price with the rider.",
+    android: "sinet.startup.inDriver",
   },
 ];
 

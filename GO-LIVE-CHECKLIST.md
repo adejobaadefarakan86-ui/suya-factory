@@ -30,3 +30,9 @@ Things that are set up for development and MUST change before real customers use
 - [ ] "Call us" opens the normal phone dialer.
 - [ ] "Chat on WhatsApp" opens WhatsApp with the bulk-order message filled in.
 - [ ] A full order + Paystack payment works on mobile data.
+
+## Supermarkets (Nigeria)
+- [ ] Once each supermarket agrees: run `node scripts/seed-stores.mjs --real` so Call/WhatsApp go to the store
+      (right now they go to our own business number for testing).
+- [ ] Fix each store's map pin in Admin → Supermarkets (current pins are street-level guesses).
+- [ ] Confirm opening hours (8am–8pm is a placeholder) and add YK Supermarket (0816 322 2827) once it has an address.

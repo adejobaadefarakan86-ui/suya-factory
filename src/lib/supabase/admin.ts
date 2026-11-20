@@ -3,7 +3,8 @@
 // Its only jobs: record payment results after the provider has confirmed them
 // (src/lib/payments.ts) and read orders for staff Telegram alerts
 // (src/lib/staff-alerts.ts) and supermarket stock from staff Telegram commands
-// (src/lib/stock-telegram.ts). Don't use it for anything else.
+// (src/lib/stock-telegram.ts), and Ghana MoMo confirmation + Dawurobo bookings
+// (src/lib/ghana-orders.ts). Don't use it for anything else.
 import "server-only";
 import { createClient } from "@supabase/supabase-js";
 

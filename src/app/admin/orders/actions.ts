@@ -5,6 +5,9 @@ import { revalidatePath } from "next/cache";
 import { requireStaff } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { adminErrorMessage, PAYMENT_METHODS, type OrderStatus } from "@/lib/orders";
+import { after } from "next/server";
+import { bookCourier } from "@/lib/ghana-orders";
+import { esc, sendTelegram } from "@/lib/telegram";
 
 export type ActionState = { error?: string; ok?: string } | undefined;
 
@@ -37,6 +40,14 @@ export async function markPaidManually(_prev: ActionState, formData: FormData): 
   });
   if (error) return { error: adminErrorMessage(error)! };
   revalidatePath(`/admin/orders/${text(formData, "orderNumber")}`);
+  // Ghana: book the Dawurobo rider now that it's paid, and tell the chat how it went.
+  const { data: o } = await supabase.from("orders").select("id, country").eq("id", text(formData, "orderId")).single();
+  if (o?.country === "GH") {
+    const result = await bookCourier(o.id);
+    after(() => sendTelegram(`✅ ${esc(text(formData, "orderNumber"))}: payment recorded in admin.
+${result}`));
+    return { ok: `Payment recorded. ${result.replace(/<[^>]+>/g, "")}` };
+  }
   return { ok: "Payment recorded. The order is now paid." };
 }
 

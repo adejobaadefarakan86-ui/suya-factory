@@ -36,3 +36,11 @@ Things that are set up for development and MUST change before real customers use
       (right now they go to our own business number for testing).
 - [ ] Fix each store's map pin in Admin → Supermarkets (current pins are street-level guesses).
 - [ ] Confirm opening hours (8am–8pm is a placeholder) and add YK Supermarket (0816 322 2827) once it has an address.
+
+## Ghana (MoMo + Dawurobo)
+- [ ] Put the site online at https://suyafactory.vercel.app (the address registered with Dawurobo) and add
+      DAWUROBO_API_KEY, DAWUROBO_SIGNING_SECRET, DAWUROBO_WEBHOOK_SECRET to Vercel's environment variables.
+- [ ] Set the Telegram webhook (scripts/telegram-webhook.mjs) so the "✅ Payment received" button works.
+- [ ] Dawurobo Partner Hub → Go live: run "Check my webhook", then request production keys and swap
+      pk_staging_ for pk_production_ (and the new signing secret).
+- [ ] Later: Paystack Ghana account → MoMo/card payments confirmed automatically (no staff tap).

@@ -1,0 +1,224 @@
+// Ghana orders: Dawurobo delivery price -> customer pays MoMo to our number ->
+// staff tap "Payment received" in Telegram -> Dawurobo rider booked -> status
+// updates from Dawurobo. Server only.
+import "server-only";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { formatMoney, type Currency } from "@/lib/money";
+import { esc, sendTelegram, telegramApi, telegramConfigured, type Buttons } from "@/lib/telegram";
+import { alertNeedsDeliveryPrice } from "@/lib/staff-alerts";
+import {
+  createDelivery, DawuroboError, dawuroboConfigured, estimateDelivery, getDelivery, stageOf,
+} from "@/lib/dawurobo";
+
+/** Ghana MoMo: where customers send money for the kilishi. */
+export const GH_MOMO = {
+  number: "0530515656",
+  names: ["SUYA FACTORY", "Gloria Okai"],
+};
+
+const site = () => process.env.NEXT_PUBLIC_SITE_URL ?? "";
+
+type GhOrder = {
+  id: string;
+  order_number: string;
+  status: string;
+  currency: Currency;
+  contact_name: string;
+  contact_phone: string;
+  subtotal_minor: number;
+  total_minor: number;
+  notes: string | null;
+  delivery_quote_minor: number | null;
+  momo_claim_ref: string | null;
+  courier_order_id: string | null;
+  courier_status: string | null;
+  courier_synced_at: string | null;
+  delivery_address: { line1?: string; line2?: string | null; city?: string; landmark?: string | null; lat?: number; lng?: number };
+  order_items: { product_name: string; variant_label: string; quantity: number }[];
+};
+
+const FIELDS =
+  "id, order_number, status, currency, contact_name, contact_phone, subtotal_minor, total_minor, notes, delivery_quote_minor, momo_claim_ref, courier_order_id, courier_status, courier_synced_at, delivery_address, order_items(product_name, variant_label, quantity)";
+
+async function loadOrder(match: { id?: string; order_number?: string }) {
+  let q = createAdminClient().from("orders").select(FIELDS).eq("country", "GH");
+  if (match.id) q = q.eq("id", match.id);
+  if (match.order_number) q = q.eq("order_number", match.order_number);
+  const { data } = await q.maybeSingle();
+  return data as GhOrder | null;
+}
+
+// --- 1. Delivery price at order time ---------------------------------------------
+
+/** Price the delivery with Dawurobo straight after ordering. Falls back to staff pricing it. */
+export async function autoQuoteGhanaOrder(orderNumber: string) {
+  const order = await loadOrder({ order_number: orderNumber });
+  if (!order || order.status !== "awaiting_quote") return;
+  const { lat, lng } = order.delivery_address;
+  try {
+    if (!dawuroboConfigured() || lat === undefined || lng === undefined) throw new Error("no Dawurobo keys or pin");
+    const est = await estimateDelivery(Number(lat), Number(lng));
+    const { error } = await createAdminClient().rpc("set_courier_quote", {
+      p_order_id: order.id,
+      p_amount_minor: est.feeMinor,
+      p_note: `Dawurobo: ${est.when}`,
+    });
+    if (error) throw new Error(error.message);
+  } catch (e) {
+    console.error(`Dawurobo price for ${orderNumber} failed:`, e);
+    await alertNeedsDeliveryPrice(orderNumber); // staff price it by hand, as before
+  }
+}
+
+// --- 2. "I've paid" -> staff check ---------------------------------------------------
+
+export const momoButtons = (orderNumber: string): Buttons => [
+  [
+    { text: "✅ Payment received", callback_data: `momo:ok:${orderNumber}` },
+    { text: "❌ Not received", callback_data: `momo:no:${orderNumber}` },
+  ],
+];
+
+export function parseMomoButton(data: string) {
+  const m = /^momo:(ok|no):([\w-]{1,40})$/.exec(data);
+  return m ? { ok: m[1] === "ok", orderNumber: m[2] } : null;
+}
+
+export async function alertMomoClaim(orderNumber: string) {
+  if (!telegramConfigured()) return;
+  const o = await loadOrder({ order_number: orderNumber });
+  if (!o) return;
+  const money = (m: number) => formatMoney(m, o.currency);
+  await sendTelegram(
+    [
+      `💸 <b>${esc(o.order_number)}: customer says they sent MoMo</b>`,
+      "",
+      `Check the MoMo for <b>${money(o.total_minor)}</b> on ${GH_MOMO.number}`,
+      `From: ${esc(o.contact_name)} · 📞 ${esc(o.contact_phone)}`,
+      o.momo_claim_ref ? `Reference they gave: <b>${esc(o.momo_claim_ref)}</b>` : "No reference given (look for the amount / their number).",
+      "",
+      ...o.order_items.map((i) => `• ${i.quantity} × ${esc(i.product_name)} (${esc(i.variant_label)})`),
+      "",
+      "Received it? Tap ✅ and the Dawurobo rider is booked automatically.",
+      `🔗 <a href="${site()}/admin/orders/${o.order_number}">Open in admin</a>`,
+    ].join("\n"),
+    momoButtons(o.order_number),
+  );
+}
+
+/** Staff tapped a MoMo button. Returns the text to show in the chat. */
+export async function handleMomoButton(orderNumber: string, ok: boolean, by: string): Promise<string> {
+  const db = createAdminClient();
+  if (!ok) {
+    const { data } = await db.rpc("reject_momo_claim", { p_order_number: orderNumber, p_by: by });
+    return data
+      ? `❌ ${orderNumber}: marked <b>not received</b> by ${esc(by)}. The customer is asked to check and try again.`
+      : `${orderNumber}: nothing to change (already paid or cancelled).`;
+  }
+  const { data: orderId, error } = await db.rpc("confirm_momo_payment", { p_order_number: orderNumber, p_confirmed_by: by });
+  if (error) return `⚠️ ${orderNumber}: couldn't confirm (${esc(error.message)}).`;
+  if (!orderId) return `${orderNumber}: already confirmed earlier.`;
+  const booking = await bookCourier(String(orderId));
+  return `✅ ${orderNumber}: payment confirmed by ${esc(by)}.\n${booking}`;
+}
+
+// --- 3. Book the Dawurobo rider -------------------------------------------------
+
+/** Book Dawurobo for a paid Ghana order. Returns a line for the staff chat. Never throws. */
+export async function bookCourier(orderId: string): Promise<string> {
+  const o = await loadOrder({ id: orderId });
+  if (!o) return "⚠️ Order not found for booking.";
+  if (o.courier_order_id) return `🛵 Dawurobo already booked (${esc(o.courier_order_id)}).`;
+  const a = o.delivery_address;
+  try {
+    if (!dawuroboConfigured()) throw new DawuroboError(0, "not_configured", "Dawurobo keys missing");
+    if (a.lat === undefined || a.lng === undefined) throw new DawuroboError(0, "no_pin", "order has no map pin");
+    const booking = await createDelivery({
+      orderNumber: o.order_number,
+      customerName: o.contact_name,
+      customerPhone: o.contact_phone,
+      address: [a.line1, a.line2, a.landmark ? `near ${a.landmark}` : ""].filter(Boolean).join(", "),
+      city: a.city ?? "Accra",
+      lat: Number(a.lat),
+      lng: Number(a.lng),
+      notes: o.notes,
+      item: o.order_items.map((i) => `${i.quantity} x ${i.product_name} ${i.variant_label}`).join(", "),
+      valueGhs: o.subtotal_minor / 100,
+      feeGhs: o.delivery_quote_minor !== null ? o.delivery_quote_minor / 100 : null,
+    });
+    const { error } = await createAdminClient().rpc("set_courier_booking", {
+      p_order_id: o.id,
+      p_courier: "dawurobo",
+      p_courier_order_id: booking.orderId,
+      p_tracking_url: booking.trackingUrl,
+      p_eta: booking.eta,
+    });
+    if (error) throw new Error(`saving booking: ${error.message}`);
+    return `🛵 Dawurobo rider booked (${esc(booking.orderId)}). ${esc(booking.eta)}\nHave the kilishi ready with Gloria for pickup.`;
+  } catch (e) {
+    console.error(`Dawurobo booking for ${o.order_number} failed:`, e);
+    const why = e instanceof Error ? e.message : String(e);
+    return `⚠️ <b>Couldn't book Dawurobo automatically</b> (${esc(why)}). Please book the rider by hand and enter them in admin → Send out.`;
+  }
+}
+
+// --- 4. Status updates (webhook, or a check when the order page is open) ------------
+
+export async function applyCourierStatus(o: Pick<GhOrder, "id" | "order_number" | "courier_status">, status: string,
+  rider: { name?: string; phone?: string } = {}, trackingUrl: string | null = null) {
+  const stage = stageOf(status);
+  const { error } = await createAdminClient().rpc("apply_courier_update", {
+    p_order_id: o.id,
+    p_status: status,
+    p_stage: stage,
+    p_rider_name: rider.name ?? null,
+    p_rider_phone: rider.phone ?? null,
+    p_tracking_url: trackingUrl,
+  });
+  if (error) {
+    console.error(`apply_courier_update ${o.order_number}:`, error.message);
+    return;
+  }
+  if (stage === "problem" && o.courier_status !== status) {
+    await sendTelegram(`⚠️ <b>Dawurobo: ${esc(o.order_number)} is "${esc(status)}"</b>\nPlease check with Dawurobo (WhatsApp +233 55 517 5699) and the customer.\n🔗 <a href="${site()}/admin/orders/${o.order_number}">Open in admin</a>`);
+  }
+}
+
+/** Ask Dawurobo for the latest status, at most once a minute per order. */
+export async function syncCourierIfStale(orderNumber: string) {
+  if (!dawuroboConfigured()) return;
+  const o = await loadOrder({ order_number: orderNumber });
+  if (!o?.courier_order_id || !["preparing", "out_for_delivery"].includes(o.status)) return;
+  if (o.courier_synced_at && Date.now() - Date.parse(o.courier_synced_at) < 60_000) return;
+  try {
+    const s = await getDelivery(o.courier_order_id);
+    await applyCourierStatus(o, s.status, {}, s.trackingUrl);
+  } catch (e) {
+    console.error(`Dawurobo status for ${orderNumber} failed:`, e);
+    // Don't hammer Dawurobo while it's failing.
+    await createAdminClient().from("orders").update({ courier_synced_at: new Date().toISOString() }).eq("id", o.id);
+  }
+}
+
+export async function findByCourierOrder(courierOrderId: string, reference: string | undefined) {
+  const db = createAdminClient();
+  const { data } = await db.from("orders").select("id, order_number, courier_status")
+    .eq("courier", "dawurobo").eq("courier_order_id", courierOrderId).maybeSingle();
+  if (data) return data as Pick<GhOrder, "id" | "order_number" | "courier_status">;
+  if (!reference) return null;
+  const { data: byRef } = await db.from("orders").select("id, order_number, courier_status")
+    .eq("order_number", reference).eq("courier", "dawurobo").maybeSingle();
+  return byRef as Pick<GhOrder, "id" | "order_number" | "courier_status"> | null;
+}
+
+/** Remove the buttons from the alert (so nobody taps twice) and post the result under it. */
+export async function answerMomoAlert(chatId: number, messageId: number, html: string) {
+  await telegramApi("editMessageReplyMarkup", { chat_id: chatId, message_id: messageId, reply_markup: { inline_keyboard: [] } });
+  await telegramApi("sendMessage", {
+    chat_id: chatId,
+    text: html,
+    parse_mode: "HTML",
+    reply_parameters: { message_id: messageId, allow_sending_without_reply: true },
+    link_preview_options: { is_disabled: true },
+  });
+}

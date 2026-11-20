@@ -10,7 +10,9 @@ import {
 import { telLink, toInternationalDigits, whatsappLink } from "@/lib/contacts";
 import { AutoRefresh } from "@/components/auto-refresh";
 import { PhoneText } from "@/components/phone-text";
-import { cancelOrder, payWithPaystack, requestNewQuote } from "./actions";
+import { cancelOrder, claimMomoPayment, payWithPaystack, requestNewQuote } from "./actions";
+import { after } from "next/server";
+import { GH_MOMO, syncCourierIfStale } from "@/lib/ghana-orders";
 import { PayButton } from "./pay-button";
 import { ConfirmButton } from "./confirm-button";
 
@@ -56,8 +58,12 @@ async function OrderDetails({ params, searchParams }: Pick<OrderPageProps, "para
   const when = (iso: string) => formatOrderDate(iso, order.country);
   const a = order.delivery_address;
   const firstName = order.contact_name.split(" ")[0];
-  // Ghana (GHS) online payment waits for a provider that supports mobile money.
+  // Nigeria pays online (Paystack); Ghana sends MoMo to our number for now.
   const canPayOnline = order.currency === "NGN";
+  // Ghana + Dawurobo: fetch the latest delivery status in the background (at most once a minute).
+  if (order.courier && (order.status === "preparing" || order.status === "out_for_delivery")) {
+    after(() => syncCourierIfStale(order.order_number));
+  }
   const quote = order.delivery_quote_minor;
   // Delivery paid online with the kilishi (automatic price) vs. paid to the rider.
   const deliveryOnline = order.delivery_fee_minor > 0;
@@ -132,11 +138,16 @@ async function OrderDetails({ params, searchParams }: Pick<OrderPageProps, "para
               <PayButton label={deliveryOnline ? `Pay ${money(order.total_minor)}` : `Pay ${money(order.total_minor)} for my kilishi`} />
               <p className="text-xs">Card, bank transfer or USSD, securely through Paystack.</p>
             </form>
+          ) : order.momo_claimed_at ? (
+            <div className="rounded-xl bg-white/70 p-4 text-sm">
+              <p className="font-semibold">⏳ Thanks! We&apos;re checking your MoMo payment.</p>
+              <p className="mt-1">
+                This usually takes a few minutes during the day. As soon as we see it, we book your Dawurobo rider and
+                this page updates by itself.
+              </p>
+            </div>
           ) : (
-            <p className="text-sm">
-              Online payment for Ghana, including mobile money, is coming soon. We&apos;ll contact you to arrange
-              payment of <strong>{money(order.total_minor)}</strong> for your kilishi.
-            </p>
+            <MomoPay order={order} token={token} quote={quote} />
           )}
         </div>
       )}
@@ -160,11 +171,20 @@ async function OrderDetails({ params, searchParams }: Pick<OrderPageProps, "para
         <div className="mt-6 rounded-2xl bg-green-50 p-5 text-green-950">
           <p className="font-semibold">Payment received. Thank you, {firstName}!</p>
           <p className="mt-1 text-sm">
-            {order.status === "paid" ? "We're getting your order ready." : "Your kilishi is being packed."} You&apos;ll see your
+            {order.courier
+              ? <>A Dawurobo rider is booked to collect your kilishi.{order.courier_eta ? <> {order.courier_eta}.</> : null}</>
+              : order.status === "paid" ? "We're getting your order ready." : "Your kilishi is being packed."} You&apos;ll see your
             rider&apos;s details here once it&apos;s on the way.
             {quote !== null && !deliveryOnline && <> Delivery fee to pay the rider: <strong>{money(quote)}</strong>.</>}
           </p>
         </div>
+      )}
+
+      {order.courier_tracking_url && (order.status === "paid" || order.status === "preparing") && (
+        <a href={order.courier_tracking_url} target="_blank" rel="noopener noreferrer"
+          className="mt-3 inline-block rounded-lg bg-indigo-700 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-800">
+          🗺️ Track your delivery
+        </a>
       )}
 
       {/* 4. Rider on the way */}
@@ -194,7 +214,7 @@ async function OrderDetails({ params, searchParams }: Pick<OrderPageProps, "para
             // Delivery paid online (automatic price, or older zone-based orders).
             <div className="flex justify-between"><dt>Delivery{a.zone_name ? ` (${a.zone_name})` : ""}</dt><dd className="tabular-nums">{money(order.delivery_fee_minor)}</dd></div>
           )}
-          <div className="flex justify-between pt-1 text-lg font-bold"><dt>Paid online</dt><dd className="tabular-nums">{money(order.total_minor)}</dd></div>
+          <div className="flex justify-between pt-1 text-lg font-bold"><dt>{order.currency === "GHS" ? "Kilishi (pay by MoMo)" : "Paid online"}</dt><dd className="tabular-nums">{money(order.total_minor)}</dd></div>
           {order.delivery_fee_minor === 0 && (
             <div className="flex justify-between text-stone-600">
               <dt>Delivery fee (pay the rider)</dt>
@@ -293,5 +313,39 @@ function RiderCard({ order }: { order: OrderView }) {
         <p className="mt-3 text-sm">Delivery fee to pay the rider: <strong>{formatMoney(order.delivery_quote_minor, order.currency)}</strong></p>
       )}
     </section>
+  );
+}
+
+/** Ghana: send MoMo to our number, then tap "I've paid". */
+function MomoPay({ order, token, quote }: { order: OrderView; token: string; quote: number }) {
+  const money = (n: number) => formatMoney(n, order.currency);
+  return (
+    <form action={claimMomoPayment.bind(null, token)} className="space-y-3">
+      {order.momo_claim_rejected_at && (
+        <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-900">
+          We couldn&apos;t find your MoMo payment yet. Please check the number and amount below, then try again, or call
+          us on {GH_MOMO.number}.
+        </p>
+      )}
+      <div className="rounded-xl bg-white p-4 text-sm text-stone-800 ring-1 ring-orange-200">
+        <p className="font-semibold text-stone-900">Pay for your kilishi by Mobile Money</p>
+        <ol className="mt-2 list-decimal space-y-1 pl-5">
+          <li>Send <strong>{money(order.total_minor)}</strong> to <strong className="tabular-nums">{GH_MOMO.number}</strong></li>
+          <li>The name shows as <strong>{GH_MOMO.names[0]}</strong> or <strong>{GH_MOMO.names[1]}</strong>. Check it before you confirm.</li>
+          <li>Put <strong>{order.order_number}</strong> as the reference, if your MoMo asks for one.</li>
+        </ol>
+      </div>
+      <label className="block text-sm">
+        <span className="mb-1 block font-medium">MoMo transaction ID or the number you paid from (optional)</span>
+        <input name="reference" maxLength={100} placeholder="e.g. 0241234567 or the ID in your MoMo SMS"
+          className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-stone-900" />
+      </label>
+      <label className="flex items-start gap-2 text-sm">
+        <input type="checkbox" name="acceptDelivery" value="yes" required className="mt-0.5 h-4 w-4 accent-orange-700" />
+        <span>I accept the Dawurobo delivery fee of <strong>{money(quote)}</strong>, which I&apos;ll pay to the rider on arrival.</span>
+      </label>
+      <PayButton label={`I've sent ${money(order.total_minor)} by MoMo`} pendingLabel="Sending…" />
+      <p className="text-xs">We check the payment, then book your rider straight away. Deliveries Monday to Saturday.</p>
+    </form>
   );
 }

@@ -7,6 +7,9 @@ import { createPublicClient } from "@/lib/supabase/public";
 import { COUNTRIES, isCountry } from "@/lib/countries";
 import { SELLS_VIA_SUPERMARKETS } from "@/lib/stores";
 import { alertNeedsDeliveryPrice } from "@/lib/staff-alerts";
+import { dawuroboConfigured, estimateDelivery } from "@/lib/dawurobo";
+import { autoQuoteGhanaOrder } from "@/lib/ghana-orders";
+import { isInServiceArea } from "@/lib/service-areas";
 
 export type CheckoutValues = {
   name: string;
@@ -24,7 +27,11 @@ export type CheckoutState =
   | { token: string; orderNumber: string; payNow: boolean }
   | undefined;
 
-export type DeliveryQuote = { feeMinor: number; km: number } | null;
+/**
+ * feeMinor + km: automatic price, paid online with the kilishi (Nigeria).
+ * payRider: the courier's price (Dawurobo, Ghana), paid to the rider on arrival.
+ */
+export type DeliveryQuote = { feeMinor: number; km: number | null; payRider?: boolean; when?: string } | null;
 
 /**
  * The automatic delivery price to a pin, worked out by the database (the same
@@ -33,6 +40,17 @@ export type DeliveryQuote = { feeMinor: number; km: number } | null;
  */
 export async function quoteDelivery(country: string, lat: number, lng: number): Promise<DeliveryQuote> {
   if (!isCountry(country) || !Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+  // Ghana: Dawurobo's own price (paid to their rider). If they can't answer, staff price it after ordering.
+  if (country === "GH") {
+    if (!dawuroboConfigured() || !isInServiceArea("GH", lat, lng)) return null;
+    try {
+      const est = await estimateDelivery(lat, lng);
+      return { feeMinor: est.feeMinor, km: null, payRider: true, when: est.when };
+    } catch (e) {
+      console.error("Dawurobo estimate failed:", e);
+      return null;
+    }
+  }
   const supabase = createPublicClient();
   const [fee, km] = await Promise.all([
     supabase.rpc("delivery_fee", { p_country: country, p_lat: lat, p_lng: lng }),
@@ -124,8 +142,11 @@ export async function placeOrder(_prev: CheckoutState, formData: FormData): Prom
   // Automatic delivery price: the database checked that the total we sent
   // included exactly its own fee, so the order is ready to pay right away.
   const payNow = Number(formData.get("deliveryFee")) > 0;
-  // No automatic price (Ghana): staff must price the delivery, so tell them now.
+  // Ghana: ask Dawurobo for the delivery price now, so the customer can pay straight away
+  // (if Dawurobo doesn't answer, staff are asked to price it, as before).
+  if (!payNow && country === "GH") await autoQuoteGhanaOrder(order.order_number);
+  // No automatic price anywhere else: staff must price the delivery, so tell them now.
   // (Paid orders are announced when the payment succeeds.)
-  if (!payNow) after(() => alertNeedsDeliveryPrice(order.order_number));
+  else if (!payNow) after(() => alertNeedsDeliveryPrice(order.order_number));
   return { token: order.access_token, orderNumber: order.order_number, payNow };
 }

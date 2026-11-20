@@ -126,7 +126,9 @@ export function CheckoutForm({
   const outsideArea = location !== null && !isInServiceArea(country, location.lat, location.lng);
   const subtotal = rows.reduce((sum, r) => sum + (r.info.price ?? 0) * r.quantity, 0);
   // Automatic delivery price (Nigeria): paid online with the kilishi.
-  const autoFee = quote.status === "ready" && quote.quote ? quote.quote : null;
+  const autoFee = quote.status === "ready" && quote.quote && !quote.quote.payRider ? quote.quote : null;
+  // Courier's price (Ghana, Dawurobo): shown now, paid to the rider on arrival.
+  const riderFee = quote.status === "ready" && quote.quote?.payRider ? quote.quote : null;
   const total = subtotal + (autoFee?.feeMinor ?? 0);
   const ready = location !== null && !outsideArea && quote.status === "ready";
   const v = failed?.values;
@@ -197,7 +199,7 @@ export function CheckoutForm({
         <dl className="space-y-1.5 border-t border-stone-200 pt-3 text-sm">
           <div className="flex justify-between"><dt>Kilishi</dt><dd className="tabular-nums">{formatMoney(subtotal, currency)}</dd></div>
           <div className="flex justify-between gap-3">
-            <dt>Delivery{autoFee ? <span className="text-stone-500"> · {autoFee.km} km</span> : null}</dt>
+            <dt>Delivery{autoFee?.km ? <span className="text-stone-500"> · {autoFee.km} km</span> : null}{riderFee ? <span className="text-stone-500"> · pay the rider</span> : null}</dt>
             <dd className="text-right tabular-nums">
               {quote.status === "none" && <span className="text-stone-500">{outsideArea ? "—" : "Add your address"}</span>}
               {quote.status === "loading" && <span className="inline-block h-4 w-16 animate-pulse rounded bg-stone-200 align-middle" />}
@@ -206,17 +208,28 @@ export function CheckoutForm({
                   Try again
                 </button>
               )}
-              {quote.status === "ready" && (autoFee ? formatMoney(autoFee.feeMinor, currency) : <span className="text-stone-500">After you order</span>)}
+              {quote.status === "ready" && (autoFee ? formatMoney(autoFee.feeMinor, currency)
+                : riderFee ? <span className="text-stone-500">{formatMoney(riderFee.feeMinor, currency)}</span>
+                : <span className="text-stone-500">After you order</span>)}
             </dd>
           </div>
           <div className="flex justify-between border-t border-stone-100 pt-2 text-lg font-bold">
-            <dt>Total</dt><dd className="tabular-nums">{formatMoney(total, currency)}</dd>
+            <dt>{riderFee ? "To pay now (MoMo)" : "Total"}</dt><dd className="tabular-nums">{formatMoney(total, currency)}</dd>
           </div>
         </dl>
         {quote.status === "error" && (
           <p role="alert" className="text-sm text-red-700">We couldn&apos;t work out the delivery price. Please try again.</p>
         )}
-        {quote.status === "ready" && !autoFee && (
+        {riderFee && (
+          <div className="rounded-lg bg-sky-50 p-3 text-sm text-sky-950">
+            <p className="font-semibold">🛵 Delivered by Dawurobo: {formatMoney(riderFee.feeMinor, currency)}, paid to the rider</p>
+            <p className="mt-1">
+              You pay for your kilishi now by Mobile Money. The delivery fee is paid to the rider when they arrive.
+              {riderFee.when ? <> {riderFee.when}.</> : null} No deliveries on Sundays.
+            </p>
+          </div>
+        )}
+        {quote.status === "ready" && !autoFee && !riderFee && (
           <div className="rounded-lg bg-sky-50 p-3 text-sm text-sky-950">
             <p className="font-semibold">🛵 Delivery fee: confirmed after you order</p>
             <p className="mt-1">
@@ -231,14 +244,16 @@ export function CheckoutForm({
         )}
 
         <button type="submit" disabled={pending || !ready} className={buttonClass}>
-          {pending ? "Placing order…" : autoFee ? `Pay ${formatMoney(total, currency)}` : "Place order"}
+          {pending ? "Placing order…" : autoFee ? `Pay ${formatMoney(total, currency)}` : riderFee ? "Place order and pay by MoMo" : "Place order"}
         </button>
         <p className="text-xs text-stone-500">
           {!location
             ? "Add your delivery address to continue."
             : autoFee
               ? "Card, bank transfer or USSD, securely through Paystack."
-              : "Nothing is charged yet."}
+              : riderFee
+                ? "Next you'll see our MoMo number and your order code."
+                : "Nothing is charged yet."}
         </p>
         <Link href="/cart" className="block text-center text-sm text-stone-600 hover:text-orange-700">← Back to cart</Link>
       </aside>

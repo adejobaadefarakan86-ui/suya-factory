@@ -47,6 +47,13 @@ export type OrderView = {
   quote_expires_at: string | null;
   quote_expired: boolean;
   can_cancel: boolean;
+  /** Ghana: customer tapped "I've paid" (MoMo) and staff haven't checked yet. */
+  momo_claimed_at: string | null;
+  /** Ghana: staff couldn't find the MoMo payment. */
+  momo_claim_rejected_at: string | null;
+  courier: "dawurobo" | null;
+  courier_eta: string | null;
+  courier_tracking_url: string | null;
   rider: { name: string; phone: string; tracking_url: string | null; stage: DeliveryStage | null } | null;
   notes: string | null;
   subtotal_minor: number;

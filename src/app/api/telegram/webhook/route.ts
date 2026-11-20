@@ -10,6 +10,7 @@ import { timingSafeEqual } from "node:crypto";
 import { esc, sendTelegram, telegramApi } from "@/lib/telegram";
 import { storeTitle } from "@/lib/stores";
 import { parseStockButton, postStockList, setStockByNumber, STOCK_REFRESH, stockList } from "@/lib/stock-telegram";
+import { answerMomoAlert, handleMomoButton, parseMomoButton } from "@/lib/ghana-orders";
 
 type TgUser = { first_name?: string; last_name?: string; username?: string };
 type Update = {
@@ -54,6 +55,15 @@ async function onButton(q: NonNullable<Update["callback_query"]>) {
   const chatId = q.message?.chat?.id;
   if (!isStaffChat(chatId) || !q.message) {
     await telegramApi("answerCallbackQuery", { callback_query_id: q.id, text: "Not allowed here." });
+    return;
+  }
+
+  // Ghana MoMo check: "✅ Payment received" / "❌ Not received"
+  const momo = parseMomoButton(q.data ?? "");
+  if (momo) {
+    const result = await handleMomoButton(momo.orderNumber, momo.ok, nameOf(q.from));
+    await answerMomoAlert(chatId!, q.message.message_id, result);
+    await telegramApi("answerCallbackQuery", { callback_query_id: q.id, text: momo.ok ? "Payment confirmed" : "Marked not received" });
     return;
   }
 

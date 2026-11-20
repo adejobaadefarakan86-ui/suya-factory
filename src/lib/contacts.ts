@@ -44,3 +44,10 @@ export function formatPhone(digits: string) {
   }
   return `+${digits}`;
 }
+
+/** "2348121023991" / "+233 53 051 5656" -> "08121023991" / "0530515656" (what local apps expect). */
+export function localPhone(raw: string) {
+  const d = raw.replace(/\D/g, "");
+  if (d.startsWith("234") || d.startsWith("233")) return "0" + d.slice(3);
+  return d;
+}

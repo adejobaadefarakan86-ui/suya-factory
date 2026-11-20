@@ -10,6 +10,8 @@ import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { LocationPicker, type PickedLocation } from "@/app/checkout/location-picker";
 import { formatPhone, telLink, whatsappLink } from "@/lib/contacts";
 import { appLink, DELIVERY_COMPANIES } from "@/lib/delivery-companies";
+import { DeliveryDetails, type DetailRow } from "@/components/delivery-details";
+import { localPhone } from "@/lib/contacts";
 import { directionsLink, mapPinLink, roadKm, storeTitle, type Store } from "@/lib/stores";
 import { logPickup, reportOutOfStock } from "./actions";
 
@@ -384,7 +386,6 @@ function RiderStep({
   setForm: (f: RiderForm | ((f: RiderForm) => RiderForm)) => void;
   onDone: (code: string) => void;
 }) {
-  const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   // Which phone decides the link (app on Android, App Store on iPhone). "" on the server.
@@ -393,19 +394,31 @@ function RiderStep({
   const set = (key: keyof RiderForm) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     setForm((f) => ({ ...f, [key]: e.target.value }));
 
-  async function copyPickup() {
-    const text = pickupText(store);
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2500);
-    } catch {
-      window.prompt("Copy the pickup address:", text);
-    }
-  }
+  // What Bolt / inDrive / GIGGo ask for, in their words. Sender = the supermarket, recipient = the customer.
+  const name = form.customerName.trim();
+  const phone = form.customerPhone.trim();
+  const details: DetailRow[] = [
+    { label: "Pickup address", hint: "Where the rider collects it", value: pickupText(store) },
+    { label: "Sender name", hint: "Bolt / inDrive: Sender (the supermarket)", value: storeTitle(store) },
+    ...(store.phone ? [{ label: "Sender phone", hint: "The rider calls the supermarket at pickup", value: localPhone(store.phone) }] : []),
+    { label: "Drop-off address", hint: "Type your own address in the app", value: "Your address", info: true },
+    name
+      ? { label: "Recipient name", hint: "Bolt / inDrive: Recipient (you)", value: name }
+      : { label: "Recipient name", value: "Your name (fill it in below to copy it)", info: true },
+    phone
+      ? { label: "Recipient phone", hint: "The rider calls you at drop-off", value: localPhone(phone) }
+      : { label: "Recipient phone", value: "Your phone (fill it in below to copy it)", info: true },
+    { label: "Item", hint: "Package / item description", value: "Food: Suya Factory beef kilishi, already paid (sealed, light, under 1 kg)" },
+    { label: "Note for the rider", value: `Collect the Suya Factory kilishi ${name ? `for ${name} ` : ""}from ${storeTitle(store)}. Already paid.` },
+  ];
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    // Name + phone are typed at the top of this step (outside this form).
+    if (!form.customerName.trim() || !form.customerPhone.trim()) {
+      setError("Please fill in your name and phone at the top of this step.");
+      return;
+    }
     setPending(true);
     setError(null);
     const result = await logPickup({ storeId: store.id, ...form });
@@ -418,21 +431,24 @@ function RiderStep({
     <div className="space-y-6">
       <section className="rounded-2xl border border-stone-200 bg-white p-5">
         <h2 className="text-lg font-bold text-stone-900">Book a rider to pick it up</h2>
-        <p className="mt-1 text-sm text-stone-600">Use this as the <strong>pickup</strong> address in the delivery app, and your own address as the drop-off.</p>
-        <div className="mt-3 rounded-xl bg-stone-50 p-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-stone-500">Pickup</p>
-          <p className="mt-1 font-medium text-stone-900">{pickupText(store)}</p>
-          <div className="mt-3 flex flex-wrap gap-2 text-sm">
-            <button type="button" onClick={copyPickup} aria-live="polite"
-              className="rounded-lg bg-stone-900 px-3 py-2 font-medium text-white hover:bg-stone-800">
-              {copied ? "✓ Copied" : "Copy pickup address"}
-            </button>
-            <a href={mapPinLink(store)} target="_blank" rel="noopener noreferrer"
-              className="rounded-lg border border-stone-300 bg-white px-3 py-2 font-medium text-stone-800 hover:bg-stone-50">Show on map</a>
-          </div>
+        <p className="mt-1 text-sm text-stone-600">Send it as a <strong>parcel</strong> from the supermarket to you. You pay the rider.</p>
+        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <label className="block"><span className="mb-1 block text-sm font-medium text-stone-700">Your name</span>
+            <input maxLength={100} value={form.customerName} onChange={set("customerName")} className={input} autoComplete="name" /></label>
+          <label className="block"><span className="mb-1 block text-sm font-medium text-stone-700">Your phone</span>
+            <input type="tel" maxLength={20} value={form.customerPhone} onChange={set("customerPhone")} className={input} autoComplete="tel" placeholder="0803 000 0000" /></label>
+        </div>
+        <p className="mt-4 text-sm font-semibold text-stone-800">1. Copy these into your app</p>
+        <div className="mt-2">
+          <DeliveryDetails rows={details} tips={[
+            "inDrive asks you to offer a price: offer a fair price for the distance; the rider can suggest another.",
+            "If the app asks who pays: you (the sender) pay, in the app or in cash.",
+          ]} />
+          <a href={mapPinLink(store)} target="_blank" rel="noopener noreferrer"
+            className="mt-2 inline-block text-sm font-medium text-orange-700 underline">See the supermarket on a map</a>
         </div>
 
-        <p className="mt-5 text-sm font-medium text-stone-700">Choose a delivery company:</p>
+        <p className="mt-5 text-sm font-semibold text-stone-800">2. Open your app</p>
         <p className="mt-1 text-xs text-stone-500">Opens the app if you have it. If you see its Play Store / App Store page instead, tap <strong>Open</strong> (or <strong>Install</strong>).</p>
         <ul className="mt-2 grid gap-2 sm:grid-cols-3">
           {DELIVERY_COMPANIES.map((c) => (
@@ -451,14 +467,10 @@ function RiderStep({
 
       <form onSubmit={submit} className="space-y-4 rounded-2xl border border-stone-200 bg-white p-5">
         <div>
-          <h2 className="text-lg font-bold text-stone-900">Booked your rider? Tell the supermarket</h2>
+          <h2 className="text-lg font-bold text-stone-900">3. Booked your rider? Tell the supermarket</h2>
           <p className="mt-1 text-sm text-stone-600">We&apos;ll write the message for you, so the supermarket hands your pack to the right rider.</p>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
-          <label className="block"><span className="mb-1 block text-sm font-medium text-stone-700">Your name</span>
-            <input required maxLength={100} value={form.customerName} onChange={set("customerName")} className={input} autoComplete="name" /></label>
-          <label className="block"><span className="mb-1 block text-sm font-medium text-stone-700">Your phone</span>
-            <input required type="tel" maxLength={20} value={form.customerPhone} onChange={set("customerPhone")} className={input} autoComplete="tel" placeholder="0803 000 0000" /></label>
           <label className="block sm:col-span-2"><span className="mb-1 block text-sm font-medium text-stone-700">Name on the account you paid from</span>
             <input maxLength={100} value={form.paidFrom} onChange={set("paidFrom")} className={input} placeholder="So the supermarket can match your payment" /></label>
           <label className="block"><span className="mb-1 block text-sm font-medium text-stone-700">Rider&apos;s name</span>

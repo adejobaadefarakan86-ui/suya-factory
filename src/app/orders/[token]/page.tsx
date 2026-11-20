@@ -12,6 +12,8 @@ import { AutoRefresh } from "@/components/auto-refresh";
 import { PhoneText } from "@/components/phone-text";
 import { cancelOrder, claimMomoPayment, payWithPaystack, requestNewQuote, setOwnRider } from "./actions";
 import { OwnRiderStep } from "./own-rider";
+import { type DetailRow } from "@/components/delivery-details";
+import { localPhone } from "@/lib/contacts";
 import { GH_DELIVERY_COMPANIES } from "@/lib/delivery-companies";
 import { GH_PICKUP } from "@/lib/dawurobo";
 import { after } from "next/server";
@@ -406,6 +408,19 @@ function OwnRiderSection({ order, token }: { order: OrderView; token: string }) 
     label: "Suya Factory, 1st Addogono Ave",
   };
   const a = order.delivery_address;
+  const gloria = GH_PICKUP.contactPerson.split(" ")[0];
+  const items = order.items.map((i) => `${i.quantity} × ${i.product_name} ${i.variant_label}`).join(", ");
+  // What Bolt / inDrive / Yango / Qargo ask for, in their words.
+  const details: DetailRow[] = [
+    { label: "Pickup address", hint: "Where the rider collects it", value: GH_PICKUP.address },
+    { label: "Sender name", hint: "Bolt / inDrive: Sender (the person handing it over)", value: `${gloria} (Suya Factory)` },
+    { label: "Sender phone", hint: "The rider calls this number at pickup", value: GH_PICKUP.contactPhone },
+    { label: "Drop-off address", hint: "Your address", value: [a.line1, a.line2, a.landmark ? `near ${a.landmark}` : ""].filter(Boolean).join(", ") },
+    { label: "Recipient name", hint: "Bolt / inDrive: Recipient (you)", value: order.contact_name },
+    { label: "Recipient phone", hint: "The rider calls you at drop-off", value: localPhone(order.contact_phone) },
+    { label: "Item", hint: "Package / item description", value: `Food: ${items} (sealed, light, under 1 kg)` },
+    { label: "Note for the rider", value: `Collect Suya Factory order ${order.order_number} for ${order.contact_name} from ${gloria}.` },
+  ];
   const dropoff = a.lat !== undefined && a.lng !== undefined
     ? { lat: Number(a.lat), lng: Number(a.lng), label: [a.line1, a.line2].filter(Boolean).join(", ") }
     : null;
@@ -430,10 +445,10 @@ function OwnRiderSection({ order, token }: { order: OrderView; token: string }) 
       {rider ? (
         <details className="mt-3">
           <summary className="cursor-pointer text-sm font-medium text-orange-700">Need a different rider?</summary>
-          <OwnRiderStep action={setOwnRider.bind(null, token)} pickup={pickup} companies={GH_DELIVERY_COMPANIES} current={rider} dropoff={dropoff} />
+          <OwnRiderStep action={setOwnRider.bind(null, token)} pickup={pickup} companies={GH_DELIVERY_COMPANIES} current={rider} dropoff={dropoff} details={details} />
         </details>
       ) : (
-        <OwnRiderStep action={setOwnRider.bind(null, token)} pickup={pickup} companies={GH_DELIVERY_COMPANIES} current={null} dropoff={dropoff} />
+        <OwnRiderStep action={setOwnRider.bind(null, token)} pickup={pickup} companies={GH_DELIVERY_COMPANIES} current={null} dropoff={dropoff} details={details} />
       )}
     </>
   );

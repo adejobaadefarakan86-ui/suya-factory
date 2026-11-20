@@ -3,9 +3,10 @@
 // (Bolt / Yango) from our pickup point, then tells us who's coming.
 import { useState, useSyncExternalStore } from "react";
 import { appLink, type DeliveryCompany } from "@/lib/delivery-companies";
+import { DeliveryDetails, type DetailRow } from "@/components/delivery-details";
+import { PayButton } from "./pay-button";
 
 const noop = () => () => {};
-import { PayButton } from "./pay-button";
 
 const input = "w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-stone-900";
 
@@ -15,14 +16,15 @@ export function OwnRiderStep({
   companies,
   current,
   dropoff,
+  details,
 }: {
+  details: DetailRow[];
   action: (formData: FormData) => void | Promise<void>;
   pickup: { text: string; mapLink: string; contact: string; lat: number; lng: number; label: string };
   dropoff: { lat: number; lng: number; label: string } | null;
   companies: DeliveryCompany[];
   current: { name: string; phone: string; plate: string | null; company: string | null } | null;
 }) {
-  const [copied, setCopied] = useState(false);
   const [company, setCompany] = useState(current?.company ?? "");
   // "Other app…": the customer types the app's name.
   const [otherMode, setOtherMode] = useState(false);
@@ -30,38 +32,23 @@ export function OwnRiderStep({
   // Which phone this is decides the link (app on Android, App Store on iPhone). "" while rendering on the server.
   const userAgent = useSyncExternalStore(noop, () => navigator.userAgent, () => "");
 
-  async function copyPickup() {
-    try {
-      await navigator.clipboard.writeText(pickup.text);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2500);
-    } catch {
-      window.prompt("Copy the pickup address:", pickup.text);
-    }
-  }
-
   return (
     <div className="mt-6 space-y-4">
       <section className="rounded-2xl border-2 border-orange-200 bg-white p-5">
         <h2 className="text-lg font-bold text-stone-900">{current ? "Change your rider" : "Now book your rider"}</h2>
         <p className="mt-1 text-sm text-stone-600">
-          In your delivery app, use this as the <strong>pickup</strong> and your own address as the drop-off. You pay the
-          rider in the app or in cash.
+          Send it as a <strong>parcel</strong> from us to you. You pay the rider in the app or in cash.
         </p>
-        <div className="mt-3 rounded-xl bg-stone-50 p-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-stone-500">Pickup</p>
-          <p className="mt-1 font-medium text-stone-900">{pickup.text}</p>
-          <p className="mt-1 text-sm text-stone-600">{pickup.contact}</p>
-          <div className="mt-3 flex flex-wrap gap-2 text-sm">
-            <button type="button" onClick={copyPickup} aria-live="polite"
-              className="rounded-lg bg-stone-900 px-3 py-2 font-medium text-white hover:bg-stone-800">
-              {copied ? "✓ Copied" : "Copy pickup address"}
-            </button>
-            <a href={pickup.mapLink} target="_blank" rel="noopener noreferrer"
-              className="rounded-lg border border-stone-300 bg-white px-3 py-2 font-medium text-stone-800 hover:bg-stone-50">Show on map</a>
-          </div>
+        <p className="mt-4 text-sm font-semibold text-stone-800">1. Copy these into your app</p>
+        <div className="mt-2">
+          <DeliveryDetails rows={details} tips={[
+            "inDrive asks you to offer a price: offer a fair price for the distance; the rider can suggest another.",
+            "If the app asks who pays: you (the sender) pay, in the app or in cash.",
+          ]} />
+          <a href={pickup.mapLink} target="_blank" rel="noopener noreferrer"
+            className="mt-2 inline-block text-sm font-medium text-orange-700 underline">See the pickup point on a map</a>
         </div>
-        <p className="mt-4 text-sm font-medium text-stone-700">Open your app:</p>
+        <p className="mt-5 text-sm font-semibold text-stone-800">2. Open your app</p>
         <p className="mt-1 text-xs text-stone-500">Opens the app if you have it. If you see its Play Store / App Store page instead, tap <strong>Open</strong> (or <strong>Install</strong>).</p>
         <ul className="mt-2 grid gap-2 sm:grid-cols-2">
           {companies.map((c) => (
@@ -80,7 +67,7 @@ export function OwnRiderStep({
 
       <form action={action} className="space-y-4 rounded-2xl border border-stone-200 bg-white p-5">
         <div>
-          <h2 className="text-lg font-bold text-stone-900">Booked? Tell us who&apos;s coming</h2>
+          <h2 className="text-lg font-bold text-stone-900">3. Booked? Tell us who&apos;s coming</h2>
           <p className="mt-1 text-sm text-stone-600">We only hand your kilishi to this rider. You&apos;ll get a pickup code for them.</p>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">

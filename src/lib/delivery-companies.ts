@@ -46,7 +46,9 @@ export const DELIVERY_COMPANIES: DeliveryCompany[] = [
  * point) to their door. They pay the rider in the app or in cash.
  * Checked 2026-11-20 on the App Store / Play Store and each company's Ghana page:
  * Bolt ("Send"), Uber ("Send a package"), Yango ("Delivery") work in Ghana.
- * Not confirmed for Ghana, so not listed: inDrive, Swoove, Shaxi.
+ * Only the most used apps that fit (customer books a parcel rider now and pays them). Checked and
+ * left out: inDrive, Shaxi (rides only in Ghana), Chowdeck GH (food only), Swoove (business/next-day),
+ * ShaQ Express (small, unsure it still runs), OyaMove (closed: domain for sale, not in the stores).
  */
 export const GH_DELIVERY_COMPANIES: DeliveryCompany[] = [
   {

@@ -62,6 +62,7 @@ export function OwnRiderStep({
           </div>
         </div>
         <p className="mt-4 text-sm font-medium text-stone-700">Open your app:</p>
+        <p className="mt-1 text-xs text-stone-500">Opens the app (Uber), or its Play Store / App Store page: tap <strong>Open</strong> there if you have it, or <strong>Install</strong>.</p>
         <ul className="mt-2 grid gap-2 sm:grid-cols-2">
           {companies.map((c) => (
             <li key={c.id}>

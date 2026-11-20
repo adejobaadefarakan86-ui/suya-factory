@@ -13,7 +13,7 @@ import { PhoneText } from "@/components/phone-text";
 import { cancelOrder, claimMomoPayment, payWithPaystack, requestNewQuote, setOwnRider } from "./actions";
 import { OwnRiderStep } from "./own-rider";
 import { type DetailRow } from "@/components/delivery-details";
-import { localPhone } from "@/lib/contacts";
+import { localPhone, plainName } from "@/lib/contacts";
 import { GH_DELIVERY_COMPANIES } from "@/lib/delivery-companies";
 import { GH_PICKUP } from "@/lib/dawurobo";
 import { after } from "next/server";
@@ -414,10 +414,10 @@ function OwnRiderSection({ order, token }: { order: OrderView; token: string }) 
   const details: DetailRow[] = [
     { label: "From (pickup)", value: GH_PICKUP.address },
     { label: "To (drop-off)", value: [a.line1, a.line2, a.landmark ? `near ${a.landmark}` : ""].filter(Boolean).join(", ") },
+    { label: "Sender name", value: plainName(GH_PICKUP.contactPerson) },
     { label: "Sender phone", value: GH_PICKUP.contactPhone },
     { label: "Your phone (recipient)", value: localPhone(order.contact_phone) },
-    { label: "Sender name", value: `${gloria} (Suya Factory)`, more: true },
-    { label: "Your name (recipient)", value: order.contact_name, more: true },
+    { label: "Your name (recipient)", value: plainName(order.contact_name), more: true },
     { label: "Item", value: `Food: ${items} (sealed, light)`, more: true },
     { label: "Note for the rider", value: `Collect Suya Factory order ${order.order_number} for ${order.contact_name} from ${gloria}.`, more: true },
   ];

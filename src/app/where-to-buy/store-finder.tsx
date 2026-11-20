@@ -11,7 +11,7 @@ import { LocationPicker, type PickedLocation } from "@/app/checkout/location-pic
 import { formatPhone, telLink, whatsappLink } from "@/lib/contacts";
 import { appLink, DELIVERY_COMPANIES } from "@/lib/delivery-companies";
 import { DeliveryDetails, type DetailRow } from "@/components/delivery-details";
-import { localPhone } from "@/lib/contacts";
+import { localPhone, plainName } from "@/lib/contacts";
 import { directionsLink, mapPinLink, roadKm, storeTitle, type Store } from "@/lib/stores";
 import { logPickup, reportOutOfStock } from "./actions";
 
@@ -403,12 +403,13 @@ function RiderStep({
   const details: DetailRow[] = [
     { label: "From (pickup)", value: pickupText(store) },
     { label: "To (drop-off)", value: "Your address (type it in the app)", info: true },
+    // The store's name alone (no branch): Bolt rejects "–" and other symbols in names.
+    { label: "Sender name", value: plainName(store.name) },
     ...(store.phone ? [{ label: "Sender phone", value: localPhone(store.phone) }] : []),
     phone
       ? { label: "Your phone (recipient)", value: localPhone(phone) }
       : { label: "Your phone (recipient)", value: "Type it above", info: true },
-    { label: "Sender name", value: storeTitle(store), more: true },
-    ...(name ? [{ label: "Your name (recipient)", value: name, more: true }] : []),
+    ...(name ? [{ label: "Your name (recipient)", value: plainName(name), more: true }] : []),
     { label: "Item", value: "Food: Suya Factory beef kilishi, already paid (sealed, light)", more: true },
     { label: "Note for the rider", value: `Collect the Suya Factory kilishi ${name ? `for ${name} ` : ""}from ${storeTitle(store)}. Already paid.`, more: true },
   ];

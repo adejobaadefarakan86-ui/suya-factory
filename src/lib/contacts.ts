@@ -51,3 +51,8 @@ export function localPhone(raw: string) {
   if (d.startsWith("234") || d.startsWith("233")) return "0" + d.slice(3);
   return d;
 }
+
+/** "Golden Choice Supermarket – Ikeja" -> "Golden Choice Supermarket Ikeja": delivery apps (Bolt) reject symbols in names. */
+export function plainName(name: string) {
+  return name.replace(/[^\p{L}\p{N} ]+/gu, " ").replace(/\s+/g, " ").trim();
+}

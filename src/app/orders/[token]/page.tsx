@@ -412,14 +412,14 @@ function OwnRiderSection({ order, token }: { order: OrderView; token: string }) 
   const items = order.items.map((i) => `${i.quantity} × ${i.product_name} ${i.variant_label}`).join(", ");
   // What Bolt / inDrive / Yango / Qargo ask for, in their words.
   const details: DetailRow[] = [
-    { label: "Pickup address", pasteInto: "inDrive “From” · Bolt “Pickup”", hint: "Where the rider collects it", value: GH_PICKUP.address },
-    { label: "Sender name", pasteInto: "Sender's name (if the app asks)", hint: "The person handing it over", value: `${gloria} (Suya Factory)` },
-    { label: "Sender phone", pasteInto: "inDrive “Sender's phone” · Bolt “Sender”", hint: "The rider calls this number at pickup", value: GH_PICKUP.contactPhone },
-    { label: "Drop-off address", pasteInto: "inDrive “To” · Bolt “Where to?”", hint: "Your address", value: [a.line1, a.line2, a.landmark ? `near ${a.landmark}` : ""].filter(Boolean).join(", ") },
-    { label: "Recipient name", pasteInto: "Recipient's name (if the app asks)", hint: "You", value: order.contact_name },
-    { label: "Recipient phone", pasteInto: "inDrive “Recipient's phone” · Bolt “Recipient”", hint: "The rider calls you at drop-off", value: localPhone(order.contact_phone) },
-    { label: "Item", pasteInto: "inDrive “Order details” / item description", hint: "What's in the package", value: `Food: ${items} (sealed, light, under 1 kg)` },
-    { label: "Note for the rider", value: `Collect Suya Factory order ${order.order_number} for ${order.contact_name} from ${gloria}.` },
+    { label: "From (pickup)", value: GH_PICKUP.address },
+    { label: "To (drop-off)", value: [a.line1, a.line2, a.landmark ? `near ${a.landmark}` : ""].filter(Boolean).join(", ") },
+    { label: "Sender phone", value: GH_PICKUP.contactPhone },
+    { label: "Your phone (recipient)", value: localPhone(order.contact_phone) },
+    { label: "Sender name", value: `${gloria} (Suya Factory)`, more: true },
+    { label: "Your name (recipient)", value: order.contact_name, more: true },
+    { label: "Item", value: `Food: ${items} (sealed, light)`, more: true },
+    { label: "Note for the rider", value: `Collect Suya Factory order ${order.order_number} for ${order.contact_name} from ${gloria}.`, more: true },
   ];
   const dropoff = a.lat !== undefined && a.lng !== undefined
     ? { lat: Number(a.lat), lng: Number(a.lng), label: [a.line1, a.line2].filter(Boolean).join(", ") }

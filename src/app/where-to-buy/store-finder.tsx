@@ -401,18 +401,16 @@ function RiderStep({
   const name = form.customerName.trim();
   const phone = form.customerPhone.trim();
   const details: DetailRow[] = [
-    { label: "Pickup address", pasteInto: "inDrive “From” · Bolt “Pickup”", hint: "Where the rider collects it", value: pickupText(store) },
-    { label: "Sender name", pasteInto: "Sender's name (if the app asks)", hint: "The supermarket", value: storeTitle(store) },
-    ...(store.phone ? [{ label: "Sender phone", pasteInto: "inDrive “Sender's phone” · Bolt “Sender”", hint: "The rider calls the supermarket at pickup", value: localPhone(store.phone) }] : []),
-    { label: "Drop-off address", pasteInto: "inDrive “To” · Bolt “Where to?”", hint: "Type your own address there", value: "Your address", info: true },
-    name
-      ? { label: "Recipient name", pasteInto: "Recipient's name (if the app asks)", hint: "You", value: name }
-      : { label: "Recipient name", value: "Your name (fill it in below to copy it)", info: true },
+    { label: "From (pickup)", value: pickupText(store) },
+    { label: "To (drop-off)", value: "Your address (type it in the app)", info: true },
+    ...(store.phone ? [{ label: "Sender phone", value: localPhone(store.phone) }] : []),
     phone
-      ? { label: "Recipient phone", pasteInto: "inDrive “Recipient's phone” · Bolt “Recipient”", hint: "The rider calls you at drop-off", value: localPhone(phone) }
-      : { label: "Recipient phone", value: "Your phone (fill it in below to copy it)", info: true },
-    { label: "Item", pasteInto: "inDrive “Order details” / item description", hint: "What's in the package", value: "Food: Suya Factory beef kilishi, already paid (sealed, light, under 1 kg)" },
-    { label: "Note for the rider", value: `Collect the Suya Factory kilishi ${name ? `for ${name} ` : ""}from ${storeTitle(store)}. Already paid.` },
+      ? { label: "Your phone (recipient)", value: localPhone(phone) }
+      : { label: "Your phone (recipient)", value: "Type it above", info: true },
+    { label: "Sender name", value: storeTitle(store), more: true },
+    ...(name ? [{ label: "Your name (recipient)", value: name, more: true }] : []),
+    { label: "Item", value: "Food: Suya Factory beef kilishi, already paid (sealed, light)", more: true },
+    { label: "Note for the rider", value: `Collect the Suya Factory kilishi ${name ? `for ${name} ` : ""}from ${storeTitle(store)}. Already paid.`, more: true },
   ];
 
   async function submit(e: React.FormEvent) {
@@ -443,16 +441,13 @@ function RiderStep({
         </div>
         <p className="mt-4 text-sm font-semibold text-stone-800">1. Copy these into your app</p>
         <div className="mt-2">
-          <DeliveryDetails rows={details} tips={[
-            "inDrive asks you to offer a price: offer a fair price for the distance; the rider can suggest another.",
-            "If the app asks who pays: you (the sender) pay, in the app or in cash.",
-          ]} />
+          <DeliveryDetails rows={details} />
           <a href={mapPinLink(store)} target="_blank" rel="noopener noreferrer"
             className="mt-2 inline-block text-sm font-medium text-orange-700 underline">See the supermarket on a map</a>
         </div>
 
         <p className="mt-5 text-sm font-semibold text-stone-800">2. Open your app</p>
-        <p className="mt-1 text-xs text-stone-500">Opens the app if you have it. If you see its Play Store / App Store page instead, tap <strong>Open</strong> (or <strong>Install</strong>).</p>
+        <p className="mt-1 text-xs text-stone-500">If a store page opens, tap <strong>Open</strong>.</p>
         <ul className="mt-2 grid gap-2 sm:grid-cols-2">
           {DELIVERY_COMPANIES.map((c) => (
             <li key={c.id}>

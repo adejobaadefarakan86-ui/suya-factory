@@ -41,15 +41,12 @@ export function OwnRiderStep({
         </p>
         <p className="mt-4 text-sm font-semibold text-stone-800">1. Copy these into your app</p>
         <div className="mt-2">
-          <DeliveryDetails rows={details} tips={[
-            "inDrive asks you to offer a price: offer a fair price for the distance; the rider can suggest another.",
-            "If the app asks who pays: you (the sender) pay, in the app or in cash.",
-          ]} />
+          <DeliveryDetails rows={details} />
           <a href={pickup.mapLink} target="_blank" rel="noopener noreferrer"
             className="mt-2 inline-block text-sm font-medium text-orange-700 underline">See the pickup point on a map</a>
         </div>
         <p className="mt-5 text-sm font-semibold text-stone-800">2. Open your app</p>
-        <p className="mt-1 text-xs text-stone-500">Opens the app if you have it. If you see its Play Store / App Store page instead, tap <strong>Open</strong> (or <strong>Install</strong>).</p>
+        <p className="mt-1 text-xs text-stone-500">If a store page opens, tap <strong>Open</strong>.</p>
         <ul className="mt-2 grid gap-2 sm:grid-cols-2">
           {companies.map((c) => (
             <li key={c.id}>

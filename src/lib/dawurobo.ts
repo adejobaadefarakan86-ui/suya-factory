@@ -158,9 +158,8 @@ export function pickupDayText(now = new Date()) {
   );
   const minutes = Number(parts.hour) * 60 + Number(parts.minute);
   const sameDay = parts.weekday !== "Sun" && minutes < 8 * 60 + 30;
-  return sameDay
-    ? "Paid and confirmed before 8:30am? Picked up today, delivered within 24 hours"
-    : `Picked up ${parts.weekday === "Sat" ? "Monday" : "tomorrow"} morning (rider pickups are booked by 8:30am), delivered within 24 hours`;
+  if (sameDay) return "Pay before 8:30am and it usually arrives today";
+  return parts.weekday === "Sat" || parts.weekday === "Sun" ? "Usually arrives Monday" : "Usually arrives tomorrow";
 }
 
 /** "2026-11-21" -> "Sat 21 Nov" */

@@ -224,8 +224,8 @@ export function CheckoutForm({
           <div className="rounded-lg bg-sky-50 p-3 text-sm text-sky-950">
             <p className="font-semibold">🛵 Delivered by Dawurobo: {formatMoney(riderFee.feeMinor, currency)}, paid to the rider</p>
             <p className="mt-1">
-              You pay for your kilishi now by Mobile Money. The delivery fee is paid to the rider when they arrive.
-              {riderFee.when ? <> {riderFee.when}.</> : null} No deliveries on Sundays.
+              {riderFee.when ? <><strong>{riderFee.when}.</strong> </> : null}You pay for your kilishi now by Mobile Money,
+              and the delivery fee to the rider when they arrive.
             </p>
           </div>
         )}

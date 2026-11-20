@@ -72,19 +72,22 @@ async function HowItWorks() {
         ["3. Send a rider", "Book a rider with a delivery app and we write the pickup message for you. Or pick it up yourself."],
       ]
     : [
-        ["1. Pick your pack", "Small pack or big pack."],
-        ["2. Pay securely", "Card, bank transfer or USSD. Ghana mobile money coming soon."],
-        ["3. We deliver", "Inside Greater Accra."],
+        ["1. Pick your pack", "Small pack or big pack. Delivery inside Greater Accra."],
+        ["2. Pay by MoMo", "Send Mobile Money to our number and tap “I've paid”. We confirm it quickly."],
+        ["3. Book your rider", "Use Bolt, Uber, Yango or Qargo to collect it from us. You pay the rider."],
       ];
   return (
-    <div className="mx-auto grid max-w-6xl gap-8 px-4 py-14 sm:grid-cols-3">
-      {steps.map(([title, text]) => (
-        <div key={title}>
-          <h3 className="font-semibold text-stone-900">{title}</h3>
-          <p className="mt-1 text-sm text-stone-600">{text}</p>
-        </div>
-      ))}
-      <p className="text-sm text-stone-600 sm:col-span-3">
+    <div className="mx-auto max-w-6xl px-4 py-14">
+      <h2 className="text-2xl font-bold text-stone-900">How it works</h2>
+      <ol className="mt-6 grid gap-4 sm:grid-cols-3">
+        {steps.map(([title, text]) => (
+          <li key={title} className="rounded-2xl bg-orange-50 p-5">
+            <h3 className="text-lg font-bold text-stone-900">{title}</h3>
+            <p className="mt-1 text-stone-700">{text}</p>
+          </li>
+        ))}
+      </ol>
+      <p className="mt-6 text-sm text-stone-600">
         Need 1kg or more?{" "}
         <Link href="/bulk-orders" className="font-medium text-orange-700 hover:underline">Ask about bulk orders</Link>.
       </p>

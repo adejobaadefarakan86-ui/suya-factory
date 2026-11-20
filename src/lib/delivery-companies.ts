@@ -6,8 +6,13 @@ export type DeliveryCompany = {
   name: string;
   url: string; // website (computers, or when nothing better is known)
   note: string;
-  /** Google Play package id: on Android the app opens if installed, otherwise its Play Store page. */
+  /** Google Play package id (its Play Store page when the app isn't installed). */
   android?: string;
+  /**
+   * The app's own link name ("scheme") on Android: with it, the button opens the app directly.
+   * Only set ones TESTED on a real phone (apps don't publish them). Without it: the Play Store page.
+   */
+  androidScheme?: string;
   /** App Store page: on iPhone it shows "Open" when the app is installed. */
   ios?: string;
   /** Uber only: its documented link that opens the app with pickup + drop-off filled in. */
@@ -26,6 +31,7 @@ export const DELIVERY_COMPANIES: DeliveryCompany[] = [
     url: "https://bolt.eu/en-ng/",
     note: "Choose “Send” (parcel delivery).",
     android: "ee.mtakso.client",
+    androidScheme: "bolt",
     ios: "https://apps.apple.com/ng/app/id675033630",
   },
   {
@@ -34,6 +40,7 @@ export const DELIVERY_COMPANIES: DeliveryCompany[] = [
     url: "https://chowdeck.com/relay",
     note: "Choose “Relay” (send a package).",
     ios: "https://apps.apple.com/ng/app/id1530676376",
+    androidScheme: "chowdeck",
   },
   {
     id: "indrive",
@@ -41,6 +48,7 @@ export const DELIVERY_COMPANIES: DeliveryCompany[] = [
     url: "https://indrive.com",
     note: "Choose “Courier”. You agree the price with the rider.",
     android: "sinet.startup.inDriver",
+    androidScheme: "indriver",
   },
 ];
 
@@ -61,6 +69,7 @@ export const GH_DELIVERY_COMPANIES: DeliveryCompany[] = [
     url: "https://bolt.eu/en-gh/rides/features/bolt-send/",
     note: "Choose “Send” (parcel delivery).",
     android: "ee.mtakso.client",
+    androidScheme: "bolt",
     ios: "https://apps.apple.com/gh/app/id675033630",
   },
   {
@@ -102,9 +111,14 @@ export function appLink(c: DeliveryCompany, userAgent: string, pickup: Point, dr
     if (dropoff) q.set("drop[0]", spot(dropoff));
     return `https://m.uber.com/looking?${q.toString()}`;
   }
-  if (/Android/i.test(userAgent) && c.android) {
-    const store = `https://play.google.com/store/apps/details?id=${c.android}`;
-    return `intent://#Intent;package=${c.android};S.browser_fallback_url=${encodeURIComponent(store)};end`;
+  if (/Android/i.test(userAgent)) {
+    const store = c.android ? `https://play.google.com/store/apps/details?id=${c.android}` : c.url;
+    // Chrome only opens an app through a link name the app registered; otherwise straight to its store page.
+    if (c.androidScheme) {
+      const pkg = c.android ? `package=${c.android};` : "";
+      return `intent://open#Intent;scheme=${c.androidScheme};${pkg}S.browser_fallback_url=${encodeURIComponent(store)};end`;
+    }
+    return store;
   }
   if (/iPhone|iPad|iPod/i.test(userAgent) && c.ios) return c.ios;
   return c.url;

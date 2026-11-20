@@ -41,7 +41,7 @@ async function Tests() {
   return (
     <>
       <p className="mt-2 text-stone-700">
-        On an <strong>Android phone</strong> with the app installed, tap each button. Write down the ones that
+        On an <strong>Android phone</strong> with the app installed, tap each button. (Ghana: Yango and Qargo still need testing there.) Write down the ones that
         <strong> open the app</strong> (not the Play Store, not an error), and send them to Claude.
         Come back to this page after each tap.
       </p>

@@ -433,7 +433,7 @@ function RiderStep({
         </div>
 
         <p className="mt-5 text-sm font-medium text-stone-700">Choose a delivery company:</p>
-        <p className="mt-1 text-xs text-stone-500">Opens the app&apos;s Play Store / App Store page: tap <strong>Open</strong> there if you have it, or <strong>Install</strong>.</p>
+        <p className="mt-1 text-xs text-stone-500">Opens the app if you have it. If you see its Play Store / App Store page instead, tap <strong>Open</strong> (or <strong>Install</strong>).</p>
         <ul className="mt-2 grid gap-2 sm:grid-cols-3">
           {DELIVERY_COMPANIES.map((c) => (
             <li key={c.id}>

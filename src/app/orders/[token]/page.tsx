@@ -412,13 +412,13 @@ function OwnRiderSection({ order, token }: { order: OrderView; token: string }) 
   const items = order.items.map((i) => `${i.quantity} × ${i.product_name} ${i.variant_label}`).join(", ");
   // What Bolt / inDrive / Yango / Qargo ask for, in their words.
   const details: DetailRow[] = [
-    { label: "Pickup address", hint: "Where the rider collects it", value: GH_PICKUP.address },
-    { label: "Sender name", hint: "Bolt / inDrive: Sender (the person handing it over)", value: `${gloria} (Suya Factory)` },
-    { label: "Sender phone", hint: "The rider calls this number at pickup", value: GH_PICKUP.contactPhone },
-    { label: "Drop-off address", hint: "Your address", value: [a.line1, a.line2, a.landmark ? `near ${a.landmark}` : ""].filter(Boolean).join(", ") },
-    { label: "Recipient name", hint: "Bolt / inDrive: Recipient (you)", value: order.contact_name },
-    { label: "Recipient phone", hint: "The rider calls you at drop-off", value: localPhone(order.contact_phone) },
-    { label: "Item", hint: "Package / item description", value: `Food: ${items} (sealed, light, under 1 kg)` },
+    { label: "Pickup address", pasteInto: "inDrive “From” · Bolt “Pickup”", hint: "Where the rider collects it", value: GH_PICKUP.address },
+    { label: "Sender name", pasteInto: "Sender's name (if the app asks)", hint: "The person handing it over", value: `${gloria} (Suya Factory)` },
+    { label: "Sender phone", pasteInto: "inDrive “Sender's phone” · Bolt “Sender”", hint: "The rider calls this number at pickup", value: GH_PICKUP.contactPhone },
+    { label: "Drop-off address", pasteInto: "inDrive “To” · Bolt “Where to?”", hint: "Your address", value: [a.line1, a.line2, a.landmark ? `near ${a.landmark}` : ""].filter(Boolean).join(", ") },
+    { label: "Recipient name", pasteInto: "Recipient's name (if the app asks)", hint: "You", value: order.contact_name },
+    { label: "Recipient phone", pasteInto: "inDrive “Recipient's phone” · Bolt “Recipient”", hint: "The rider calls you at drop-off", value: localPhone(order.contact_phone) },
+    { label: "Item", pasteInto: "inDrive “Order details” / item description", hint: "What's in the package", value: `Food: ${items} (sealed, light, under 1 kg)` },
     { label: "Note for the rider", value: `Collect Suya Factory order ${order.order_number} for ${order.contact_name} from ${gloria}.` },
   ];
   const dropoff = a.lat !== undefined && a.lng !== undefined

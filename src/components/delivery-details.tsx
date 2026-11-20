@@ -7,7 +7,9 @@ import { useState } from "react";
 export type DetailRow = {
   /** What we call it, e.g. "Sender phone (pickup)". */
   label: string;
-  /** How the apps word it, shown small, e.g. "Bolt / inDrive: Sender". */
+  /** Where to paste it, in the apps' own words, e.g. "inDrive: From · Bolt: Pickup". */
+  pasteInto?: string;
+  /** Extra explanation, shown small. */
   hint?: string;
   value: string;
   /** Not copyable, just information (e.g. "Your own address"). */
@@ -52,6 +54,9 @@ export function DeliveryDetails({ rows, tips }: { rows: DetailRow[]; tips?: stri
             <div className="min-w-0">
               <p className="text-xs font-semibold uppercase tracking-wide text-stone-500">{r.label}</p>
               <p className={`break-words ${r.info ? "text-stone-600" : "font-medium text-stone-900"}`}>{r.value}</p>
+              {r.pasteInto && (
+                <p className="mt-0.5 text-xs font-semibold text-orange-800">👉 Paste into: {r.pasteInto}</p>
+              )}
               {r.hint && <p className="text-xs text-stone-500">{r.hint}</p>}
             </div>
             {!r.info && (

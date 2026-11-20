@@ -398,17 +398,17 @@ function RiderStep({
   const name = form.customerName.trim();
   const phone = form.customerPhone.trim();
   const details: DetailRow[] = [
-    { label: "Pickup address", hint: "Where the rider collects it", value: pickupText(store) },
-    { label: "Sender name", hint: "Bolt / inDrive: Sender (the supermarket)", value: storeTitle(store) },
-    ...(store.phone ? [{ label: "Sender phone", hint: "The rider calls the supermarket at pickup", value: localPhone(store.phone) }] : []),
-    { label: "Drop-off address", hint: "Type your own address in the app", value: "Your address", info: true },
+    { label: "Pickup address", pasteInto: "inDrive “From” · Bolt “Pickup”", hint: "Where the rider collects it", value: pickupText(store) },
+    { label: "Sender name", pasteInto: "Sender's name (if the app asks)", hint: "The supermarket", value: storeTitle(store) },
+    ...(store.phone ? [{ label: "Sender phone", pasteInto: "inDrive “Sender's phone” · Bolt “Sender”", hint: "The rider calls the supermarket at pickup", value: localPhone(store.phone) }] : []),
+    { label: "Drop-off address", pasteInto: "inDrive “To” · Bolt “Where to?”", hint: "Type your own address there", value: "Your address", info: true },
     name
-      ? { label: "Recipient name", hint: "Bolt / inDrive: Recipient (you)", value: name }
+      ? { label: "Recipient name", pasteInto: "Recipient's name (if the app asks)", hint: "You", value: name }
       : { label: "Recipient name", value: "Your name (fill it in below to copy it)", info: true },
     phone
-      ? { label: "Recipient phone", hint: "The rider calls you at drop-off", value: localPhone(phone) }
+      ? { label: "Recipient phone", pasteInto: "inDrive “Recipient's phone” · Bolt “Recipient”", hint: "The rider calls you at drop-off", value: localPhone(phone) }
       : { label: "Recipient phone", value: "Your phone (fill it in below to copy it)", info: true },
-    { label: "Item", hint: "Package / item description", value: "Food: Suya Factory beef kilishi, already paid (sealed, light, under 1 kg)" },
+    { label: "Item", pasteInto: "inDrive “Order details” / item description", hint: "What's in the package", value: "Food: Suya Factory beef kilishi, already paid (sealed, light, under 1 kg)" },
     { label: "Note for the rider", value: `Collect the Suya Factory kilishi ${name ? `for ${name} ` : ""}from ${storeTitle(store)}. Already paid.` },
   ];
 

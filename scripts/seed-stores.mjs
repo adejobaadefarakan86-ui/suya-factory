@@ -11,7 +11,7 @@ import { readFileSync } from "node:fs";
 const TEST_NUMBER = "2349132654740"; // Suya Factory NG business line (src/lib/contacts.ts)
 const HOURS = "8am – 8pm (to be confirmed)";
 
-// lat/lng: APPROXIMATE (street level) – fix the pin in Admin -> Supermarkets when someone is there.
+// Addresses = each store's registered Google Maps listing. lat/lng: APPROXIMATE (street level) – fix the pin in Admin -> Supermarkets when someone is there.
 const STORES = [
   {
     name: "Qwik Supermarket",
@@ -22,16 +22,16 @@ const STORES = [
   },
   {
     name: "Golden Choice Supermarket",
-    branch: "Abule Egba",
-    address: "Karimu Alabi Street, Abule Egba, Lagos",
-    lat: 6.6479, lng: 3.3046,
+    branch: "Ikeja",
+    address: "10 John Olugbo Street, Oregun, Ikeja, Lagos",
+    lat: 6.5994, lng: 3.3471,
     realPhone: "2347069641232",
   },
   {
     name: "La Royale Hotel",
-    branch: "Abule Egba",
-    address: "1 Morin Street, Poposola, Abule Egba, Lagos",
-    lat: 6.6673, lng: 3.3099,
+    branch: "Agege",
+    address: "La Royale Hotel & Event Centre, Amusan Street, Agege, Lagos",
+    lat: 6.6658, lng: 3.3117,
     realPhone: "2348120638938",
   },
   // YK Supermarket (real phone 2348163222827): not on the map yet – add when we have its address.

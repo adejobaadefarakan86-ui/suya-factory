@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { AdminNav, type NavItem } from "./admin-nav";
 import { LogoMark } from "@/components/logo-mark";
+import { BackButton } from "@/components/back-button";
 
 // The admin "frame": a dark control-room sidebar. The ACCESS CHECK is not done
 // here: layouts don't re-run when you move between pages, so every admin page
@@ -23,6 +24,8 @@ export default function AdminLayout({ children }: LayoutProps<"/admin">) {
     // data-theme-lock: the admin keeps its light look even when a visitor picks the dark theme.
     <div data-theme-lock="" className="flex min-h-screen flex-1 flex-col bg-stone-100 md:flex-row">
       <aside className="bg-stone-950 px-4 py-5 text-stone-100 md:sticky md:top-0 md:h-screen md:w-64 md:shrink-0 md:overflow-y-auto">
+        <div className="flex items-center gap-1">
+        <Suspense fallback={null}><BackButton tone="night" /></Suspense>
         <Link href="/admin" className="flex items-center gap-3">
           <span className="grid h-11 w-11 place-items-center rounded-xl bg-white/10"><LogoMark gid="sf-heat-admin" className="h-9 w-9 text-white" /></span>
           <span>
@@ -30,6 +33,7 @@ export default function AdminLayout({ children }: LayoutProps<"/admin">) {
             <span className="block text-xs font-semibold uppercase tracking-widest text-orange-400">Control room</span>
           </span>
         </Link>
+        </div>
 
         <div className="mt-5 rounded-xl bg-white/5 px-3 py-2 text-xs text-stone-300">
           <Suspense fallback="…"><WhoAmI /></Suspense>

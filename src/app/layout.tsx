@@ -4,6 +4,7 @@ import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { THEME_SCRIPT } from "@/components/theme";
 import { Splash } from "@/components/splash";
+import { ServiceWorker } from "@/components/service-worker";
 import "./globals.css";
 
 // Headings: Outfit, soft and geometric like the lettering in our logo.
@@ -36,6 +37,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       </head>
       <body className="flex min-h-full flex-col">
         <Splash />
+        <ServiceWorker />
         <SiteHeader />
         {children}
         <SiteFooter />

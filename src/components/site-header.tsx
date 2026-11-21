@@ -5,6 +5,7 @@ import { CartLink } from "@/components/cart-link";
 import { CountrySwitcher } from "@/components/country-switcher";
 import { MobileMenu } from "@/components/mobile-menu";
 import { LogoMark } from "@/components/logo-mark";
+import { BackButton } from "@/components/back-button";
 import { NAV_LINKS } from "@/lib/nav";
 import { getCatalog } from "@/lib/catalog";
 
@@ -51,10 +52,14 @@ export function SiteHeader() {
   return (
     <header className="site-header sticky top-0 z-40 border-b border-line bg-bg">
       <div className="relative mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4">
-        <Link href="/" className="flex shrink-0 items-center gap-2.5">
-          <LogoMark gid="sf-heat-top" className="h-10 w-10 text-ink" />
-          <span className="font-display text-lg font-semibold tracking-tight text-ink">Suya Factory</span>
-        </Link>
+        <div className="flex min-w-0 items-center gap-1">
+          {/* Phones: back arrow on every page except home (it knows the page, so it streams in). */}
+          <Suspense fallback={null}><BackButton /></Suspense>
+          <Link href="/" className="flex shrink-0 items-center gap-2.5">
+            <LogoMark gid="sf-heat-top" className="h-10 w-10 text-ink" />
+            <span className="font-display text-lg font-semibold tracking-tight text-ink">Suya Factory</span>
+          </Link>
+        </div>
 
         {/* Computer: simple links in the middle */}
         <nav className="hidden items-center gap-7 md:flex" aria-label="Main">

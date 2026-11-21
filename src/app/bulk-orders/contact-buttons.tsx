@@ -10,16 +10,15 @@ function useInBrowser() {
   return useSyncExternalStore(subscribe, () => true, () => false);
 }
 
-export function ContactButtons({ whatsapp, phone }: { whatsapp: string; phone: string }) {
+export function ContactButtons({ whatsapp, phones }: { whatsapp: string; phones: string[] }) {
   const inBrowser = useInBrowser();
-  const [copied, setCopied] = useState(false);
-  const shown = formatPhone(phone);
+  const [copied, setCopied] = useState<string | null>(null);
 
-  async function copyNumber() {
+  async function copyNumber(phone: string) {
     try {
       await navigator.clipboard.writeText(`+${phone}`);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2500);
+      setCopied(phone);
+      setTimeout(() => setCopied((c) => (c === phone ? null : c)), 2500);
     } catch {
       // Clipboard blocked (rare): let the customer copy it by hand.
       window.prompt("Copy this number:", `+${phone}`);
@@ -35,26 +34,31 @@ export function ContactButtons({ whatsapp, phone }: { whatsapp: string; phone: s
         className="flex flex-col items-center justify-center rounded-xl bg-green-600 px-4 py-3 text-center font-semibold text-white hover:bg-green-700"
       >
         <span>💬 Chat on WhatsApp</span>
-        <span className="text-sm font-normal text-green-50">{inBrowser ? formatPhone(whatsapp) : " "}</span>
+        <span className="text-sm font-normal text-green-50">{inBrowser ? formatPhone(whatsapp) : " "}</span>
       </a>
 
       <div className="flex flex-col gap-2">
-        {/* tel: = an ordinary phone call. The phone chooses its calling app. */}
-        <a
-          href={telLink(phone)}
-          className="flex flex-col items-center rounded-xl border border-stone-300 bg-white px-4 py-3 text-center font-semibold text-stone-900 hover:bg-stone-50"
-        >
-          <span>📞 Call us</span>
-          <span className="text-sm font-normal text-stone-600">{inBrowser ? shown : " "}</span>
-        </a>
-        <button
-          type="button"
-          onClick={copyNumber}
-          className="rounded-lg px-3 py-1 text-sm font-medium text-orange-700 hover:bg-orange-50"
-          aria-live="polite"
-        >
-          {copied ? "✓ Number copied" : "Copy number"}
-        </button>
+        {/* tel: = an ordinary phone call. The phone chooses its calling app. Either number works. */}
+        {phones.map((phone) => (
+          <div key={phone} className="flex items-stretch gap-2">
+            <a
+              href={telLink(phone)}
+              className="flex flex-1 flex-col items-center rounded-xl border border-stone-300 bg-white px-4 py-3 text-center font-semibold text-stone-900 hover:bg-stone-50"
+            >
+              <span>📞 Call us</span>
+              <span className="text-sm font-normal text-stone-600">{inBrowser ? formatPhone(phone) : " "}</span>
+            </a>
+            <button
+              type="button"
+              onClick={() => copyNumber(phone)}
+              aria-label={`Copy ${formatPhone(phone)}`}
+              className="rounded-xl px-3 text-sm font-medium text-orange-700 hover:bg-orange-50"
+              aria-live="polite"
+            >
+              {copied === phone ? "✓" : "Copy"}
+            </button>
+          </div>
+        ))}
       </div>
     </div>
   );

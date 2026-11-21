@@ -4,9 +4,10 @@ import type { CountryCode } from "@/lib/countries";
 
 export const BULK_MIN_KG = 1;
 
-export const CONTACTS: Record<CountryCode, { whatsapp: string; phone: string }> = {
-  NG: { whatsapp: "2349132654740", phone: "2349132654740" },
-  GH: { whatsapp: "233530515656", phone: "233545809740" },
+// "phones": numbers customers can call (either one). Ghana calls go to a different number from WhatsApp on purpose.
+export const CONTACTS: Record<CountryCode, { whatsapp: string; phones: string[] }> = {
+  NG: { whatsapp: "2349132654740", phones: ["2349132654740", "2347080807300"] },
+  GH: { whatsapp: "233530515656", phones: ["233545809740"] },
 };
 
 const BULK_MESSAGE =

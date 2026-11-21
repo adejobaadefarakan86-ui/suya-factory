@@ -55,7 +55,7 @@ async function BulkContent() {
             <h2 className="mb-4 text-lg font-semibold text-stone-900">
               {c === "NG" ? "🇳🇬" : "🇬🇭"} {COUNTRIES[c].name}
             </h2>
-            <ContactButtons whatsapp={CONTACTS[c].whatsapp} phone={CONTACTS[c].phone} />
+            <ContactButtons whatsapp={CONTACTS[c].whatsapp} phones={CONTACTS[c].phones} />
           </div>
         ))}
       </section>

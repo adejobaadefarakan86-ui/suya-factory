@@ -6,7 +6,7 @@ import { Suspense } from "react";
 import { ProductGrid, ProductGridSkeleton } from "@/components/product-grid";
 import { HeroOrder, OrderBarForPage } from "@/components/quick-order";
 import { Reveal } from "@/components/reveal";
-import { Flame, Sparks, Squiggle, Swirl } from "@/components/doodles";
+import { Cow, Flame, Sparks, Squiggle, Swirl } from "@/components/doodles";
 import { getCountry } from "@/lib/country";
 import { SELLS_VIA_SUPERMARKETS } from "@/lib/stores";
 import { SOCIAL } from "@/lib/business";
@@ -26,7 +26,7 @@ export default function HomePage() {
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">The one and only</p>
               <h2 className="mt-2 font-display text-3xl font-semibold tracking-tight text-ink sm:text-4xl">Our beef kilishi</h2>
             </div>
-            <Flame className="hidden h-12 w-10 text-accent sm:block" />
+            <Flame className="flicker hidden h-12 w-10 text-accent sm:block" />
           </Reveal>
           <Reveal>
             <Suspense fallback={<ProductGridSkeleton />}>
@@ -65,25 +65,27 @@ function Hero() {
         className="pointer-events-none absolute -right-40 -top-40 h-[34rem] w-[34rem] rounded-full bg-[radial-gradient(circle,color-mix(in_srgb,var(--sun)_45%,transparent),transparent_65%)] opacity-70" />
       <div className={`${wrap} relative grid items-center gap-12 py-7 sm:py-20 md:grid-cols-[1.05fr_1fr] md:py-24`}>
         <div>
-          <p className="inline-flex items-center gap-2 rounded-lg border border-line bg-surface/70 px-3 py-1.5 text-xs font-medium text-muted">
-            <Flame className="h-4 w-3.5 text-accent" />
+          <p className="hero-in inline-flex items-center gap-2 rounded-lg border border-line bg-surface/70 px-3 py-1.5 text-xs font-medium text-muted">
+            <Flame className="flicker h-4 w-3.5 text-accent" />
             Spicy beef kilishi · Lagos &amp; Accra
           </p>
-          <h1 className="mt-4 font-display text-[2.6rem] font-semibold sm:mt-6 sm:text-5xl leading-[1.02] tracking-tight text-ink md:text-6xl lg:text-7xl">
+          <h1 style={{ "--d": "0.08s" } as React.CSSProperties} className="hero-in mt-4 font-display text-[2.6rem] font-semibold sm:mt-6 sm:text-5xl leading-[1.02] tracking-tight text-ink md:text-6xl lg:text-7xl">
             No rules,
             <br />
             <span className="relative inline-block">
               just bite.
-              <Squiggle className="absolute -bottom-3 left-0 h-4 w-full text-accent" />
+              <Squiggle className="draw absolute -bottom-3 left-0 h-4 w-full text-accent" />
             </span>
           </h1>
-          <p className="mt-5 max-w-md leading-relaxed text-muted sm:mt-7 sm:text-lg">
+          <p style={{ "--d": "0.16s" } as React.CSSProperties} className="hero-in mt-5 max-w-md leading-relaxed text-muted sm:mt-7 sm:text-lg">
             Soft and crunchy in every piece. Prepared in a clean kitchen, sealed fresh, and seriously spicy.
           </p>
           {/* Order straight from the first screen: no scrolling needed. */}
-          <Suspense fallback={<div className="mt-8 h-44 max-w-md animate-pulse rounded-2xl bg-surface" />}>
-            <HeroOrder />
-          </Suspense>
+          <div style={{ "--d": "0.24s" } as React.CSSProperties} className="hero-in">
+            <Suspense fallback={<div className="mt-8 h-44 max-w-md animate-pulse rounded-2xl bg-surface" />}>
+              <HeroOrder />
+            </Suspense>
+          </div>
           <a href="#how-it-works" className="mt-4 inline-block text-sm font-medium text-muted underline-offset-4 hover:text-ink hover:underline">
             How it works
           </a>
@@ -92,16 +94,17 @@ function Hero() {
         <div className="relative mx-auto w-full max-w-lg md:max-w-none">
           {/* Abstract shape behind the photo */}
           <div aria-hidden="true"
-            className="absolute -inset-4 -z-0 rotate-3 rounded-[2.25rem] bg-gradient-to-br from-accent via-[color-mix(in_srgb,var(--accent)_60%,var(--sun))] to-sun opacity-90" />
+            className="tilt-in absolute -inset-4 -z-0 rotate-3 rounded-[2.25rem] bg-gradient-to-br from-accent via-[color-mix(in_srgb,var(--accent)_60%,var(--sun))] to-sun opacity-90" />
           <div className="relative overflow-hidden rounded-[1.75rem] shadow-[0_30px_60px_-30px_rgba(60,25,5,0.55)]">
             <Image src="/images/kilishi-plate.jpg" alt="Suya Factory beef kilishi on a white plate, coated in red pepper spice"
               width={1080} height={1078} priority sizes="(min-width: 768px) 560px, 100vw"
               className="aspect-[5/4] w-full object-cover" />
           </div>
-          <p className="absolute -bottom-5 left-5 rounded-xl border border-line bg-surface px-4 py-2.5 text-sm font-medium text-ink shadow-sm">
-            Halal · Sealed fresh
+          <p className="absolute -bottom-5 left-5 flex items-center gap-2.5 rounded-xl border border-line bg-surface py-2 pl-2.5 pr-4 text-sm font-medium text-ink shadow-sm">
+            <Cow className="h-8 w-8 text-ink" />
+            <span>Halal beef<span className="block text-xs font-normal text-muted">Sealed fresh</span></span>
           </p>
-          <Sparks className="absolute -right-3 -top-9 h-10 w-10 text-ink/70" />
+          <Sparks className="twinkle absolute -right-3 -top-9 h-10 w-10 text-ink/70" />
           <Swirl className="absolute -left-14 top-8 hidden h-10 w-28 text-ink/50 lg:block" />
         </div>
       </div>
@@ -194,6 +197,10 @@ function ComingSoon() {
         {/* Thin rings, like ripples in a pot */}
         <svg viewBox="0 0 400 400" className="absolute right-[6%] top-1/2 hidden h-[26rem] w-[26rem] -translate-y-1/2 text-on-night/15 md:block">
           {[70, 110, 150, 190].map((r) => <circle key={r} cx="200" cy="200" r={r} fill="none" stroke="currentColor" strokeWidth="1" />)}
+          {[0, 1.5, 3].map((d) => (
+            <circle key={d} className="ripple" style={{ "--d": `${d}s` } as React.CSSProperties}
+              cx="200" cy="200" r="120" fill="none" stroke="var(--accent)" strokeWidth="1" />
+          ))}
           <circle cx="200" cy="200" r="30" fill="none" stroke="var(--accent)" strokeWidth="1.5" />
         </svg>
       </div>

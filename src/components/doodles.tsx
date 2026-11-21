@@ -15,13 +15,14 @@ export function Flame({ className = "" }: Props) {
   );
 }
 
-/** A chilli pepper. */
+/** A chilli pepper: wide at the stem, curling to a point. */
 export function Chilli({ className = "" }: Props) {
   return (
-    <svg viewBox="0 0 48 32" className={className} aria-hidden="true">
-      <path {...line} d="M8 10c10 1 20 4 27 12 3 3.5 2 7-1.5 6.5C22 27 12 21 6.5 14.5 4.5 12 5.5 9.5 8 10z" />
-      <path {...line} d="M7.5 10.5C6 7 7 4 10 3" />
-      <path {...line} d="M5 6.5c2-1 4.5-.5 5.5 1" />
+    <svg viewBox="0 0 48 48" className={className} aria-hidden="true">
+      <path {...line} d="M13 13c6-2 11 0 13 5 3 8 6 15 15 20 2 1 1 3-1 3-11 0-22-6-27-16-2-5-3-10 0-12z" />
+      <path {...line} d="M10 15c1-3 3-4.5 6-4.5 1.5 0 3 .7 4 1.8" />
+      <path {...line} d="M13 11c-1-3 0-6 3-8" />
+      <path {...line} d="M17 24c2 4 5 8 9 10" opacity="0.5" />
     </svg>
   );
 }
@@ -50,6 +51,32 @@ export function Squiggle({ className = "" }: Props) {
   return (
     <svg viewBox="0 0 200 16" preserveAspectRatio="none" className={className} aria-hidden="true">
       <path {...line} strokeWidth={3} d="M3 10c20-8 34 6 52 0s30-8 48 0 32 6 50-1 28-6 44 1" />
+    </svg>
+  );
+}
+
+/** A friendly cow head in line art (our beef), same stroke style as the logo. */
+export function Cow({ className = "" }: Props) {
+  return (
+    <svg viewBox="0 0 64 64" className={className} aria-hidden="true">
+      {/* horns */}
+      <path {...line} d="M19 17c-5-2-7-7-5-11" />
+      <path {...line} d="M45 17c5-2 7-7 5-11" />
+      {/* ears */}
+      <path {...line} d="M18 22c-6-1-11 1-12 4 4 3 9 2 13-1" />
+      <path {...line} d="M46 22c6-1 11 1 12 4-4 3-9 2-13-1" />
+      {/* head */}
+      <path {...line} d="M19 18c8-5 18-5 26 0 2 7 2 14-1 20" />
+      <path {...line} d="M19 18c-2 7-2 14 1 20" />
+      {/* tuft */}
+      <path {...line} d="M27 16c1.5 3 5 3.5 6.5 0 1 2.5 3.5 3 5 .5" />
+      {/* eyes */}
+      <circle cx="25.5" cy="28" r="1.6" fill="currentColor" />
+      <circle cx="38.5" cy="28" r="1.6" fill="currentColor" />
+      {/* muzzle + nostrils */}
+      <path {...line} d="M20 40c0-4 5-6 12-6s12 2 12 6-5 9-12 9-12-5-12-9z" />
+      <circle cx="27" cy="41.5" r="1.4" fill="currentColor" />
+      <circle cx="37" cy="41.5" r="1.4" fill="currentColor" />
     </svg>
   );
 }

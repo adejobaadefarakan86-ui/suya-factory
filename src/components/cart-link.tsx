@@ -20,7 +20,7 @@ export function CartLink({ validIds }: { validIds?: string[] }) {
       </svg>
       <span className="hidden sm:inline">Cart</span>
       {count > 0 && (
-        <span className="absolute -right-1 top-0.5 min-w-5 rounded-full bg-accent px-1.5 text-center text-[11px] font-semibold leading-5 text-on-accent sm:static sm:text-xs">
+        <span key={count} className="bump absolute -right-1 top-0.5 min-w-5 rounded-full bg-accent px-1.5 text-center text-[11px] font-semibold leading-5 text-on-accent sm:static sm:text-xs">
           {count}
         </span>
       )}

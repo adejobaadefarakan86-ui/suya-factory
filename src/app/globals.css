@@ -206,3 +206,43 @@ html[data-intro-seen] .intro-loader { display: none; }
 
 /* No intro loader in the admin. */
 body:has([data-theme-lock]) .intro-loader { display: none; }
+
+/* ---------- Small brand animations (only when motion is welcome) ---------- */
+@media (prefers-reduced-motion: no-preference) {
+  /* Hero opening: lines rise in one after another (after the intro loader on a first visit). */
+  .hero-in { animation: hero-rise 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) both; animation-delay: var(--d, 0s); }
+  html:not([data-intro-seen]) .hero-in { animation-delay: calc(var(--d, 0s) + 0.95s); }
+  @keyframes hero-rise { from { opacity: 0; transform: translateY(16px); } }
+
+  /* The orange shape behind the hero photo settles into its tilt. */
+  .tilt-in { animation: tilt-in 1.1s cubic-bezier(0.2, 0.7, 0.2, 1) both; animation-delay: 0.15s; }
+  html:not([data-intro-seen]) .tilt-in { animation-delay: 1.1s; }
+  @keyframes tilt-in { from { transform: rotate(-4deg) scale(0.94); opacity: 0; } }
+
+  /* The hand-drawn underline draws itself. */
+  .draw path { stroke-dasharray: 260; stroke-dashoffset: 260; animation: draw 1s ease-out 0.6s forwards; }
+  html:not([data-intro-seen]) .draw path { animation-delay: 1.5s; }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+
+  /* Flames flicker softly; sparks twinkle. */
+  .flicker { transform-origin: 50% 100%; animation: flicker 2.6s ease-in-out infinite; }
+  @keyframes flicker {
+    0%, 100% { transform: scale(1, 1) skewX(0deg); }
+    30% { transform: scale(0.97, 1.06) skewX(-2deg); }
+    60% { transform: scale(1.02, 0.97) skewX(2deg); }
+  }
+  .twinkle { animation: twinkle 2.4s ease-in-out infinite; }
+  @keyframes twinkle { 50% { opacity: 0.35; transform: scale(0.85) rotate(12deg); } }
+
+  /* "Something new is simmering": rings ripple out like a simmering pot. */
+  .ripple { transform-origin: center; transform-box: fill-box; animation: ripple 4.5s ease-out infinite; animation-delay: var(--d, 0s); }
+  @keyframes ripple { from { transform: scale(0.55); opacity: 0.9; } to { transform: scale(1.35); opacity: 0; } }
+
+  /* Cart number pops when it changes. */
+  .bump { animation: bump 0.45s cubic-bezier(0.3, 1.6, 0.5, 1); }
+  @keyframes bump { 40% { transform: scale(1.35); } }
+
+  /* Buttons lift a touch on hover. */
+  .btn:hover { transform: translateY(-1px); }
+  .btn:active { transform: translateY(1px); }
+}

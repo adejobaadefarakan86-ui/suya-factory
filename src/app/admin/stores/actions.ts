@@ -1,7 +1,5 @@
 "use server";
 import { revalidatePath } from "next/cache";
-import { after } from "next/server";
-import { announceStockChange } from "@/lib/stock-telegram";
 import { requireStaff } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { toInternationalDigits } from "@/lib/contacts";
@@ -69,7 +67,6 @@ export async function setStock(storeId: string, inStock: boolean) {
   const supabase = await createClient();
   const { error } = await supabase.rpc("set_store_stock", { p_store_id: storeId, p_in_stock: inStock });
   if (error) console.error("set_store_stock failed:", error);
-  else after(() => announceStockChange(storeId));
   revalidatePath("/admin/stores");
   revalidatePath("/stock");
 }

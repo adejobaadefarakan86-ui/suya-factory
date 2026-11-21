@@ -4,7 +4,8 @@ import { getCountry } from "@/lib/country";
 import { COUNTRIES } from "@/lib/countries";
 import { SELLS_VIA_SUPERMARKETS } from "@/lib/stores";
 import { SupermarketNotice } from "@/components/supermarket-notice";
-import { getCurrentUser } from "@/lib/auth";
+import Link from "next/link";
+import { getCurrentUser, isStaff } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import type { CartItemInfo } from "../cart/cart-view";
 import { CheckoutForm } from "./checkout-form";
@@ -26,6 +27,7 @@ async function PricedCheckout() {
   if (SELLS_VIA_SUPERMARKETS[await getCountry()]) return <SupermarketNotice />;
   const [catalog, country, user] = await Promise.all([getCatalog(), getCountry(), getCurrentUser()]);
   const { currency, name: countryName } = COUNTRIES[country];
+  if (isStaff(user)) return <TeamAccountNotice />;
 
   // Today's names and prices for every variant, in this visitor's currency.
   const items: Record<string, CartItemInfo> = {};
@@ -58,5 +60,19 @@ async function PricedCheckout() {
       defaults={{ name: user?.fullName ?? "", email: user?.email ?? "", phone }}
       loggedIn={!!user}
     />
+  );
+}
+
+/** Team accounts don't order (it would mix staff and customer records). */
+function TeamAccountNotice() {
+  return (
+    <div className="mt-6 max-w-xl rounded-2xl bg-amber-50 p-5 text-amber-950">
+      <p className="font-semibold">You&apos;re signed in with a team account.</p>
+      <p className="mt-1 text-sm">
+        Team accounts can&apos;t place orders. To order (or test an order), log out first and order as a guest, or use a
+        customer account.
+      </p>
+      <Link href="/account" className="mt-3 inline-block text-sm font-semibold text-orange-800 underline">Go to my account to log out</Link>
+    </div>
   );
 }

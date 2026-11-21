@@ -1,12 +1,12 @@
 // Staff stock page, made for a phone: after calling a supermarket, tap
-// "Has kilishi" or "Finished". Customers see the change at once, and the
-// staff Telegram chat is told. Tip: add it to the phone's home screen.
+// "Has kilishi" or "Finished". Customers see the change at once. Supermarkets
+// that are out (or reported out by a customer) come first, in red, and show as
+// a red number in the admin menu. Tip: add it to the phone's home screen.
 import { Suspense } from "react";
 import { requireStaff } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { formatPhone, telLink, whatsappLink } from "@/lib/contacts";
-import { storeTitle } from "@/lib/stores";
-import { shortTime } from "@/lib/stock-telegram";
+import { shortTime, storeTitle } from "@/lib/stores";
 import { AutoRefresh } from "@/components/auto-refresh";
 import { StockButtons } from "./stock-buttons";
 
@@ -39,6 +39,9 @@ export default function StockPage() {
   );
 }
 
+/** Out of kilishi, or a customer says so: needs a restock or a check. */
+const needsCheck = (r: Row) => !r.in_stock || Boolean(r.out_reported_at);
+
 const CHECK_MESSAGE = "Hello, this is Suya Factory. Do you still have our beef kilishi in stock? Thank you!";
 
 async function StockList() {
@@ -65,8 +68,8 @@ async function StockList() {
         {finished > 0 && <span className="font-semibold text-red-700"> · {finished} finished</span>}
       </p>
       <ul className="mt-4 space-y-3">
-        {rows.map((r) => (
-          <li key={r.id} className="rounded-2xl border border-stone-200 bg-white p-4">
+        {[...rows].sort((a, b) => Number(needsCheck(b)) - Number(needsCheck(a))).map((r) => (
+          <li key={r.id} className={`rounded-2xl border bg-white p-4 ${needsCheck(r) ? "border-red-400 ring-2 ring-red-200" : "border-stone-200"}`}>
             <div className="flex items-start justify-between gap-2">
               <h2 className="font-semibold text-stone-900">{storeTitle(r)}</h2>
               <div className="flex shrink-0 gap-1.5">

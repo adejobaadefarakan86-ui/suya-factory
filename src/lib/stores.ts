@@ -84,3 +84,15 @@ export function directionsLink(s: Pick<Store, "lat" | "lng">) {
 export function mapPinLink(s: Pick<Store, "lat" | "lng">) {
   return `https://www.google.com/maps/search/?api=1&query=${s.lat},${s.lng}`;
 }
+
+/** "21 Nov, 3:05 pm" in Lagos time (stock page). */
+export function shortTime(iso: string) {
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "numeric",
+    month: "short",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+    timeZone: "Africa/Lagos",
+  }).format(new Date(iso));
+}

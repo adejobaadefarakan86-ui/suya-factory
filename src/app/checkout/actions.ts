@@ -3,6 +3,7 @@ import { after } from "next/server";
 // Sends the order to the database's place_order() function.
 // We pass only WHAT the customer wants; the database works out every price.
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser, isStaff } from "@/lib/auth";
 import { createPublicClient } from "@/lib/supabase/public";
 import { COUNTRIES, isCountry } from "@/lib/countries";
 import { SELLS_VIA_SUPERMARKETS } from "@/lib/stores";
@@ -98,6 +99,7 @@ export async function placeOrder(_prev: CheckoutState, formData: FormData): Prom
     notes: text(formData, "notes"),
   };
   const fail = (error: string): CheckoutState => ({ error, values });
+  if (isStaff(await getCurrentUser())) return fail("Team accounts can't place orders. Please log out and order as a guest.");
 
   const country = formData.get("country");
   if (!isCountry(country)) return fail("Please choose your country again.");

@@ -86,19 +86,6 @@ export async function alertNeedsDeliveryPrice(orderNumber: string) {
   );
 }
 
-/** A customer says a supermarket has run out of kilishi. */
-export async function alertOutOfStockReport(store: Store) {
-  if (!telegramConfigured()) return;
-  await sendTelegram(
-    [
-      `🔴 <b>Customer says ${esc(storeTitle(store))} is out of kilishi</b>`,
-      "",
-      `Please check, then mark it: /out ${store.storeNo} (or /in ${store.storeNo} if they still have it).`,
-      store.phone ? `📞 Store: +${store.phone}` : "",
-      `🔗 <a href="${site()}/admin/stores">Open supermarkets</a>`,
-    ].filter(Boolean).join("\n"),
-  );
-}
 
 /** A customer sent their rider's details to a supermarket (= a sale through the app). */
 export async function alertStorePickup(

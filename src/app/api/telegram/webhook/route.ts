@@ -1,15 +1,10 @@
-// Telegram sends the staff chat's messages and button taps here (once the
-// webhook is set: scripts/telegram-webhook.mjs). Staff keep supermarket stock
-// up to date:
-//   /stock (or /stores)  the stock list with a tap button per supermarket
-//   tap "❌ Mark OUT" / "✅ Mark IN" under the list
-//   /out 3, /in 3        the same by typing, for supermarket #3
+// Telegram sends the staff chat's button taps here (webhook: scripts/telegram-webhook.mjs):
+// Ghana orders' ✅ payment received / ❌ not received, 📦 handed to rider, 💸 refund sent.
+// (Supermarket stock is kept in the app only: /stock.)
 // Only the staff chat (TELEGRAM_CHAT_ID) is obeyed, and only requests carrying
 // our secret (TELEGRAM_WEBHOOK_SECRET) are accepted.
 import { timingSafeEqual } from "node:crypto";
-import { esc, sendTelegram, telegramApi } from "@/lib/telegram";
-import { storeTitle } from "@/lib/stores";
-import { parseStockButton, postStockList, setStockByNumber, STOCK_REFRESH, stockList } from "@/lib/stock-telegram";
+import { sendTelegram, telegramApi } from "@/lib/telegram";
 import {
   answerMomoAlert, handleHandover, handleMomoButton, handleRefunded, parseHandButton, parseMomoButton, parseRefundButton,
 } from "@/lib/ghana-orders";
@@ -85,69 +80,31 @@ async function onButton(q: NonNullable<Update["callback_query"]>) {
     return;
   }
 
-  let toast = "Updated";
-  const tap = parseStockButton(q.data ?? "");
-  if (tap) {
-    const store = await setStockByNumber(tap.storeNo, tap.inStock, nameOf(q.from));
-    toast = store
-      ? `${storeTitle(store)}: ${tap.inStock ? "has kilishi ✅" : "finished ❌"}`
-      : "That supermarket no longer exists.";
-  } else if (q.data !== STOCK_REFRESH) {
-    toast = "That button is out of date. Send /stock for a new list.";
-  }
-
-  // Show the change straight away in the same message, for everyone in the chat.
-  const { html, buttons } = await stockList();
-  await telegramApi("editMessageText", {
-    chat_id: chatId,
-    message_id: q.message.message_id,
-    text: html,
-    parse_mode: "HTML",
-    reply_markup: { inline_keyboard: buttons },
+  // Old stock-list buttons (stock is now kept in the app only).
+  await telegramApi("answerCallbackQuery", {
+    callback_query_id: q.id,
+    text: "Supermarket stock is now updated in the app: Admin → Stock check.",
   });
-  await telegramApi("answerCallbackQuery", { callback_query_id: q.id, text: toast.slice(0, 190) });
 }
 
 // --- Typed commands -------------------------------------------------------------
 
 async function onMessage(msg: NonNullable<Update["message"]>) {
   if (!msg.text || !isStaffChat(msg.chat?.id)) return;
-  // "/out@suyafactory_alerts_bot 3" -> ["out", "3"]
-  const match = /^\/(\w+)(?:@\w+)?\s*([\s\S]*)$/.exec(msg.text.trim());
+  // "/help@suyafactory_alerts_bot" -> "help"
+  const match = /^\/(\w+)(?:@\w+)?/.exec(msg.text.trim());
   if (!match) return;
   const command = match[1].toLowerCase();
-  const arg = match[2].trim();
 
-  if (command === "stock" || command === "stores") await postStockList();
-  else if (command === "in" || command === "out" || command === "restock") await typedStock(arg, command !== "out", msg.from);
-  else if (command === "help" || command === "start") await help();
+  if (command === "help" || command === "start") await help();
 }
 
 async function help() {
   await sendTelegram(
     [
-      "<b>Supermarket stock</b>",
-      "/stock: the list with a button for each supermarket. Tap to mark it finished or restocked.",
-      "",
-      "You can also type /out 3 or /in 3 (the numbers are in Admin → Supermarkets).",
+      "<b>Suya Factory order alerts</b>",
+      "Tap the buttons under each alert: ✅ payment received, 📦 handed to rider, 💸 refund sent.",
+      "Supermarket stock is updated in the app: Admin → Stock check.",
     ].join("\n"),
-  );
-}
-
-async function typedStock(arg: string, inStock: boolean, from: TgUser | undefined) {
-  const no = Number(arg.replace("#", ""));
-  if (!Number.isInteger(no) || no <= 0) {
-    await postStockList("Which supermarket? Just tap a button:");
-    return;
-  }
-  const store = await setStockByNumber(no, inStock, nameOf(from));
-  if (!store) {
-    await postStockList(`There's no supermarket #${no}. Tap one of these instead:`);
-    return;
-  }
-  await sendTelegram(
-    inStock
-      ? `🟢 ${esc(storeTitle(store))} is marked <b>in stock</b>. Customers will see it again.`
-      : `🔴 ${esc(storeTitle(store))} is marked <b>finished</b>. Customers will be sent to the next nearest supermarket.`,
   );
 }

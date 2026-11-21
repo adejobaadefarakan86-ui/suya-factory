@@ -3,7 +3,7 @@ import { after } from "next/server";
 import { createPublicClient } from "@/lib/supabase/public";
 import { STORE_FIELDS, toStore, type StoreRow } from "@/lib/stores";
 import { DELIVERY_COMPANIES } from "@/lib/delivery-companies";
-import { alertOutOfStockReport, alertStorePickup } from "@/lib/staff-alerts";
+import { alertStorePickup } from "@/lib/staff-alerts";
 
 const isId = (v: unknown): v is string =>
   typeof v === "string" && /^[0-9a-f-]{36}$/i.test(v);
@@ -13,19 +13,13 @@ async function loadStore(id: string) {
   return data ? toStore(data as StoreRow) : null;
 }
 
-/** A customer says this store has run out. Staff are told; the store isn't changed until they check. */
+/** A customer says this store has run out. It shows as a warning in the app; the store isn't changed until staff check. */
 export async function reportOutOfStock(storeId: string): Promise<{ ok: boolean }> {
   if (!isId(storeId)) return { ok: false };
-  const { data, error } = await createPublicClient().rpc("report_store_out_of_stock", { p_store_id: storeId });
+  const { error } = await createPublicClient().rpc("report_store_out_of_stock", { p_store_id: storeId });
   if (error) {
     console.error("report_store_out_of_stock failed:", error);
     return { ok: false };
-  }
-  if (data === true) {
-    after(async () => {
-      const store = await loadStore(storeId);
-      if (store) await alertOutOfStockReport(store);
-    });
   }
   return { ok: true };
 }

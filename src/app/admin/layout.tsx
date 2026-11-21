@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { getCurrentUser } from "@/lib/auth";
+import { createClient } from "@/lib/supabase/server";
 
 // The admin "frame" (sidebar). The ACCESS CHECK is not done here: layouts
 // don't re-run when you move between pages, so every admin page checks
@@ -29,7 +30,10 @@ export default function AdminLayout({ children }: LayoutProps<"/admin">) {
         </p>
         <nav className="flex flex-wrap gap-x-4 gap-y-2 text-sm md:flex-col md:gap-2">
           {NAV.map((item) => (
-            <Link key={item.href} href={item.href} className="hover:text-orange-300">{item.label}</Link>
+            <Link key={item.href} href={item.href} className="hover:text-orange-300">
+              {item.label}
+              {item.href === "/stock" && <Suspense fallback={null}><StockSignal /></Suspense>}
+            </Link>
           ))}
           <span className="text-stone-500" title="Coming in a later phase">Kitchen &amp; stock</span>
           <Link href="/account" className="hover:text-orange-300">My account</Link>
@@ -38,6 +42,18 @@ export default function AdminLayout({ children }: LayoutProps<"/admin">) {
       <div className="min-w-0 flex-1 px-4 py-8 md:px-8">{children}</div>
     </div>
   );
+}
+
+/** Red count of supermarkets that are out of kilishi (or reported out by a customer). */
+async function StockSignal() {
+  const user = await getCurrentUser();
+  if (!user) return null;
+  const { data } = await (await createClient())
+    .from("stores").select("in_stock, out_reported_at").eq("active", true);
+  const n = (data ?? []).filter((s) => !s.in_stock || s.out_reported_at).length;
+  return n > 0
+    ? <span className="ml-2 rounded-full bg-red-600 px-1.5 text-xs font-bold text-white" aria-label={`${n} need attention`}>{n}</span>
+    : null;
 }
 
 async function WhoAmI() {

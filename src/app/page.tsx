@@ -97,15 +97,27 @@ function Hero() {
           </Link>
         </div>
 
-        {/* The photo, framed and kept inside the page */}
-        <div style={delay(0.9)} className="hero-in relative mt-14 w-full max-w-[18rem] sm:max-w-md">
+        {/* The plate, seen from above: a round photo on a warm orange disc, with a thin
+            orbit ring and a small flame sticker. Kept inside the page, never edge to edge. */}
+        <div style={delay(0.9)} className="hero-in relative mt-14 aspect-square w-full max-w-[17rem] sm:max-w-sm">
+          {/* orange disc, offset, with a soft glow */}
           <div aria-hidden="true"
-            className="tilt-in absolute -inset-3 rotate-3 rounded-[2rem] bg-gradient-to-br from-accent via-[color-mix(in_srgb,var(--accent)_60%,var(--sun))] to-sun opacity-90" />
-          <div className="relative overflow-hidden rounded-[1.6rem] shadow-[0_30px_60px_-30px_rgba(60,25,5,0.55)]">
+            className="tilt-in absolute inset-0 translate-x-5 translate-y-5 scale-[1.04] rounded-full bg-[radial-gradient(circle_at_30%_25%,var(--sun),var(--accent)_55%,var(--accent-strong))] shadow-[0_40px_80px_-30px_color-mix(in_srgb,var(--accent)_80%,transparent)]" />
+          {/* thin orbit ring */}
+          <svg aria-hidden="true" viewBox="0 0 100 100" className="absolute -inset-6 h-[calc(100%+3rem)] w-[calc(100%+3rem)] text-accent/60">
+            <circle cx="50" cy="50" r="48.5" fill="none" stroke="currentColor" strokeWidth="0.35" strokeDasharray="1.2 2.2" />
+          </svg>
+          {/* the plate */}
+          <div className="relative h-full w-full overflow-hidden rounded-full ring-[6px] ring-bg shadow-[0_25px_50px_-25px_rgba(60,25,5,0.6)]">
             <Image src="/images/kilishi-plate.jpg" alt="Suya Factory beef kilishi on a white plate, coated in red pepper spice"
-              width={1080} height={1078} priority sizes="(min-width: 640px) 448px, 288px"
-              className="aspect-[5/4] w-full object-cover" />
+              width={1080} height={1078} priority sizes="(min-width: 640px) 384px, 272px"
+              className="h-full w-full scale-[1.12] object-cover" />
           </div>
+          {/* flame sticker */}
+          <span className="absolute -right-2 bottom-6 flex items-center gap-1.5 rounded-full bg-night py-2 pl-2.5 pr-3.5 text-xs font-semibold text-on-night shadow-lg sm:-right-6">
+            <Flame className="flicker h-4 w-3.5 text-accent" />
+            Seriously spicy
+          </span>
         </div>
       </div>
     </section>

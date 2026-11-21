@@ -14,11 +14,10 @@ export function MobileMenu({ children }: { children: React.ReactNode }) {
   return (
     <div className="md:hidden">
       <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-controls="mobile-menu"
-        className="flex h-10 items-center gap-2 rounded-xl border border-line px-3 text-sm font-medium text-ink">
+        aria-label={open ? "Close menu" : "Open menu"} className="grid h-10 w-10 place-items-center rounded-xl border border-line text-ink">
         <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
           {open ? <path d="M6 6l12 12M18 6L6 18" /> : <path d="M4 7h16M4 12h16M4 17h10" />}
         </svg>
-        Menu
       </button>
       <div id="mobile-menu" hidden={!open}
         className="absolute inset-x-0 top-full border-b border-line bg-bg px-4 pb-6 pt-2 shadow-[0_20px_40px_-24px_rgba(0,0,0,0.35)]">

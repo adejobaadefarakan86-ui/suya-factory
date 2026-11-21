@@ -1,10 +1,12 @@
 import type { Metadata, Viewport } from "next";
+import { Suspense } from "react";
 import { Inter, Outfit } from "next/font/google";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { THEME_SCRIPT } from "@/components/theme";
 import { Splash } from "@/components/splash";
 import { ServiceWorker } from "@/components/service-worker";
+import { Welcome } from "@/components/welcome";
 import "./globals.css";
 
 // Headings: Outfit, soft and geometric like the lettering in our logo.
@@ -38,6 +40,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="flex min-h-full flex-col">
         <Splash />
         <ServiceWorker />
+        {/* Knows the current page, so it streams in. */}
+        <Suspense fallback={null}><Welcome /></Suspense>
         <SiteHeader />
         {children}
         <SiteFooter />

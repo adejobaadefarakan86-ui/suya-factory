@@ -313,3 +313,10 @@ html[data-motion="reduce"] [data-reveal="line"]::before { transform: none !impor
 /* The admin is its own app: no shop top bar or footer around it. */
 body:has([data-theme-lock]) .site-header,
 body:has([data-theme-lock]) .site-footer { display: none; }
+
+/* Welcome message fades in, then out. */
+@media (prefers-reduced-motion: no-preference) {
+  /* A soft fade in (with a touch of focus), and a gentle fade out after a few seconds. */
+  .welcome-in { animation: welcome-in 0.7s ease-out both; }
+  @keyframes welcome-in { from { opacity: 0; filter: blur(6px); transform: scale(0.98); } }
+}

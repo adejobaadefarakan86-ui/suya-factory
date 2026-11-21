@@ -1,9 +1,9 @@
 "use client";
-// "use client" = this part runs in the browser, so it can show
-// "Logging in…" and error messages without reloading the page.
+// "use client" = this part runs in the browser, so it can show the loader and
+// error messages without reloading the page.
 import { useActionState } from "react";
-import { Field, buttonClass } from "@/components/field";
 import { login, type AuthState } from "../actions";
+import { GlassButton, GlassError, GlassField, SigningIn } from "../glass";
 
 export function LoginForm({ next }: { next: string }) {
   const [state, action, pending] = useActionState<AuthState, FormData>(login, undefined);
@@ -11,18 +11,11 @@ export function LoginForm({ next }: { next: string }) {
   return (
     <form action={action} className="space-y-4">
       <input type="hidden" name="next" value={next} />
-      <Field label="Email" name="email" type="email" autoComplete="email" defaultValue={state?.email} required />
-      <Field label="Password" name="password" type="password" autoComplete="current-password" required />
-
-      {state?.error && (
-        <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-800">
-          {state.error}
-        </p>
-      )}
-
-      <button type="submit" disabled={pending} className={buttonClass}>
-        {pending ? "Logging in…" : "Log in"}
-      </button>
+      <GlassField label="Email" name="email" type="email" autoComplete="email" placeholder="you@example.com" defaultValue={state?.email} required />
+      <GlassField label="Password" name="password" type="password" autoComplete="current-password" placeholder="Your password" required />
+      {state?.error && <GlassError>{state.error}</GlassError>}
+      <GlassButton pending={pending}>{pending ? "Logging in…" : "Log in"}</GlassButton>
+      <SigningIn show={pending} text="Signing you in…" />
     </form>
   );
 }

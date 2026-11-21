@@ -25,9 +25,7 @@ async function CartForCustomers() {
 // <Suspense>, so the rest of the page can load without waiting for them.
 async function UserLinks() {
   const user = await getCurrentUser();
-  if (!user) {
-    return <Link href="/login" className="text-sm font-medium text-muted transition hover:text-ink">Log in</Link>;
-  }
+  if (!user) return null;
   return (
     <>
       {isStaff(user) && (
@@ -36,15 +34,37 @@ async function UserLinks() {
           Team view · Admin
         </Link>
       )}
-      <Link href="/account" className="text-sm font-medium text-muted transition hover:text-ink">Account</Link>
     </>
+  );
+}
+
+/** Always visible (phones too): "Log in" with a person icon, or your initials once logged in. */
+async function AccountButton() {
+  const user = await getCurrentUser();
+  if (!user) {
+    return (
+      <Link href="/login" aria-label="Log in"
+        className="flex h-10 items-center gap-1.5 rounded-xl border border-line px-2.5 text-sm font-medium text-ink transition hover:border-ink sm:px-3">
+        <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
+          <circle cx="12" cy="8" r="4" /><path d="M4 20c1.5-4 4.5-6 8-6s6.5 2 8 6" />
+        </svg>
+        <span className="hidden sm:inline">Log in</span>
+      </Link>
+    );
+  }
+  const initials = (user.fullName ?? user.email ?? "?").split(/[\s@]+/).filter(Boolean).slice(0, 2).map((w) => w[0]!.toUpperCase()).join("");
+  return (
+    <Link href="/account" aria-label="My account" title={user.fullName ?? "My account"}
+      className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-accent to-[color-mix(in_srgb,var(--accent)_55%,var(--sun))] font-display text-sm font-semibold text-white shadow-sm ring-2 ring-bg transition hover:brightness-110">
+      {initials}
+    </Link>
   );
 }
 
 /** The Menu button as it looks before the page is ready (phones only). */
 function MenuPlaceholder() {
   return (
-    <span className="flex h-10 items-center rounded-xl border border-line px-3 text-sm font-medium text-ink md:hidden">Menu</span>
+    <span className="grid h-10 w-10 place-items-center rounded-xl border border-line text-ink md:hidden" aria-hidden="true">☰</span>
   );
 }
 
@@ -57,7 +77,7 @@ export function SiteHeader() {
           <Suspense fallback={null}><BackButton /></Suspense>
           <Link href="/" className="flex shrink-0 items-center gap-2.5">
             <LogoMark gid="sf-heat-top" className="h-10 w-10 text-ink" />
-            <span className="font-display text-lg font-semibold tracking-tight text-ink">Suya Factory</span>
+            <span className="font-display text-lg font-semibold tracking-tight text-ink max-[380px]:hidden">Suya Factory</span>
           </Link>
         </div>
 
@@ -68,7 +88,7 @@ export function SiteHeader() {
           ))}
         </nav>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <div className="hidden items-center gap-4 md:flex">
             <Suspense fallback={<span className="w-20" />}><CountrySwitcher /></Suspense>
             <Suspense fallback={<span className="w-12" />}><UserLinks /></Suspense>
@@ -81,6 +101,7 @@ export function SiteHeader() {
             </Link>
           </div>
           <Suspense fallback={<CartLink />}><CartForCustomers /></Suspense>
+          <Suspense fallback={<span className="h-10 w-10" />}><AccountButton /></Suspense>
           {/* Phone: everything else lives in the menu (it knows the current page, so it streams in). */}
           <Suspense fallback={<MenuPlaceholder />}>
           <MobileMenu>

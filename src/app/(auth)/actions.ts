@@ -2,11 +2,18 @@
 // Server Actions: these run ONLY on the server, even though forms in the
 // browser call them. Passwords go straight to Supabase and are never stored by us.
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 
 export type AuthState =
   | { error?: string; message?: string; email?: string; fullName?: string; phone?: string }
   | undefined;
+
+/** A one-minute note for the welcome message ("Welcome back, Daniel"), shown once by components/welcome.tsx. */
+async function noteWelcome(kind: "back" | "new", fullName: unknown) {
+  const first = typeof fullName === "string" ? fullName.trim().split(/s+/)[0].slice(0, 40) : "";
+  (await cookies()).set("sf_welcome", JSON.stringify({ kind, name: first }), { path: "/", maxAge: 60, sameSite: "lax" });
+}
 
 // Only allow redirects to pages on OUR site (stops "?next=https://evil.com" tricks).
 function safeNext(value: FormDataEntryValue | null) {
@@ -25,7 +32,7 @@ export async function login(_prev: AuthState, formData: FormData): Promise<AuthS
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data: signedIn, error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
     if (error.code === "email_not_confirmed") {
@@ -36,6 +43,7 @@ export async function login(_prev: AuthState, formData: FormData): Promise<AuthS
     return { error: "Wrong email or password.", email };
   }
 
+  await noteWelcome("back", signedIn.user?.user_metadata?.full_name);
   redirect(safeNext(formData.get("next")));
 }
 
@@ -71,7 +79,10 @@ export async function signup(_prev: AuthState, formData: FormData): Promise<Auth
   }
 
   // If email confirmation is switched off, the user is logged in straight away.
-  if (data.session) redirect("/account");
+  if (data.session) {
+    await noteWelcome("new", fullName);
+    redirect("/account");
+  }
 
   return { message: `Almost done! We've sent a link to ${email}. Click it to activate your account.` };
 }

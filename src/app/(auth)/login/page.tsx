@@ -12,16 +12,16 @@ export const metadata = { title: "Log in · Suya Factory" };
 export default function LoginPage(props: PageProps<"/login">) {
   return (
     <>
-      <h1 className="text-2xl font-bold text-ink">Welcome back</h1>
-      <p className="mt-1 mb-6 text-sm text-muted">Log in to your Suya Factory account.</p>
+      <h1 className="text-center font-display text-3xl font-semibold tracking-tight">Welcome back</h1>
+      <p className="mb-7 mt-2 text-center text-sm text-white/80">Log in to your Suya Factory account.</p>
 
-      <Suspense fallback={<p className="text-sm text-muted">Loading…</p>}>
+      <Suspense fallback={<p className="text-center text-sm text-white/80">Loading…</p>}>
         <LoginContent searchParams={props.searchParams} />
       </Suspense>
 
-      <p className="mt-6 text-center text-sm text-muted">
+      <p className="mt-7 text-center text-sm text-white/80">
         New here?{" "}
-        <Link href="/signup" className="font-semibold text-accent-strong hover:underline">
+        <Link href="/signup" className="font-semibold text-white underline-offset-4 hover:underline">
           Create an account
         </Link>
       </p>
@@ -39,7 +39,7 @@ async function LoginContent({ searchParams }: { searchParams: PageProps<"/login"
   return (
     <>
       {error === "confirm" && (
-        <p role="alert" className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-800">
+        <p role="alert" className="mb-4 rounded-xl border border-white/40 bg-[#5a1503]/45 p-3 text-sm text-white">
           That confirmation link is invalid or has expired. Try logging in, or sign up again.
         </p>
       )}

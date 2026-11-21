@@ -1,5 +1,5 @@
 "use client";
-// Scroll reveals, played once when a section comes into view:
+// Scroll reveals, played each time a section comes into view (down or up):
 //   "rise"  : text lifts gently into place (default)
 //   "mask"  : a heading slides up from behind a hidden edge, line by line
 //   "image" : a photo opens out from a rounded frame while it settles from a slight zoom
@@ -21,12 +21,12 @@ export function Reveal({ children, className = "", as: Tag = "div", variant = "r
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+    // Plays every time it comes into view, scrolling down or back up: it resets
+    // once it has gone fully off screen, so it never flickers while visible.
     const io = new IntersectionObserver((entries) => {
       for (const e of entries) {
-        if (e.isIntersecting) {
-          e.target.setAttribute("data-revealed", "");
-          io.unobserve(e.target);
-        }
+        if (e.isIntersecting) e.target.setAttribute("data-revealed", "");
+        else e.target.removeAttribute("data-revealed");
       }
     }, { rootMargin: "0px 0px -10% 0px" });
     io.observe(el);

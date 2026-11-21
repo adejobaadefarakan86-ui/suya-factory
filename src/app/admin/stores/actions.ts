@@ -61,12 +61,11 @@ export async function saveStore(_prev: StoreFormState, formData: FormData): Prom
   return { ok: id ? "Saved." : "Supermarket added." };
 }
 
-/** Staff mark a store in / out of stock (admin page and the /stock page). The chat is told. */
+/** Staff mark a store in / out of stock (Admin → Supermarkets). */
 export async function setStock(storeId: string, inStock: boolean) {
-  await requireStaff("/stock");
+  await requireStaff("/admin/stores");
   const supabase = await createClient();
   const { error } = await supabase.rpc("set_store_stock", { p_store_id: storeId, p_in_stock: inStock });
   if (error) console.error("set_store_stock failed:", error);
   revalidatePath("/admin/stores");
-  revalidatePath("/stock");
 }

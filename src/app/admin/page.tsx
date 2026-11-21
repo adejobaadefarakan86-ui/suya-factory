@@ -50,8 +50,8 @@ async function Overview() {
 
   // Things someone should do now. Red = a supermarket has no kilishi (or a customer says so).
   const todo: Card[] = [
-    { label: "Supermarkets out of kilishi", count: storesOut.count ?? 0, href: "/stock", icon: "🔴", red: true },
-    { label: "Customer says a supermarket is out", count: storesReported.count ?? 0, href: "/stock", icon: "⚠️", red: true },
+    { label: "Supermarkets out of kilishi", count: storesOut.count ?? 0, href: "/admin/stores", icon: "🔴", red: true },
+    { label: "Customer says a supermarket is out", count: storesReported.count ?? 0, href: "/admin/stores", icon: "⚠️", red: true },
     { label: "MoMo payments to check", count: check.count ?? 0, href: "/admin/orders?tab=check", icon: "💸" },
     { label: "Ready to hand to a rider", count: handover.count ?? 0, href: "/admin/orders?tab=handover", icon: "📦" },
     { label: "Refunds to send", count: refund.count ?? 0, href: "/admin/orders?tab=refund", icon: "↩️" },
@@ -115,7 +115,7 @@ async function Overview() {
         <div className="flex flex-wrap gap-2 text-sm">
           {[
             ["🧾 All orders", "/admin/orders"],
-            ["🏪 Supermarket stock", "/stock"],
+            ["🏪 Supermarkets", "/admin/stores"],
             ["🛵 Ghana pickup details", "/admin/delivery"],
             ["👀 See the shop as customers do", "/"],
           ].map(([label, href]) => (

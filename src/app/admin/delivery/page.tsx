@@ -28,8 +28,8 @@ async function Settings() {
   const pickup = await getGhPickup();
 
   return (
-    <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_18rem]">
-      <section className="rounded-2xl border border-stone-200 bg-white p-5">
+    <div className="mt-6 grid max-w-5xl gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
+      <section className="min-w-0 rounded-2xl border border-stone-200 bg-white p-5">
         <h2 className="mb-1 font-semibold text-stone-900">🇬🇭 Ghana pickup point</h2>
         <p className="mb-4 text-sm text-stone-600">Where customers send their rider (Bolt, Uber, Yango, Qargo…).</p>
         <GhPickupForm pickup={pickup} />

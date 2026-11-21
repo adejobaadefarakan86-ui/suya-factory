@@ -58,8 +58,8 @@ async function Team() {
         </p>
         <RoleForm />
         <div className="mt-4 rounded-lg bg-stone-50 p-3 text-xs text-stone-600">
-          <p><strong>Staff</strong> can: enter delivery prices, prepare orders, send them out with rider details, update the rider&apos;s progress, add notes, handle bulk enquiries.</p>
-          <p className="mt-1"><strong>Only admins</strong> can: cancel or undo orders, record offline payments, and manage this team.</p>
+          <p><strong>Staff</strong> can: confirm MoMo payments, hand orders to the customer&apos;s rider, mark refunds as sent, update supermarket stock, add notes, and handle bulk enquiries.</p>
+          <p className="mt-1"><strong>Only admins</strong> can also: cancel orders, change pickup details and supermarkets, and manage this team.</p>
         </div>
       </section>
     </div>

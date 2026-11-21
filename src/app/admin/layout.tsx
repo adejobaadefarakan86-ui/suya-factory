@@ -11,8 +11,7 @@ import { AdminNav, type NavItem } from "./admin-nav";
 const NAV: NavItem[] = [
   { href: "/admin", label: "Overview", icon: "🏠" },
   { href: "/admin/orders", label: "Orders", icon: "🧾" },
-  { href: "/stock", label: "Supermarket stock", icon: "🏪" },
-  { href: "/admin/stores", label: "Supermarkets", icon: "📍" },
+  { href: "/admin/stores", label: "Supermarkets", icon: "🏪" },
   { href: "/admin/enquiries", label: "Bulk enquiries", icon: "📦" },
   { href: "/admin/products", label: "Products", icon: "🥩" },
   { href: "/admin/delivery", label: "Pickup & delivery", icon: "🛵" },
@@ -39,7 +38,7 @@ export default function AdminLayout({ children }: LayoutProps<"/admin">) {
           {/* The menu highlights the current page (known only in the browser), so it streams in. */}
           <Suspense fallback={<PlainNav />}>
             <AdminNav items={NAV} badges={NAV.map((item) =>
-              item.href === "/stock" ? <Suspense key={item.href} fallback={null}><StockSignal /></Suspense> : null)} />
+              item.href === "/admin/stores" ? <Suspense key={item.href} fallback={null}><StockSignal /></Suspense> : null)} />
           </Suspense>
         </div>
 

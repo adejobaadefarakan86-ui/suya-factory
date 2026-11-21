@@ -32,12 +32,13 @@ async function UserLinks() {
   return (
     <>
       {isStaff(user) && (
-        <Link href="/admin" className="rounded-full bg-stone-900 px-3 py-1 text-xs font-semibold text-white hover:bg-orange-700"
+        <Link href="/admin" className="shrink-0 rounded-full bg-stone-900 px-2.5 py-1 text-xs font-semibold text-white hover:bg-orange-700"
           title="You're signed in with a team account: you see the shop like a customer, without buying.">
-          👀 Team view · Admin
+          <span className="sm:hidden">Admin</span><span className="hidden sm:inline">👀 Team view · Admin</span>
         </Link>
       )}
-      <Link href="/account" className="hover:text-orange-700">Account</Link>
+      {/* On phones, team members reach their account from the admin menu (keeps the bar on one screen). */}
+      <Link href="/account" className={`hover:text-orange-700 ${isStaff(user) ? "hidden sm:inline" : ""}`}>Account</Link>
     </>
   );
 }
@@ -50,7 +51,7 @@ export function SiteHeader() {
           <Image src="/images/logo-mark.png" alt="" width={36} height={36} className="rounded-lg" priority />
           <span className="hidden sm:inline">Suya Factory</span>
         </Link>
-        <nav className="flex items-center gap-3 text-sm text-stone-700 sm:gap-5">
+        <nav className="flex min-w-0 items-center gap-2.5 text-sm text-stone-700 sm:gap-5">
           <Link href="/shop" className="hover:text-orange-700">Shop</Link>
           <Link href="/where-to-buy" className="hover:text-orange-700"><span className="hidden sm:inline">Where to buy</span><span className="sm:hidden">Stores</span></Link>
           <Link href="/bulk-orders" className="hover:text-orange-700">Bulk<span className="hidden sm:inline"> orders</span></Link>

@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { getCatalog, getProduct } from "@/lib/catalog";
 import { getCountry } from "@/lib/country";
+import { BUSINESS } from "@/lib/business";
 import { COUNTRIES } from "@/lib/countries";
 import { SELLS_VIA_SUPERMARKETS } from "@/lib/stores";
 import { ProductImage } from "@/components/product-image";
@@ -103,8 +104,12 @@ async function PricedBuyBox({ slug }: { slug: string }) {
     );
   }
 
+  const regNo = BUSINESS.foodRegNo[country];
   return (
-    <BuyBox productName={product.name} variants={variants} currency={currency} countryName={name}
-      inSupermarkets={SELLS_VIA_SUPERMARKETS[country]} />
+    <>
+      <BuyBox productName={product.name} variants={variants} currency={currency} countryName={name}
+        inSupermarkets={SELLS_VIA_SUPERMARKETS[country]} />
+      {regNo && <p className="mt-3 text-xs text-stone-500">{regNo}</p>}
+    </>
   );
 }

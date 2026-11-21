@@ -5,7 +5,7 @@ import { createPublicClient } from "@/lib/supabase/public";
 import { startPaystackPayment } from "@/lib/start-payment";
 import { isOrderToken } from "@/lib/orders";
 import { after } from "next/server";
-import { alertCancelled, alertMomoClaim, alertRiderBooked, autoQuoteGhanaOrder } from "@/lib/ghana-orders";
+import { alertCancelReason, alertCancelled, alertMomoClaim, alertRiderBooked, autoQuoteGhanaOrder } from "@/lib/ghana-orders";
 
 /** "Pay": record a pending payment, then go to Paystack. */
 export async function payWithPaystack(token: string, formData: FormData) {
@@ -27,6 +27,20 @@ export async function cancelOrder(token: string) {
   if (error) console.error("cancel_order_by_token:", error.message);
   if (typeof data === "string") after(() => alertCancelled(data));
   redirect(`/orders/${token}${error ? "?payment=cannot_cancel" : ""}`);
+}
+
+/** After cancelling: why? (a listed reason, or their own words). Staff get it on Telegram. */
+export async function setCancelReason(token: string, formData: FormData) {
+  if (!isOrderToken(token)) redirect("/");
+  const picked = String(formData.get("reason") ?? "");
+  const own = String(formData.get("other") ?? "").trim();
+  // Typing their own words counts even without ticking "Something else".
+  const reason = (picked && picked !== "other" ? picked : own).slice(0, 300);
+  if (!reason) redirect(`/orders/${token}?payment=cancel_reason`);
+  const { data, error } = await createPublicClient().rpc("set_cancel_reason_by_token", { p_token: token, p_reason: reason });
+  if (error) console.error("set_cancel_reason_by_token:", error.message);
+  if (typeof data === "string") after(() => alertCancelReason(data, reason));
+  redirect(`/orders/${token}`);
 }
 
 /** The delivery price expired (prices change): ask staff for a fresh one. */

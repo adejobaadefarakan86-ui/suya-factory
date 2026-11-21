@@ -4,10 +4,10 @@
 import { revalidatePath } from "next/cache";
 import { requireStaff } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { adminErrorMessage, PAYMENT_METHODS, type OrderStatus } from "@/lib/orders";
+import { adminErrorMessage, type OrderStatus } from "@/lib/orders";
 import { after } from "next/server";
-import { afterGhanaPayment } from "@/lib/ghana-orders";
-import { esc, sendTelegram } from "@/lib/telegram";
+import { handleHandover, handleMomoButton, handleRefunded } from "@/lib/ghana-orders";
+import { sendTelegram } from "@/lib/telegram";
 
 export type ActionState = { error?: string; ok?: string } | undefined;
 
@@ -27,30 +27,6 @@ export async function changeStatus(_prev: ActionState, formData: FormData): Prom
   return { ok: "Status updated." };
 }
 
-export async function markPaidManually(_prev: ActionState, formData: FormData): Promise<ActionState> {
-  await requireStaff("/admin/orders");
-  const method = text(formData, "method");
-  if (!(method in PAYMENT_METHODS)) return { error: "Please choose a payment method." };
-  const supabase = await createClient();
-  const { error } = await supabase.rpc("mark_order_paid_manually", {
-    p_order_id: text(formData, "orderId"),
-    p_method: method,
-    p_reference: text(formData, "reference"),
-    p_note: text(formData, "note") || null,
-  });
-  if (error) return { error: adminErrorMessage(error)! };
-  revalidatePath(`/admin/orders/${text(formData, "orderNumber")}`);
-  // Ghana: book the Dawurobo rider now that it's paid, and tell the chat how it went.
-  const { data: o } = await supabase.from("orders").select("id, country").eq("id", text(formData, "orderId")).single();
-  if (o?.country === "GH") {
-    const result = await afterGhanaPayment(o.id);
-    after(() => sendTelegram(`✅ ${esc(text(formData, "orderNumber"))}: payment recorded in admin.
-${result}`));
-    return { ok: `Payment recorded. ${result.replace(/<[^>]+>/g, "")}` };
-  }
-  return { ok: "Payment recorded. The order is now paid." };
-}
-
 export async function saveNotes(_prev: ActionState, formData: FormData): Promise<ActionState> {
   await requireStaff("/admin/orders");
   const supabase = await createClient();
@@ -63,54 +39,43 @@ export async function saveNotes(_prev: ActionState, formData: FormData): Promise
   return { ok: "Notes saved." };
 }
 
-/** "2,300" or "2300.50" (naira/cedis) -> 230000 / 230050 (kobo/pesewas). */
-function toMinor(value: string) {
-  const clean = value.replace(/[,\s]/g, "");
-  if (!/^\d{1,9}(\.\d{1,2})?$/.test(clean)) return null;
-  return Math.round(Number(clean) * 100);
+// --- Ghana own-rider orders: the same steps as the Telegram buttons ------------------
+
+async function staffName() {
+  const me = await requireStaff("/admin/orders");
+  return `${me.fullName ?? me.email} (admin page)`;
 }
 
-export async function setDeliveryQuote(_prev: ActionState, formData: FormData): Promise<ActionState> {
-  await requireStaff("/admin/orders");
-  const amount = toMinor(text(formData, "amount"));
-  if (amount === null) return { error: "Please enter the delivery price as a number, e.g. 2300." };
-  const supabase = await createClient();
-  const { error } = await supabase.rpc("set_delivery_quote", {
-    p_order_id: text(formData, "orderId"),
-    p_amount_minor: amount,
-    p_note: text(formData, "note") || null,
-  });
-  if (error) return { error: adminErrorMessage(error)! };
-  revalidatePath(`/admin/orders/${text(formData, "orderNumber")}`);
-  return { ok: "Delivery price sent. The customer's page shows it now. Let them know on WhatsApp." };
+/** Tell the Telegram chat what was done here, so nobody does it twice. */
+function tellChat(html: string) {
+  after(() => sendTelegram(html));
 }
 
-export async function sendOutForDelivery(_prev: ActionState, formData: FormData): Promise<ActionState> {
-  await requireStaff("/admin/orders");
-  const supabase = await createClient();
-  const { error } = await supabase.rpc("send_out_for_delivery", {
-    p_order_id: text(formData, "orderId"),
-    p_rider_name: text(formData, "riderName"),
-    p_rider_phone: text(formData, "riderPhone"),
-    p_tracking_url: text(formData, "trackingUrl") || null,
-    p_note: text(formData, "note") || null,
-  });
-  if (error) return { error: adminErrorMessage(error)! };
-  revalidatePath(`/admin/orders/${text(formData, "orderNumber")}`);
-  return { ok: "Rider details saved. The customer can see them now." };
+const plain = (html: string) => html.replace(/<[^>]+>/g, "");
+
+export async function confirmMomo(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const by = await staffName();
+  const orderNumber = text(formData, "orderNumber");
+  const result = await handleMomoButton(orderNumber, formData.get("ok") === "yes", by);
+  tellChat(result);
+  revalidatePath(`/admin/orders/${orderNumber}`);
+  return { ok: plain(result) };
 }
 
-export async function setDeliveryStage(_prev: ActionState, formData: FormData): Promise<ActionState> {
-  await requireStaff("/admin/orders");
-  const stage = text(formData, "stage");
-  if (!["on_the_way", "almost_there", "arrived"].includes(stage)) return { error: "Unknown stage." };
-  const supabase = await createClient();
-  const { error } = await supabase.rpc("set_delivery_stage", {
-    p_order_id: text(formData, "orderId"),
-    p_stage: stage,
-    p_note: text(formData, "note") || null,
-  });
-  if (error) return { error: adminErrorMessage(error)! };
-  revalidatePath(`/admin/orders/${text(formData, "orderNumber")}`);
-  return { ok: "Updated. The customer sees it now." };
+export async function handOver(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const by = await staffName();
+  const orderNumber = text(formData, "orderNumber");
+  const result = await handleHandover(orderNumber, by);
+  tellChat(result);
+  revalidatePath(`/admin/orders/${orderNumber}`);
+  return { ok: plain(result) };
+}
+
+export async function markRefunded(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const by = await staffName();
+  const orderNumber = text(formData, "orderNumber");
+  const result = await handleRefunded(orderNumber, by);
+  tellChat(result);
+  revalidatePath(`/admin/orders/${orderNumber}`);
+  return { ok: plain(result) };
 }

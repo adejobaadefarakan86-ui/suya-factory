@@ -56,6 +56,8 @@ export type OrderView = {
   /** Cancelled after paying: amount to refund, and when it was sent. */
   refund_due_minor: number | null;
   refunded_at: string | null;
+  /** Why the customer cancelled (asked right after cancelling). */
+  cancel_reason: string | null;
   courier: "dawurobo" | null;
   courier_eta: string | null;
   courier_tracking_url: string | null;
@@ -91,6 +93,32 @@ export const DELIVERY_STAGES: { stage: DeliveryStage; label: string; icon: strin
 /** The normal journey of an order, in order (used for the customer's timeline). */
 export const ORDER_JOURNEY: OrderStatus[] = [
   "awaiting_quote", "pending_payment", "paid", "preparing", "out_for_delivery", "delivered",
+];
+
+/** Ghana own rider: our part ends when the kilishi is handed to the customer's rider. */
+export const OWN_RIDER_JOURNEY: { status: OrderStatus; label: string }[] = [
+  { status: "pending_payment", label: "Ordered" },
+  { status: "paid", label: "Paid" },
+  { status: "preparing", label: "Rider booked" },
+  { status: "delivered", label: "Handed to rider" },
+];
+
+/** Status in plain words. Own-rider orders: "Rider booked", "Handed to rider". */
+export function statusLabel(status: OrderStatus, ownRider: boolean) {
+  if (ownRider) {
+    if (status === "preparing") return "Rider booked";
+    if (status === "out_for_delivery" || status === "delivered") return "Handed to rider";
+  }
+  return ORDER_STATUS[status].label;
+}
+
+/** Reasons a customer can pick after cancelling (or type their own). */
+export const CANCEL_REASONS = [
+  "I ordered by mistake",
+  "I couldn't get a rider",
+  "It was taking too long",
+  "I changed my mind",
+  "Problem with the payment",
 ];
 
 /** Simple next steps (a single button). Quotes and sending out have their own forms. */

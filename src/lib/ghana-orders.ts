@@ -203,7 +203,7 @@ export async function handleHandover(orderNumber: string, by: string): Promise<s
   const { data, error } = await createAdminClient().rpc("mark_handed_to_rider", { p_order_number: orderNumber, p_by: by });
   if (error) return `⚠️ ${orderNumber}: couldn't update (${esc(error.message)}).`;
   return data
-    ? `📦 ${orderNumber}: handed to the rider by ${esc(by)}. The customer can see it's on the way.`
+    ? `📦 ${orderNumber}: handed to the rider by ${esc(by)}. Done ✅ (the customer's page shows it).`
     : `${orderNumber}: nothing to change (already handed over, or no rider yet).`;
 }
 
@@ -249,6 +249,12 @@ export async function alertCancelled(orderNumber: string) {
     );
   }
   await sendTelegram(lines.join("\n"), o.refund_due_minor !== null ? refundButton(o.order_number) : undefined);
+}
+
+/** The customer said why they cancelled. */
+export async function alertCancelReason(orderNumber: string, reason: string) {
+  if (!telegramConfigured()) return;
+  await sendTelegram(`📝 <b>${esc(orderNumber)}</b>: why they cancelled: “${esc(reason)}”`);
 }
 
 /** Staff tapped "Refunded". */

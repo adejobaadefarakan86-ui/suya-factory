@@ -23,24 +23,21 @@ async function Counts() {
   const supabase = await createClient();
 
   // head:true + count = just count the rows, don't download them.
-  const countOrders = (status: string) =>
-    supabase.from("orders").select("id", { count: "exact", head: true }).eq("status", status);
-  const [needsQuote, toPrepare, preparing, outForDelivery, unpaid, newEnquiries] = await Promise.all([
-    countOrders("awaiting_quote"),
-    countOrders("paid"),
-    countOrders("preparing"),
-    countOrders("out_for_delivery"),
-    countOrders("pending_payment"),
+  const orders = () => supabase.from("orders").select("id", { count: "exact", head: true });
+  const [check, handover, refund, rider, newEnquiries] = await Promise.all([
+    orders().eq("status", "pending_payment").not("momo_claimed_at", "is", null),
+    orders().eq("status", "preparing"),
+    orders().eq("status", "cancelled").not("refund_due_minor", "is", null).is("refunded_at", null),
+    orders().eq("status", "paid"),
     supabase.from("bulk_enquiries").select("id", { count: "exact", head: true }).eq("status", "new"),
   ]);
 
   const cards = [
-    { label: "Need a delivery price", count: needsQuote.count, href: "/admin/orders?status=awaiting_quote", urgent: true },
-    { label: "Paid, to prepare", count: toPrepare.count, href: "/admin/orders?status=paid", urgent: true },
-    { label: "Being prepared", count: preparing.count, href: "/admin/orders?status=preparing" },
-    { label: "Out for delivery", count: outForDelivery.count, href: "/admin/orders?status=out_for_delivery" },
+    { label: "💸 MoMo payments to check", count: check.count, href: "/admin/orders?tab=check", urgent: true },
+    { label: "📦 Ready to hand to a rider", count: handover.count, href: "/admin/orders?tab=handover", urgent: true },
+    { label: "↩️ Refunds to send", count: refund.count, href: "/admin/orders?tab=refund", urgent: true },
+    { label: "🛵 Customers booking their rider", count: rider.count, href: "/admin/orders?tab=rider" },
     { label: "New bulk enquiries", count: newEnquiries.count, href: "/admin/enquiries?status=new", urgent: true },
-    { label: "Waiting for payment", count: unpaid.count, href: "/admin/orders?status=pending_payment" },
   ];
 
   return (

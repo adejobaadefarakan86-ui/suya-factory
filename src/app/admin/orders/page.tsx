@@ -3,22 +3,28 @@ import { Suspense } from "react";
 import { requireStaff } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { formatMoney, type Currency } from "@/lib/money";
-import { ORDER_STATUS, formatOrderDate, type OrderStatus } from "@/lib/orders";
+import { formatOrderDate, type OrderStatus } from "@/lib/orders";
 import type { CountryCode } from "@/lib/countries";
 import { AutoRefresh } from "@/components/auto-refresh";
 
 export const metadata = { title: "Orders · Admin · Suya Factory" };
 
 // Tabs in working order: what needs doing first comes first.
-const TABS: { status: OrderStatus; label: string }[] = [
-  { status: "awaiting_quote", label: "Needs delivery price" },
-  { status: "paid", label: "To prepare" },
-  { status: "preparing", label: "Preparing" },
-  { status: "out_for_delivery", label: "Out for delivery" },
-  { status: "delivered", label: "Delivered" },
-  { status: "pending_payment", label: "Waiting for payment" },
-  { status: "cancelled", label: "Cancelled" },
+//   Check MoMo -> (customer books rider) -> Hand over -> Done.
+type Tab = {
+  key: string; label: string; urgent?: boolean; oldestFirst?: boolean;
+  status: OrderStatus[]; claimed?: boolean; refundDue?: boolean;
+};
+const TABS: Tab[] = [
+  { key: "check", label: "💸 Check MoMo", urgent: true, oldestFirst: true, status: ["pending_payment"], claimed: true },
+  { key: "handover", label: "📦 Hand over", urgent: true, oldestFirst: true, status: ["preparing"] },
+  { key: "refund", label: "↩️ Refund to send", urgent: true, oldestFirst: true, status: ["cancelled"], refundDue: true },
+  { key: "rider", label: "🛵 Booking their rider", oldestFirst: true, status: ["paid"] },
+  { key: "unpaid", label: "⏳ Not paid yet", status: ["pending_payment", "awaiting_quote"], claimed: false },
+  { key: "done", label: "✅ Done", status: ["delivered", "out_for_delivery"] },
+  { key: "cancelled", label: "🚫 Cancelled", status: ["cancelled"] },
 ];
+
 
 type Row = {
   order_number: string;
@@ -28,8 +34,8 @@ type Row = {
   total_minor: number;
   status: OrderStatus;
   created_at: string;
-  delivery_address: { zone_name?: string; city?: string };
-  order_items: { quantity: number }[];
+  own_rider: boolean;
+  order_items: { quantity: number; variant_label: string }[];
 };
 
 export default function AdminOrdersPage(props: PageProps<"/admin/orders">) {
@@ -47,7 +53,7 @@ export default function AdminOrdersPage(props: PageProps<"/admin/orders">) {
 async function OrderList({ searchParams }: { searchParams: PageProps<"/admin/orders">["searchParams"] }) {
   await requireStaff("/admin/orders");
   const sp = await searchParams;
-  const status = (TABS.find((t) => t.status === sp.status)?.status ?? "awaiting_quote") as OrderStatus;
+  const tab = TABS.find((t) => t.key === sp.tab) ?? TABS[0];
   const country = sp.country === "NG" || sp.country === "GH" ? sp.country : null;
   // Keep only letters, numbers, spaces and dashes: stops the search box being used to inject filters.
   const q = String(sp.q ?? "").replace(/[^\p{L}\p{N} -]/gu, "").trim().slice(0, 50);
@@ -57,7 +63,10 @@ async function OrderList({ searchParams }: { searchParams: PageProps<"/admin/ord
   // How many orders in each tab (respecting the country filter).
   const counts = await Promise.all(
     TABS.map(async (t) => {
-      let query = supabase.from("orders").select("id", { count: "exact", head: true }).eq("status", t.status);
+      let query = supabase.from("orders").select("id", { count: "exact", head: true }).in("status", t.status);
+      if (t.claimed === true) query = query.not("momo_claimed_at", "is", null);
+      if (t.claimed === false) query = query.is("momo_claimed_at", null);
+      if (t.refundDue) query = query.not("refund_due_minor", "is", null).is("refunded_at", null);
       if (country) query = query.eq("country", country);
       return (await query).count ?? 0;
     }),
@@ -65,11 +74,14 @@ async function OrderList({ searchParams }: { searchParams: PageProps<"/admin/ord
 
   let query = supabase
     .from("orders")
-    .select("order_number, contact_name, country, currency, total_minor, status, created_at, delivery_address, order_items(quantity)")
-    .eq("status", status)
+    .select("order_number, contact_name, country, currency, total_minor, status, own_rider, created_at, order_items(quantity, variant_label)")
+    .in("status", tab.status)
     // Work queue tabs: oldest first (first come, first served). History tabs: newest first.
-    .order("created_at", { ascending: ["awaiting_quote", "paid", "preparing", "out_for_delivery"].includes(status) })
+    .order("created_at", { ascending: Boolean(tab.oldestFirst) })
     .limit(100);
+  if (tab.claimed === true) query = query.not("momo_claimed_at", "is", null);
+  if (tab.claimed === false) query = query.is("momo_claimed_at", null);
+  if (tab.refundDue) query = query.not("refund_due_minor", "is", null).is("refunded_at", null);
   if (country) query = query.eq("country", country);
   if (q) query = query.or(`order_number.ilike.%${q}%,contact_name.ilike.%${q}%`);
 
@@ -79,7 +91,7 @@ async function OrderList({ searchParams }: { searchParams: PageProps<"/admin/ord
 
   const link = (changes: Record<string, string | null>) => {
     const params = new URLSearchParams();
-    const merged = { status, country, q: q || null, ...changes };
+    const merged = { tab: tab.key, country, q: q || null, ...changes };
     for (const [k, v] of Object.entries(merged)) if (v) params.set(k, v);
     return `/admin/orders?${params}`;
   };
@@ -88,9 +100,11 @@ async function OrderList({ searchParams }: { searchParams: PageProps<"/admin/ord
     <>
       <nav className="mt-4 flex flex-wrap gap-2" aria-label="Order status">
         {TABS.map((t, i) => (
-          <Link key={t.status} href={link({ status: t.status })}
+          <Link key={t.key} href={link({ tab: t.key })}
             className={`rounded-full px-3 py-1 text-sm font-medium ${
-              t.status === status ? "bg-stone-900 text-white" : "bg-white text-stone-700 ring-1 ring-stone-300 hover:bg-stone-100"
+              t.key === tab.key ? "bg-stone-900 text-white"
+                : t.urgent && counts[i] > 0 ? "bg-orange-100 text-orange-900 ring-1 ring-orange-300 hover:bg-orange-200"
+                : "bg-white text-stone-700 ring-1 ring-stone-300 hover:bg-stone-100"
             }`}>
             {t.label} <span className="tabular-nums opacity-70">{counts[i]}</span>
           </Link>
@@ -98,7 +112,7 @@ async function OrderList({ searchParams }: { searchParams: PageProps<"/admin/ord
       </nav>
 
       <form className="mt-4 flex flex-wrap items-center gap-2" action="/admin/orders">
-        <input type="hidden" name="status" value={status} />
+        <input type="hidden" name="tab" value={tab.key} />
         <input name="q" defaultValue={q} placeholder="Search order number or name"
           className="w-64 rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-sm" />
         <select name="country" defaultValue={country ?? ""} className="rounded-lg border border-stone-300 bg-white px-2 py-1.5 text-sm">
@@ -122,8 +136,7 @@ async function OrderList({ searchParams }: { searchParams: PageProps<"/admin/ord
                 <th className="px-4 py-2">Order</th>
                 <th className="px-4 py-2">Placed</th>
                 <th className="px-4 py-2">Customer</th>
-                <th className="px-4 py-2">Deliver to</th>
-                <th className="px-4 py-2 text-right">Items</th>
+                <th className="px-4 py-2">Packs</th>
                 <th className="px-4 py-2 text-right">Total</th>
               </tr>
             </thead>
@@ -138,8 +151,7 @@ async function OrderList({ searchParams }: { searchParams: PageProps<"/admin/ord
                   </td>
                   <td className="whitespace-nowrap px-4 py-2 text-stone-600">{formatOrderDate(o.created_at, o.country)}</td>
                   <td className="px-4 py-2">{o.contact_name}</td>
-                  <td className="px-4 py-2 text-stone-600">{[o.delivery_address.city, o.delivery_address.zone_name].filter(Boolean).join(" · ")}</td>
-                  <td className="px-4 py-2 text-right tabular-nums">{o.order_items.reduce((s, i) => s + i.quantity, 0)}</td>
+                  <td className="px-4 py-2 text-stone-600">{o.order_items.map((i) => `${i.quantity} × ${i.variant_label}`).join(", ")}</td>
                   <td className="px-4 py-2 text-right font-semibold tabular-nums">{formatMoney(o.total_minor, o.currency)}</td>
                 </tr>
               ))}
@@ -148,7 +160,7 @@ async function OrderList({ searchParams }: { searchParams: PageProps<"/admin/ord
         </div>
       )}
       <p className="mt-2 text-xs text-stone-500">
-        {ORDER_STATUS[status].label} · showing up to 100 orders.
+        {tab.label} · showing up to 100 orders.
       </p>
     </>
   );

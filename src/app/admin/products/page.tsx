@@ -2,30 +2,23 @@ import { Suspense } from "react";
 import { requireStaff } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { formatMoney, type Currency } from "@/lib/money";
+import { BUSINESS, FOOD_INFO } from "@/lib/business";
 
 export const metadata = { title: "Products · Admin · Suya Factory" };
 
-type Price = { currency: Currency; amount_minor: number };
 type Variant = {
   id: string;
-  sku: string | null;
   size_label: string;
-  spice_level: string | null;
   is_active: boolean;
-  variant_prices: Price[];
+  variant_prices: { currency: Currency; amount_minor: number }[];
 };
-type Product = {
-  id: string;
-  name: string;
-  is_active: boolean;
-  categories: { name: string } | null;
-  product_variants: Variant[];
-};
+type Product = { id: string; name: string; description: string | null; is_active: boolean; product_variants: Variant[] };
 
-function priceIn(variant: Variant, currency: Currency) {
-  const price = variant.variant_prices.find((p) => p.currency === currency);
-  return price ? formatMoney(price.amount_minor, currency) : "—";
-}
+// Each pack is sold in one country (its price currency).
+const COUNTRIES: { currency: Currency; title: string; how: string }[] = [
+  { currency: "NGN", title: "🇳🇬 Nigeria", how: "Sold in supermarkets" },
+  { currency: "GHS", title: "🇬🇭 Ghana", how: "Sold online (MoMo)" },
+];
 
 export default function AdminProductsPage() {
   return (
@@ -39,70 +32,71 @@ export default function AdminProductsPage() {
 }
 
 async function ProductList() {
-  // Checked HERE, next to the data, on every visit.
   await requireStaff("/admin/products");
   const supabase = await createClient();
-
-  // One request fetches products + their variants + their prices.
   const { data, error } = await supabase
     .from("products")
-    .select(
-      "id, name, is_active, categories(name), product_variants(id, sku, size_label, spice_level, is_active, sort_order, variant_prices(currency, amount_minor))",
-    )
+    .select("id, name, description, is_active, product_variants(id, size_label, is_active, sort_order, variant_prices(currency, amount_minor))")
     .order("name")
     .order("sort_order", { referencedTable: "product_variants" });
+  if (error) return <p className="text-red-700">Couldn&apos;t load products: {error.message}</p>;
 
-  if (error) {
-    return <p className="text-red-700">Couldn&apos;t load products: {error.message}</p>;
-  }
-
-  const products = (data ?? []) as unknown as Product[];
+  const all = (data ?? []) as unknown as Product[];
+  const selling = all.filter((p) => p.is_active);
+  const old = all.filter((p) => !p.is_active);
 
   return (
-    <>
-      <p className="mt-1 mb-6 text-sm text-stone-600">
-        {products.length} products · editing comes in a later phase.
-      </p>
+    <div className="mt-6 max-w-3xl space-y-6">
+      {selling.map((p) => (
+        <section key={p.id} className="rounded-2xl border border-stone-200 bg-white p-5">
+          <h2 className="text-xl font-bold text-stone-900">{p.name}</h2>
+          {p.description && <p className="mt-1 text-sm text-stone-600">{p.description}</p>}
 
-      <div className="space-y-6">
-        {products.map((product) => (
-          <section key={product.id} className="overflow-hidden rounded-xl border border-stone-200 bg-white">
-            <header className="flex items-center justify-between border-b border-stone-200 bg-stone-50 px-4 py-3">
-              <h2 className="font-semibold text-stone-900">
-                {product.name}
-                <span className="ml-2 text-xs font-normal text-stone-500">{product.categories?.name}</span>
-              </h2>
-              {!product.is_active && (
-                <span className="rounded bg-stone-200 px-2 py-0.5 text-xs text-stone-700">Hidden</span>
-              )}
-            </header>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className="text-xs uppercase text-stone-500">
-                  <tr>
-                    <th className="px-4 py-2">SKU</th>
-                    <th className="px-4 py-2">Size</th>
-                    <th className="px-4 py-2">Spice</th>
-                    <th className="px-4 py-2 text-right">Nigeria</th>
-                    <th className="px-4 py-2 text-right">Ghana</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {product.product_variants.map((v) => (
-                    <tr key={v.id} className="border-t border-stone-100">
-                      <td className="px-4 py-2 font-mono text-xs text-stone-600">{v.sku}</td>
-                      <td className="px-4 py-2">{v.size_label}</td>
-                      <td className="px-4 py-2 capitalize">{v.spice_level?.replace("_", " ") ?? "—"}</td>
-                      <td className="px-4 py-2 text-right tabular-nums">{priceIn(v, "NGN")}</td>
-                      <td className="px-4 py-2 text-right tabular-nums">{priceIn(v, "GHS")}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
-        ))}
-      </div>
-    </>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            {COUNTRIES.map((c) => {
+              const packs = p.product_variants.filter((v) => v.is_active && v.variant_prices.some((x) => x.currency === c.currency));
+              return (
+                <div key={c.currency} className="rounded-xl bg-stone-50 p-4">
+                  <p className="font-semibold text-stone-900">{c.title}</p>
+                  <p className="text-xs text-stone-500">{c.how}</p>
+                  {packs.length === 0 ? <p className="mt-2 text-sm text-stone-500">Not sold here.</p> : (
+                    <ul className="mt-2 space-y-1 text-sm">
+                      {packs.map((v) => (
+                        <li key={v.id} className="flex justify-between gap-3">
+                          <span>{v.size_label}</span>
+                          <span className="font-semibold tabular-nums">
+                            {formatMoney(v.variant_prices.find((x) => x.currency === c.currency)!.amount_minor, c.currency)}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          <dl className="mt-4 grid gap-x-4 gap-y-1 text-sm sm:grid-cols-[9rem_1fr]">
+            <dt className="text-stone-500">Ingredients</dt><dd>{FOOD_INFO.ingredients}</dd>
+            <dt className="text-stone-500">Allergens</dt><dd>Contains {FOOD_INFO.allergens}</dd>
+            <dt className="text-stone-500">Halal</dt><dd>{FOOD_INFO.halal ? "Yes" : "No"}</dd>
+            <dt className="text-stone-500">Best before</dt><dd>{FOOD_INFO.shelfLife} from packing</dd>
+            <dt className="text-stone-500">Storage</dt><dd>{FOOD_INFO.storage}</dd>
+            {Object.entries(BUSINESS.foodRegNo).map(([country, no]) => (
+              <div key={country} className="contents"><dt className="text-stone-500">Registration ({country})</dt><dd>{no}</dd></div>
+            ))}
+          </dl>
+        </section>
+      ))}
+
+      <p className="text-xs text-stone-500">To change a price, pack or the food details, ask your developer (editing here comes later).</p>
+
+      {old.length > 0 && (
+        <details className="text-sm text-stone-500">
+          <summary className="cursor-pointer">Old products, hidden from customers ({old.length})</summary>
+          <p className="mt-2">{old.map((p) => p.name).join(", ")}</p>
+        </details>
+      )}
+    </div>
   );
 }

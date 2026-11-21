@@ -5,17 +5,18 @@ import { Suspense } from "react";
 import { createPublicClient } from "@/lib/supabase/public";
 import { formatMoney } from "@/lib/money";
 import {
-  DELIVERY_STAGES, ORDER_JOURNEY, ORDER_STATUS, formatOrderDate, isOrderToken, type OrderView,
+  CANCEL_REASONS, DELIVERY_STAGES, ORDER_JOURNEY, ORDER_STATUS, OWN_RIDER_JOURNEY, formatOrderDate, isOrderToken, statusLabel,
+  type OrderView,
 } from "@/lib/orders";
 import { telLink, toInternationalDigits, whatsappLink } from "@/lib/contacts";
 import { AutoRefresh } from "@/components/auto-refresh";
 import { PhoneText } from "@/components/phone-text";
-import { cancelOrder, claimMomoPayment, payWithPaystack, requestNewQuote, setOwnRider } from "./actions";
+import { cancelOrder, setCancelReason, claimMomoPayment, payWithPaystack, requestNewQuote, setOwnRider } from "./actions";
 import { OwnRiderStep } from "./own-rider";
 import { type DetailRow } from "@/components/delivery-details";
 import { localPhone, plainName } from "@/lib/contacts";
 import { GH_DELIVERY_COMPANIES } from "@/lib/delivery-companies";
-import { GH_PICKUP } from "@/lib/dawurobo";
+import { getGhPickup, type GhPickup } from "@/lib/gh-pickup";
 import { after } from "next/server";
 import { GH_MOMO, syncCourierIfStale } from "@/lib/ghana-orders";
 import { PayButton } from "./pay-button";
@@ -37,6 +38,7 @@ const PAYMENT_MESSAGES: Record<string, { text: string; className: string }> = {
   rider_name: { text: "Please enter your rider's name.", className: "bg-red-50 text-red-900" },
   rider_phone: { text: "Please enter your rider's phone number (7 to 15 digits).", className: "bg-red-50 text-red-900" },
   cannot_cancel: { text: "This order can't be cancelled here any more. Please contact us.", className: "bg-red-50 text-red-900" },
+  cancel_reason: { text: "Please pick a reason, or type your own.", className: "bg-amber-50 text-amber-900" },
   paid_from: { text: "Please enter the MoMo number you paid from (e.g. 024 123 4567).", className: "bg-red-50 text-red-900" },
 };
 
@@ -61,7 +63,10 @@ async function OrderDetails({ params, searchParams }: Pick<OrderPageProps, "para
   if (!data) notFound();
 
   const order = data as OrderView;
-  const status = ORDER_STATUS[order.status];
+  const status = { ...ORDER_STATUS[order.status], label: statusLabel(order.status, order.own_rider) };
+  // Our part ends when the kilishi is handed to the customer's own rider.
+  const handedOver = order.own_rider && (order.status === "out_for_delivery" || order.status === "delivered");
+  const pickup = order.own_rider && (order.status === "paid" || order.status === "preparing") ? await getGhPickup() : null;
   const money = (n: number) => formatMoney(n, order.currency);
   const when = (iso: string) => formatOrderDate(iso, order.country);
   const a = order.delivery_address;
@@ -93,9 +98,9 @@ async function OrderDetails({ params, searchParams }: Pick<OrderPageProps, "para
       {order.status !== "cancelled" && <Timeline order={order} />}
 
       {/* Keep the status up to date by itself until the order is finished. */}
-      {order.status !== "delivered" && order.status !== "cancelled" && <AutoRefresh seconds={30} />}
+      {order.status !== "delivered" && order.status !== "cancelled" && !handedOver && <AutoRefresh seconds={30} />}
 
-      {message && (order.status === "pending_payment" || order.status === "awaiting_quote" || payment === "cannot_cancel"
+      {message && (order.status === "pending_payment" || order.status === "awaiting_quote" || payment === "cannot_cancel" || payment === "cancel_reason"
         || ((order.status === "paid" || order.status === "preparing") && order.own_rider)) && (
         <p role="status" className={`mt-6 rounded-2xl p-4 text-sm ${message.className}`}>{message.text}</p>
       )}
@@ -189,13 +194,14 @@ async function OrderDetails({ params, searchParams }: Pick<OrderPageProps, "para
                 : <>Your refund of <strong>{formatMoney(order.refund_due_minor, order.currency)}</strong> will be sent within 2 days to the MoMo number you paid from{order.momo_paid_from ? ` (${order.momo_paid_from})` : ""}.</>}
             </p>
           )}
+          {order.cancel_reason === null && order.own_rider && <CancelReasonForm token={token} />}
           <p className="mt-1 text-sm">Whenever you&apos;re ready, you can <Link href="/shop" className="font-medium text-orange-700 underline">order again</Link>.</p>
         </div>
       )}
 
       {/* 3a. Ghana, own rider: book it, then show the pickup code */}
       {order.own_rider && (order.status === "paid" || order.status === "preparing") && (
-        <OwnRiderSection order={order} token={token} />
+        <OwnRiderSection order={order} token={token} pickup={pickup!} />
       )}
 
       {/* 3. Paid / being prepared */}
@@ -220,9 +226,16 @@ async function OrderDetails({ params, searchParams }: Pick<OrderPageProps, "para
       )}
 
       {/* 4. Rider on the way */}
-      {order.status === "out_for_delivery" && order.rider && <RiderCard order={order} />}
+      {order.status === "out_for_delivery" && order.rider && !handedOver && <RiderCard order={order} />}
 
-      {order.status === "delivered" && (
+      {handedOver && (
+        <div className="mt-6 rounded-2xl bg-green-50 p-5 text-green-950">
+          <p className="font-semibold">✅ Handed to your rider{order.booked_rider ? ` (${order.booked_rider.name})` : ""}.</p>
+          <p className="mt-1 text-sm">Your rider is bringing it to you. Enjoy your kilishi, {firstName}! 🎉</p>
+        </div>
+      )}
+
+      {order.status === "delivered" && !handedOver && (
         <div className="mt-6 rounded-2xl bg-green-50 p-5 text-green-950">
           <p className="font-semibold">Delivered. Enjoy your kilishi, {firstName}! 🎉</p>
         </div>
@@ -285,6 +298,7 @@ async function OrderDetails({ params, searchParams }: Pick<OrderPageProps, "para
 
 /** Order placed → Delivery price → Paid → Being prepared → Out for delivery → Delivered, with times. */
 function Timeline({ order }: { order: OrderView }) {
+  if (order.own_rider) return <OwnRiderTimeline order={order} />;
   const current = ORDER_JOURNEY.indexOf(order.status);
   const reachedAt = new Map(order.events.filter((e) => e.from_status !== e.status).map((e) => [e.status, e.at]));
   return (
@@ -301,6 +315,48 @@ function Timeline({ order }: { order: OrderView }) {
         );
       })}
     </ol>
+  );
+}
+
+/** Ghana own rider: Ordered → Paid → Rider booked → Handed to rider. */
+function OwnRiderTimeline({ order }: { order: OrderView }) {
+  const status = order.status === "out_for_delivery" ? "delivered" : order.status;
+  const current = OWN_RIDER_JOURNEY.findIndex((s) => s.status === status);
+  const reachedAt = new Map(order.events.filter((e) => e.from_status !== e.status).map((e) => [e.status, e.at]));
+  return (
+    <ol className="mt-6 grid grid-cols-4 gap-1 text-center text-xs" aria-label="Order progress">
+      {OWN_RIDER_JOURNEY.map((step, i) => {
+        const done = i <= current;
+        const at = done ? reachedAt.get(step.status) ?? (step.status === "delivered" ? reachedAt.get("out_for_delivery") : undefined) : undefined;
+        return (
+          <li key={step.status} aria-current={i === current ? "step" : undefined}>
+            <div className={`mx-auto mb-1 h-2 rounded-full ${done ? "bg-orange-600" : "bg-stone-200"}`} />
+            <span className={done ? "font-semibold text-stone-900" : "text-stone-400"}>{step.label}</span>
+            {at && <span className="block text-stone-500">{formatOrderDate(at, order.country)}</span>}
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
+/** After cancelling: why? */
+function CancelReasonForm({ token }: { token: string }) {
+  return (
+    <form action={setCancelReason.bind(null, token)} className="mt-4 space-y-2 rounded-xl bg-white p-4 text-sm ring-1 ring-stone-200">
+      <p className="font-medium text-stone-900">Can you tell us why you cancelled?</p>
+      {CANCEL_REASONS.map((r) => (
+        <label key={r} className="flex items-center gap-2">
+          <input type="radio" name="reason" value={r} className="h-4 w-4 accent-orange-700" /> {r}
+        </label>
+      ))}
+      <label className="flex items-center gap-2">
+        <input type="radio" name="reason" value="other" className="h-4 w-4 accent-orange-700" /> Something else:
+      </label>
+      <input name="other" maxLength={300} placeholder="Tell us in your own words"
+        className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-stone-900" />
+      <PayButton label="Send" pendingLabel="Sending…" />
+    </form>
   );
 }
 
@@ -408,26 +464,26 @@ function MomoPay({ order, token, quote }: { order: OrderView; token: string; quo
 }
 
 /** Ghana: payment confirmed -> book your own rider -> pickup code. */
-function OwnRiderSection({ order, token }: { order: OrderView; token: string }) {
+function OwnRiderSection({ order, token, pickup: p }: { order: OrderView; token: string; pickup: GhPickup }) {
   const rider = order.booked_rider;
   const firstName = order.contact_name.split(" ")[0];
+  const gloria = p.contactPerson.split(" ")[0];
   const pickup = {
-    text: `Suya Factory (${GH_PICKUP.contactPerson.split(" ")[0]}), ${GH_PICKUP.address}`,
-    mapLink: `https://www.google.com/maps/search/?api=1&query=${GH_PICKUP.lat},${GH_PICKUP.lng}`,
-    contact: `Your rider can call ${GH_PICKUP.contactPerson.split(" ")[0]} on ${GH_PICKUP.contactPhone}.`,
-    lat: GH_PICKUP.lat,
-    lng: GH_PICKUP.lng,
-    label: "Suya Factory, 1st Addogono Ave",
+    text: `Suya Factory (${gloria}), ${p.address}`,
+    mapLink: `https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}`,
+    contact: `Your rider can call ${gloria} on ${p.contactPhone}.${p.hours ? ` Pickup hours: ${p.hours}.` : ""}`,
+    lat: p.lat,
+    lng: p.lng,
+    label: `Suya Factory, ${p.address.split(",")[0]}`,
   };
   const a = order.delivery_address;
-  const gloria = GH_PICKUP.contactPerson.split(" ")[0];
   const items = order.items.map((i) => `${i.quantity} × ${i.product_name} ${i.variant_label}`).join(", ");
   // What Bolt / inDrive / Yango / Qargo ask for, in their words.
   const details: DetailRow[] = [
-    { label: "From (pickup)", value: GH_PICKUP.address },
+    { label: "From (pickup)", value: p.address },
     { label: "To (drop-off)", value: [a.line1, a.line2, a.landmark ? `near ${a.landmark}` : ""].filter(Boolean).join(", ") },
-    { label: "Sender name", value: plainName(GH_PICKUP.contactPerson) },
-    { label: "Sender phone", value: GH_PICKUP.contactPhone },
+    { label: "Sender name", value: plainName(p.contactPerson) },
+    { label: "Sender phone", value: p.contactPhone },
     { label: "Your phone (recipient)", value: localPhone(order.contact_phone) },
     { label: "Your name (recipient)", value: plainName(order.contact_name), more: true },
     { label: "Item", value: `Food: ${items} (sealed, light)`, more: true },

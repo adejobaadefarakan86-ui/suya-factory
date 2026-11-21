@@ -4,10 +4,12 @@ import type { CountryCode } from "@/lib/countries";
 
 export const BULK_MIN_KG = 1;
 
-// "phones": numbers customers can call (either one).
+// Bulk & custom orders: who to WhatsApp / call (either phone number).
+// Ghana bulk goes to 054 580 9740, answered by the Nigeria team: the main Ghana
+// line (053 051 5656) has an AI assistant that doesn't handle bulk orders.
 export const CONTACTS: Record<CountryCode, { whatsapp: string; phones: string[] }> = {
   NG: { whatsapp: "2349132654740", phones: ["2349132654740", "2347080807300"] },
-  GH: { whatsapp: "233530515656", phones: ["233530515656", "233545809740"] },
+  GH: { whatsapp: "233545809740", phones: ["233545809740"] },
 };
 
 const BULK_MESSAGE =

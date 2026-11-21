@@ -17,6 +17,7 @@ import { type DetailRow } from "@/components/delivery-details";
 import { localPhone, plainName } from "@/lib/contacts";
 import { GH_DELIVERY_COMPANIES } from "@/lib/delivery-companies";
 import { getGhPickup, type GhPickup } from "@/lib/gh-pickup";
+import { GH_HOURS_TEXT, ghPickupStatus } from "@/lib/gh-hours";
 import { after } from "next/server";
 import { GH_MOMO, syncCourierIfStale } from "@/lib/ghana-orders";
 import { PayButton } from "./pay-button";
@@ -340,6 +341,14 @@ function OwnRiderTimeline({ order }: { order: OrderView }) {
   );
 }
 
+/** Paid, no rider yet: ready now, or when pickup opens (closed on Sundays and at night). */
+function ReadyText() {
+  const s = ghPickupStatus();
+  return s.open
+    ? <p className="mt-1 text-sm">Your kilishi is ready for pickup. Book your rider below.</p>
+    : <p className="mt-1 text-sm"><strong>⏰ Pickup is closed now.</strong> Book your rider to collect {s.opens} (hours: {GH_HOURS_TEXT}).</p>;
+}
+
 /** After cancelling: why? */
 function CancelReasonForm({ token }: { token: string }) {
   return (
@@ -502,7 +511,7 @@ function OwnRiderSection({ order, token, pickup: p }: { order: OrderView; token:
             Tell them to say this <strong>pickup code</strong> when they arrive:
           </p>
         ) : (
-          <p className="mt-1 text-sm">Your kilishi is ready for pickup. Book your rider below.</p>
+          <ReadyText />
         )}
         {rider && order.pickup_code && (
           <p className="mt-3 inline-block rounded-xl bg-white px-5 py-2 text-3xl font-bold tracking-[0.3em] text-green-900 ring-1 ring-green-200">

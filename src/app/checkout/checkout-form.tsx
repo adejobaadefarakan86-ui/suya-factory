@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { GH_HOURS_TEXT, ghPickupStatus } from "@/lib/gh-hours";
 import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { cart, useCartLines, usePruneCart } from "@/lib/cart";
@@ -229,6 +230,11 @@ export function CheckoutForm({
               <li>Once we confirm it, book a delivery in your app from our pickup point (we show you the address).</li>
               <li>Pay the rider in the app or in cash, like any ride.</li>
             </ol>
+            <p className="mt-2 text-xs">Pickup hours: {GH_HOURS_TEXT}</p>
+            {(() => {
+              const s = ghPickupStatus();
+              return s.open ? null : <p className="mt-1 font-semibold">⏰ Pickup is closed now. You can still order: your rider can collect {s.opens}.</p>;
+            })()}
           </div>
         )}
         {riderFee && !riderFee.ownRider && (

@@ -9,7 +9,8 @@ export const BULK_MIN_KG = 1;
 // line (053 051 5656) has an AI assistant that doesn't handle bulk orders.
 export const CONTACTS: Record<CountryCode, { whatsapp: string; phones: string[] }> = {
   NG: { whatsapp: "2349132654740", phones: ["2349132654740", "2347080807300"] },
-  GH: { whatsapp: "233545809740", phones: ["233545809740"] },
+  // Calls may also go to 053 051 5656 (a person answers calls; the AI only answers WhatsApp).
+  GH: { whatsapp: "233545809740", phones: ["233545809740", "233530515656"] },
 };
 
 const BULK_MESSAGE =

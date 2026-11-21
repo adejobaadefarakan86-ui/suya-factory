@@ -4,6 +4,8 @@ import { Suspense } from "react";
 import { getCurrentUser, isStaff } from "@/lib/auth";
 import { CartLink } from "@/components/cart-link";
 import { CountrySwitcher } from "@/components/country-switcher";
+import { MobileMenu } from "@/components/mobile-menu";
+import { NAV_LINKS } from "@/lib/nav";
 import { getCatalog } from "@/lib/catalog";
 
 // The cart icon needs to know what's still for sale (the catalogue is cached, so this is quick).
@@ -22,49 +24,61 @@ async function CartForCustomers() {
 // <Suspense>, so the rest of the page can load without waiting for them.
 async function UserLinks() {
   const user = await getCurrentUser();
-
   if (!user) {
-    return (
-      <Link href="/login" className="hover:text-orange-700">Log in</Link>
-    );
+    return <Link href="/login" className="text-sm font-medium text-muted transition hover:text-ink">Log in</Link>;
   }
-
   return (
     <>
       {isStaff(user) && (
-        <Link href="/admin" className="shrink-0 rounded-full bg-stone-900 px-2.5 py-1 text-xs font-semibold text-white hover:bg-orange-700"
-          title="You're signed in with a team account: you see the shop like a customer, without buying.">
-          <span className="sm:hidden">Admin</span><span className="hidden sm:inline">👀 Team view · Admin</span>
+        <Link href="/admin" title="You're signed in with a team account: you see the shop like a customer, without buying."
+          className="shrink-0 rounded-lg bg-ink px-2.5 py-1 text-xs font-medium text-bg transition hover:bg-accent hover:text-on-accent">
+          Team view · Admin
         </Link>
       )}
-      {/* On phones, team members reach their account from the admin menu (keeps the bar on one screen). */}
-      <Link href="/account" className={`hover:text-orange-700 ${isStaff(user) ? "hidden sm:inline" : ""}`}>Account</Link>
+      <Link href="/account" className="text-sm font-medium text-muted transition hover:text-ink">Account</Link>
     </>
+  );
+}
+
+/** The Menu button as it looks before the page is ready (phones only). */
+function MenuPlaceholder() {
+  return (
+    <span className="flex h-10 items-center rounded-xl border border-line px-3 text-sm font-medium text-ink md:hidden">Menu</span>
   );
 }
 
 export function SiteHeader() {
   return (
-    <header className="border-b border-stone-200 bg-white">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3">
-        <Link href="/" className="flex shrink-0 items-center gap-2 text-lg font-extrabold text-stone-900">
+    <header className="sticky top-0 z-40 border-b border-line bg-bg/95 backdrop-blur-sm">
+      <div className="relative mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4">
+        <Link href="/" className="flex shrink-0 items-center gap-2.5">
           <Image src="/images/logo-mark.png" alt="" width={36} height={36} className="rounded-lg" priority />
-          <span className="hidden sm:inline">Suya Factory</span>
+          <span className="font-display text-lg font-semibold tracking-tight text-ink">Suya Factory</span>
         </Link>
-        <nav className="flex min-w-0 items-center gap-2.5 text-sm text-stone-700 sm:gap-5">
-          <Link href="/shop" className="hover:text-orange-700">Shop</Link>
-          <Link href="/where-to-buy" className="hover:text-orange-700"><span className="hidden sm:inline">Where to buy</span><span className="sm:hidden">Stores</span></Link>
-          <Link href="/bulk-orders" className="hover:text-orange-700">Bulk<span className="hidden sm:inline"> orders</span></Link>
-          <Suspense fallback={<span className="w-20" />}>
-            <CountrySwitcher />
-          </Suspense>
-          <Suspense fallback={<span className="text-stone-400">…</span>}>
-            <UserLinks />
-          </Suspense>
-          <Suspense fallback={<CartLink />}>
-            <CartForCustomers />
-          </Suspense>
+
+        {/* Computer: simple links in the middle */}
+        <nav className="hidden items-center gap-7 md:flex" aria-label="Main">
+          {NAV_LINKS.map((l) => (
+            <Link key={l.href} href={l.href} className="text-sm font-medium text-muted transition hover:text-ink">{l.label}</Link>
+          ))}
         </nav>
+
+        <div className="flex items-center gap-3">
+          <div className="hidden items-center gap-4 md:flex">
+            <Suspense fallback={<span className="w-20" />}><CountrySwitcher /></Suspense>
+            <Suspense fallback={<span className="w-12" />}><UserLinks /></Suspense>
+          </div>
+          <Suspense fallback={<CartLink />}><CartForCustomers /></Suspense>
+          {/* Phone: everything else lives in the menu (it knows the current page, so it streams in). */}
+          <Suspense fallback={<MenuPlaceholder />}>
+          <MobileMenu>
+            <Suspense fallback={<span className="w-20" />}><CountrySwitcher /></Suspense>
+            <div className="flex items-center gap-4">
+              <Suspense fallback={<span className="w-12" />}><UserLinks /></Suspense>
+            </div>
+          </MobileMenu>
+          </Suspense>
+        </div>
       </div>
     </header>
   );

@@ -20,7 +20,8 @@ const NAV: NavItem[] = [
 
 export default function AdminLayout({ children }: LayoutProps<"/admin">) {
   return (
-    <div className="flex flex-1 flex-col bg-stone-100 md:flex-row">
+    // data-theme-lock: the admin keeps its light look even when a visitor picks the dark theme.
+    <div data-theme-lock="" className="flex flex-1 flex-col bg-stone-100 md:flex-row">
       <aside className="bg-stone-950 px-4 py-5 text-stone-100 md:sticky md:top-0 md:h-screen md:w-64 md:shrink-0 md:overflow-y-auto">
         <Link href="/admin" className="flex items-center gap-3">
           <Image src="/images/logo-mark.png" alt="" width={40} height={40} className="rounded-xl ring-2 ring-orange-500/60" />

@@ -1,20 +1,208 @@
 @import "tailwindcss";
 
-/* Light theme only for now; the brand look and dark mode come in the design phase. */
+/* =====================================================================
+   Suya Factory design foundation
+   Look: modern, clean, slightly futuristic. White and warm cream, dark
+   ink, orange for actions, a little yellow, occasional dark bands.
+   Every colour is a token, defined for light and dark.
+   The theme comes from <html data-theme="light|dark">, set before the page
+   paints by the small script in layout.tsx (customer choice, else the phone's
+   own setting). The admin keeps its light look: pages that contain
+   [data-theme-lock] never switch to dark.
+   ===================================================================== */
+
 :root {
-  --background: #fafaf9;
-  --foreground: #1c1917;
+  --bg: #fffdf9;          /* page: warm white */
+  --cream: #fbf3e6;       /* warm cream bands */
+  --surface: #ffffff;     /* cards, inputs */
+  --ink: #18130e;         /* text */
+  --muted: #6e6357;       /* secondary text */
+  --line: #ece2d3;        /* hairlines and borders */
+  --accent: #e4570f;      /* orange: buttons, links, highlights */
+  --accent-strong: #c2410c;
+  --accent-soft: #fde7d6; /* orange tint behind small things */
+  --on-accent: #ffffff;   /* text on orange */
+  --sun: #f4b52b;         /* yellow, used sparingly */
+  --night: #17120e;       /* dark bands (footer, story) */
+  --on-night: #f7efe4;
+  --night-muted: #b5a998;
+}
+
+/* Dark theme: soft warm darks rather than pure black. */
+:root[data-theme="dark"] body:not(:has([data-theme-lock])) {
+  color-scheme: dark;
+  --bg: #15110d;
+  --cream: #1d1813;
+  --surface: #221c16;
+  --ink: #f6eee3;
+  --muted: #b3a797;
+  --line: #3a3129;
+  --accent: #ff7a2e;
+  --accent-strong: #ff9150;
+  --accent-soft: #3a2416;
+  --on-accent: #1a0f07;
+  --sun: #ffc94d;
+  --night: #0e0b08;
+  --on-night: #f7efe4;
+  --night-muted: #a99d8c;
+
+  /* Pages still using Tailwind's stone/white/tint colours follow the dark theme too
+     (the neutral scale is flipped, light tints become dark tints). */
+  --color-white: #221c16;
+  --color-stone-50: #1c1814;
+  --color-stone-100: #241f1a;
+  --color-stone-200: #342c25;
+  --color-stone-300: #463c33;
+  --color-stone-400: #7a6e62;
+  --color-stone-500: #a0948a;
+  --color-stone-600: #bdb2a6;
+  --color-stone-700: #d3c9bd;
+  --color-stone-800: #e6ded4;
+  --color-stone-900: #f2ebe2;
+  --color-stone-950: #faf6f0;
+  --color-orange-50: #2e1d12;
+  --color-orange-100: #3a2416;
+  --color-orange-200: #5a3218;
+  --color-orange-700: #ff8a45;
+  --color-orange-800: #ffa066;
+  --color-orange-900: #ffc29b;
+  --color-orange-950: #ffe0cc;
+  --color-amber-50: #2b2212;
+  --color-amber-100: #3a2d14;
+  --color-amber-800: #f5cf7a;
+  --color-amber-900: #f8dc9c;
+  --color-amber-950: #fbe9c2;
+  --color-green-50: #14261a;
+  --color-green-100: #1a3322;
+  --color-green-700: #7fd69a;
+  --color-green-800: #9be3b1;
+  --color-green-900: #bdeccb;
+  --color-green-950: #dcf6e4;
+  --color-red-50: #2e1514;
+  --color-red-100: #3d1a18;
+  --color-red-700: #ff8f86;
+  --color-red-800: #ffaba4;
+  --color-red-900: #ffc9c4;
+  --color-sky-50: #10222c;
+  --color-sky-900: #bfe3f5;
+  --color-sky-950: #dff1fa;
+  --color-indigo-50: #191c33;
+  --color-indigo-900: #c9cdf7;
+  --color-indigo-950: #e2e4fb;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg: var(--bg);
+  --color-cream: var(--cream);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-soft: var(--accent-soft);
+  --color-on-accent: var(--on-accent);
+  --color-sun: var(--sun);
+  --color-night: var(--night);
+  --color-on-night: var(--on-night);
+  --color-night-muted: var(--night-muted);
+  --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-heading), var(--font-body), ui-sans-serif, system-ui, sans-serif;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
+
+h1, h2, h3 {
+  font-family: var(--font-heading), var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  text-wrap: balance;
+}
+
+/* Clear keyboard focus everywhere. */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ---------- Buttons (moderately rounded, not pills) ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 0.75rem;
+  padding: 0.75rem 1.25rem;
+  font-weight: 500;
+  line-height: 1.25;
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+}
+.btn:active { transform: translateY(1px); }
+.btn:disabled { cursor: wait; opacity: 0.6; }
+.btn-primary { background: var(--accent); color: var(--on-accent); box-shadow: 0 6px 18px -8px color-mix(in srgb, var(--accent) 70%, transparent); }
+.btn-primary:hover { background: var(--accent-strong); }
+.btn-ghost { border: 1.5px solid var(--line); color: var(--ink); background: transparent; }
+.btn-ghost:hover { border-color: var(--ink); }
+.btn-night { background: var(--on-night); color: var(--night); }
+.btn-night:hover { background: var(--sun); }
+
+/* ---------- Gentle reveal on scroll ----------
+   Content is visible by default. Only when JavaScript runs (html.js) and the
+   visitor hasn't asked for less motion do sections start slightly lowered and
+   fade up as they come into view (see components/reveal.tsx). */
+@media (prefers-reduced-motion: no-preference) {
+  html.js [data-reveal]:not([data-revealed]) { opacity: 0; transform: translateY(18px); }
+  html.js [data-reveal] { transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1); }
+}
+
+/* ---------- Spice loader: particles swirl, gather, and fade ---------- */
+.spice-loader {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  animation: spice-swirl 1.6s cubic-bezier(0.45, 0, 0.25, 1) infinite;
+}
+.spice-loader span {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--s, 7px);
+  height: var(--s, 7px);
+  margin: calc(var(--s, 7px) / -2);
+  border-radius: 50%;
+  background: var(--c, var(--accent));
+  transform: rotate(var(--a)) translateX(var(--r, 30px));
+  animation: spice-gather 1.6s cubic-bezier(0.45, 0, 0.25, 1) infinite;
+  animation-delay: var(--d, 0s);
+}
+@keyframes spice-swirl { to { transform: rotate(360deg); } }
+@keyframes spice-gather {
+  0%   { transform: rotate(var(--a)) translateX(var(--r, 30px)) scale(0.4); opacity: 0; }
+  25%  { opacity: 1; }
+  60%  { transform: rotate(calc(var(--a) + 120deg)) translateX(4px) scale(1); opacity: 1; }
+  100% { transform: rotate(calc(var(--a) + 200deg)) translateX(0) scale(0.2); opacity: 0; }
+}
+
+/* First visit in a session: a short loader over the page, then it fades. */
+.intro-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  background: var(--bg);
+  animation: intro-out 0.35s ease 0.9s forwards;
+}
+html[data-intro-seen] .intro-loader { display: none; }
+@keyframes intro-out { to { opacity: 0; visibility: hidden; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .intro-loader { display: none; }
+  .spice-loader, .spice-loader span { animation-duration: 3.2s; }
+}
+
+/* No intro loader in the admin. */
+body:has([data-theme-lock]) .intro-loader { display: none; }

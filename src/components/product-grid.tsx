@@ -4,13 +4,15 @@ import { getCountry } from "@/lib/country";
 import { getCurrentUser, isStaff } from "@/lib/auth";
 import { COUNTRIES } from "@/lib/countries";
 import { formatMoney } from "@/lib/money";
+import { FOOD_INFO } from "@/lib/business";
 import { ProductImage } from "@/components/product-image";
+import { AddPackButton } from "@/components/add-pack-button";
 import { SELLS_VIA_SUPERMARKETS } from "@/lib/stores";
 
 /**
  * Our products as clear "product panels": photo, name, short description, the
- * pack sizes with prices, and obvious buttons (team feedback: people didn't
- * know the old small card was clickable).
+ * pack sizes with prices, and obvious buttons. Ghana: "Add to cart" on each
+ * pack. Nigeria: packs are bought in supermarkets, so "Find a supermarket".
  * Reads the country cookie, so always render it inside <Suspense>.
  */
 export async function ProductGrid() {
@@ -23,11 +25,11 @@ export async function ProductGrid() {
   const products = catalog.filter((p) => lowestPrice(p, currency) !== null);
 
   if (products.length === 0) {
-    return <p className="text-stone-600">No products yet. Check back soon!</p>;
+    return <p className="text-muted">No products yet. Check back soon!</p>;
   }
 
   return (
-    <ul className="space-y-6">
+    <ul className="space-y-8">
       {products.map((product, i) => {
         const href = `/shop/${product.slug}`;
         const packs = product.variants
@@ -35,52 +37,48 @@ export async function ProductGrid() {
           .sort((a, b) => a.grams - b.grams);
         return (
           <li key={product.id}
-            className="overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm md:grid md:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
-            <Link href={href} aria-label={`${product.name}: see details`} className="block md:h-full">
+            className="overflow-hidden rounded-[1.5rem] border border-line bg-surface md:grid md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+            <Link href={href} aria-label={`${product.name}: see details`} className="group block overflow-hidden md:h-full">
               <ProductImage name={product.name} src={product.imageUrls[0]} index={i}
-                className="md:aspect-auto md:h-full md:min-h-80"
-                sizes="(min-width: 768px) 460px, 100vw" />
+                className="transition duration-700 group-hover:scale-[1.03] md:aspect-auto md:h-full md:min-h-96"
+                sizes="(min-width: 768px) 560px, 100vw" />
             </Link>
 
-            <div className="flex flex-col p-5 sm:p-7">
+            <div className="flex flex-col p-6 sm:p-9">
               {product.category?.name && (
-                <p className="text-xs font-semibold uppercase tracking-widest text-orange-700">{product.category.name}</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">{product.category.name}</p>
               )}
-              <h3 className="mt-1 text-2xl font-extrabold text-stone-900 sm:text-3xl">
-                <Link href={href} className="hover:text-orange-700">{product.name}</Link>
+              <h3 className="mt-2 font-display text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
+                <Link href={href} className="transition hover:text-accent">{product.name}</Link>
               </h3>
-              {product.description && <p className="mt-2 line-clamp-3 text-stone-600">{product.description}</p>}
+              {product.description && <p className="mt-3 line-clamp-3 leading-relaxed text-muted">{product.description}</p>}
 
-              <p className="mt-5 text-sm font-semibold text-stone-700">
+              <p className="mt-4 flex flex-wrap gap-2 text-xs font-medium">
+                {FOOD_INFO.halal && <span className="rounded-lg bg-cream px-2.5 py-1 text-ink">Halal</span>}
+                <span className="rounded-lg bg-cream px-2.5 py-1 text-ink">Contains {FOOD_INFO.allergens.toLowerCase()}</span>
+              </p>
+
+              <p className="mt-6 text-sm font-medium text-muted">
                 {viaSupermarkets ? "Packs in supermarkets" : "Choose your pack"}
               </p>
-              <ul className="mt-2 grid gap-2 sm:grid-cols-2">
+              <ul className="mt-2 divide-y divide-line rounded-2xl border border-line">
                 {packs.map((v) => (
-                  <li key={v.id}>
-                    <Link href={href}
-                      className="flex items-center justify-between gap-3 rounded-xl border border-stone-200 px-4 py-3 hover:border-orange-400 hover:bg-orange-50">
-                      <span className="font-medium text-stone-900">{variantLabel(v)}</span>
-                      <span className="font-bold text-stone-900 tabular-nums">{formatMoney(v.prices[currency]!, currency)}</span>
-                    </Link>
+                  <li key={v.id} className="flex items-center justify-between gap-3 px-4 py-3">
+                    <span className="min-w-0">
+                      <span className="block font-medium text-ink">{variantLabel(v)}</span>
+                      <span className="block font-display text-lg font-semibold tabular-nums text-ink">{formatMoney(v.prices[currency]!, currency)}</span>
+                    </span>
+                    {!viaSupermarkets && !teamView && <AddPackButton variantId={v.id} label={variantLabel(v)} />}
                   </li>
                 ))}
               </ul>
 
               <div className="mt-6 flex flex-col gap-3 sm:flex-row">
                 {viaSupermarkets ? (
-                  <Link href="/where-to-buy"
-                    className="rounded-xl bg-orange-700 px-6 py-3.5 text-center text-lg font-bold text-white shadow-sm hover:bg-orange-800">
-                    📍 Find a supermarket near you
-                  </Link>
-                ) : (
-                  <Link href={href}
-                    className="rounded-xl bg-orange-700 px-6 py-3.5 text-center text-lg font-bold text-white shadow-sm hover:bg-orange-800">
-                    {teamView ? "See the product →" : <>Choose pack &amp; order →</>}
-                  </Link>
-                )}
-                <Link href={href}
-                  className="rounded-xl border-2 border-stone-300 px-6 py-3 text-center font-semibold text-stone-800 hover:border-stone-500">
-                  See details
+                  <Link href="/where-to-buy" className="btn btn-primary px-6 py-3.5 text-base">Find a supermarket near you</Link>
+                ) : null}
+                <Link href={href} className="btn btn-ghost px-6 py-3.5 text-base">
+                  {teamView ? "See the product" : "See details"}
                 </Link>
               </div>
             </div>
@@ -93,17 +91,14 @@ export async function ProductGrid() {
 
 export function ProductGridSkeleton() {
   return (
-    <div className="overflow-hidden rounded-3xl border border-stone-200 bg-white md:grid md:grid-cols-[5fr_6fr]" aria-busy="true">
-      <div className="aspect-[4/3] animate-pulse bg-stone-200" />
-      <div className="space-y-3 p-7">
-        <div className="h-3 w-20 animate-pulse rounded bg-stone-200" />
-        <div className="h-7 w-48 animate-pulse rounded bg-stone-200" />
-        <div className="h-4 w-full animate-pulse rounded bg-stone-200" />
-        <div className="grid gap-2 pt-4 sm:grid-cols-2">
-          <div className="h-12 animate-pulse rounded-xl bg-stone-100" />
-          <div className="h-12 animate-pulse rounded-xl bg-stone-100" />
-        </div>
-        <div className="h-12 w-56 animate-pulse rounded-xl bg-stone-200" />
+    <div className="overflow-hidden rounded-[1.5rem] border border-line bg-surface md:grid md:grid-cols-2" aria-busy="true">
+      <div className="aspect-[4/3] animate-pulse bg-cream" />
+      <div className="space-y-3 p-9">
+        <div className="h-3 w-20 animate-pulse rounded bg-cream" />
+        <div className="h-8 w-56 animate-pulse rounded bg-cream" />
+        <div className="h-4 w-full animate-pulse rounded bg-cream" />
+        <div className="h-28 w-full animate-pulse rounded-2xl bg-cream" />
+        <div className="h-12 w-48 animate-pulse rounded-xl bg-cream" />
       </div>
     </div>
   );

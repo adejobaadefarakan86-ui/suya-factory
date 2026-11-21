@@ -1,34 +1,76 @@
+import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
 import { BUSINESS, SOCIAL } from "@/lib/business";
 import { getCountry } from "@/lib/country";
+import { ThemeSwitcher } from "@/components/theme";
+import { Flame } from "@/components/doodles";
 
 export function SiteFooter() {
   return (
-    <footer className="mt-auto border-t border-stone-200 px-4 py-4 text-center text-xs text-stone-500">
-      {/* Social links depend on the visitor's country (a cookie), so they stream in. */}
-      <Suspense fallback={<p className="h-5" />}>
-        <SocialLinks />
-      </Suspense>
-      <p className="mt-2">{BUSINESS.legalName} · {BUSINESS.rcNumber} · {BUSINESS.publicAddress}</p>
-      <p className="mt-1">
-        <a href={`mailto:${BUSINESS.email}`} className="underline hover:text-stone-800">{BUSINESS.email}</a>
-        {" · "}<Link href="/terms" className="underline hover:text-stone-800">Terms</Link>
-        {" · "}<Link href="/privacy" className="underline hover:text-stone-800">Privacy</Link>
-      </p>
+    <footer className="mt-auto bg-night text-on-night">
+      <div className="mx-auto grid max-w-6xl gap-10 px-4 py-14 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1.2fr]">
+        <div>
+          <Link href="/" className="inline-flex items-center gap-3">
+            <Image src="/images/logo-mark.png" alt="" width={44} height={44} className="rounded-xl" />
+            <span className="font-display text-xl font-semibold">Suya Factory</span>
+          </Link>
+          <p className="mt-4 flex items-center gap-2 font-display text-2xl text-on-night">
+            No rules, just bite.
+            <Flame className="h-6 w-5 text-accent" />
+          </p>
+        </div>
+
+        <FooterLinks title="Shop" links={[["Beef kilishi", "/shop"], ["Where to buy", "/where-to-buy"], ["Bulk orders", "/bulk-orders"]]} />
+        <FooterLinks title="Help" links={[["My account", "/account"], ["Terms of sale", "/terms"], ["Privacy", "/privacy"]]} />
+
+        <div className="space-y-5">
+          <div>
+            <h2 className="text-xs font-semibold uppercase tracking-[0.18em] text-night-muted">Follow us</h2>
+            {/* Social links depend on the visitor's country (a cookie), so they stream in. */}
+            <Suspense fallback={<p className="mt-3 h-5" />}>
+              <SocialLinks />
+            </Suspense>
+          </div>
+          <div>
+            <h2 className="text-xs font-semibold uppercase tracking-[0.18em] text-night-muted">Theme</h2>
+            <div className="mt-3"><ThemeSwitcher tone="night" /></div>
+          </div>
+        </div>
+      </div>
+
+      <div className="border-t border-white/10">
+        <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-5 text-xs text-night-muted sm:flex-row sm:items-center sm:justify-between">
+          <p>{BUSINESS.legalName} · {BUSINESS.rcNumber} · {BUSINESS.publicAddress}</p>
+          <a href={`mailto:${BUSINESS.email}`} className="transition hover:text-on-night">{BUSINESS.email}</a>
+        </div>
+      </div>
     </footer>
+  );
+}
+
+function FooterLinks({ title, links }: { title: string; links: [string, string][] }) {
+  return (
+    <div>
+      <h2 className="text-xs font-semibold uppercase tracking-[0.18em] text-night-muted">{title}</h2>
+      <ul className="mt-3 space-y-2 text-sm">
+        {links.map(([label, href]) => (
+          <li key={href}><Link href={href} className="text-on-night/85 transition hover:text-sun">{label}</Link></li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
 async function SocialLinks() {
   const country = await getCountry();
   return (
-    <p className="flex justify-center gap-4 text-sm font-medium text-stone-700">
+    <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm">
       {SOCIAL[country].map((s) => (
-        <a key={s.name} href={s.url} target="_blank" rel="noopener noreferrer" className="hover:text-orange-700">
-          {s.name}
-        </a>
+        <li key={s.name}>
+          <a href={s.url} target="_blank" rel="noopener noreferrer" className="text-on-night/85 transition hover:text-sun">{s.name}</a>
+        </li>
       ))}
-    </p>
+    </ul>
   );
 }

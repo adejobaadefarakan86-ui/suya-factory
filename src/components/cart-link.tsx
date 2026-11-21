@@ -12,7 +12,7 @@ export function CartLink({ validIds }: { validIds?: string[] }) {
     .reduce((sum, l) => sum + l.quantity, 0);
 
   return (
-    <Link href="/cart" className="relative flex items-center gap-1 hover:text-orange-700" aria-label={`Cart, ${count} items`}>
+    <Link href="/cart" className="relative flex h-10 items-center gap-1.5 rounded-xl px-2 text-sm font-medium text-ink transition hover:text-accent" aria-label={`Cart, ${count} items`}>
       <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
         <path d="M3 3h2l2.4 12.2a2 2 0 0 0 2 1.6h8.2a2 2 0 0 0 2-1.5L21 8H6" strokeLinecap="round" strokeLinejoin="round" />
         <circle cx="10" cy="20" r="1.5" />
@@ -20,7 +20,7 @@ export function CartLink({ validIds }: { validIds?: string[] }) {
       </svg>
       <span className="hidden sm:inline">Cart</span>
       {count > 0 && (
-        <span className="absolute -top-2 -right-3 rounded-full bg-orange-700 px-1.5 text-[10px] font-bold text-white sm:static sm:px-2 sm:text-xs">
+        <span className="absolute -right-1 top-0.5 min-w-5 rounded-full bg-accent px-1.5 text-center text-[11px] font-semibold leading-5 text-on-accent sm:static sm:text-xs">
           {count}
         </span>
       )}

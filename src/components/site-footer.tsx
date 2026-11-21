@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Suspense } from "react";
 import { BUSINESS, SOCIAL } from "@/lib/business";
 import { getCountry } from "@/lib/country";
@@ -12,6 +13,8 @@ export function SiteFooter() {
       <p className="mt-2">{BUSINESS.legalName} · {BUSINESS.rcNumber} · {BUSINESS.publicAddress}</p>
       <p className="mt-1">
         <a href={`mailto:${BUSINESS.email}`} className="underline hover:text-stone-800">{BUSINESS.email}</a>
+        {" · "}<Link href="/terms" className="underline hover:text-stone-800">Terms</Link>
+        {" · "}<Link href="/privacy" className="underline hover:text-stone-800">Privacy</Link>
       </p>
     </footer>
   );

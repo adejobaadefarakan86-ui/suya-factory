@@ -5,7 +5,7 @@ import { createPublicClient } from "@/lib/supabase/public";
 import { startPaystackPayment } from "@/lib/start-payment";
 import { isOrderToken } from "@/lib/orders";
 import { after } from "next/server";
-import { alertMomoClaim, alertRiderBooked, autoQuoteGhanaOrder } from "@/lib/ghana-orders";
+import { alertCancelled, alertMomoClaim, alertRiderBooked, autoQuoteGhanaOrder } from "@/lib/ghana-orders";
 
 /** "Pay": record a pending payment, then go to Paystack. */
 export async function payWithPaystack(token: string, formData: FormData) {
@@ -20,11 +20,12 @@ export async function payWithPaystack(token: string, formData: FormData) {
   redirect("url" in result ? result.url : `/orders/${token}?payment=${result.error}`);
 }
 
-/** Customer cancels before paying (e.g. the delivery price is too high). */
+/** Customer cancels (Ghana: until handed to the rider; money already sent is refunded). Staff are told. */
 export async function cancelOrder(token: string) {
   if (!isOrderToken(token)) redirect("/");
-  const { error } = await createPublicClient().rpc("cancel_order_by_token", { p_token: token });
+  const { data, error } = await createPublicClient().rpc("cancel_order_by_token", { p_token: token });
   if (error) console.error("cancel_order_by_token:", error.message);
+  if (typeof data === "string") after(() => alertCancelled(data));
   redirect(`/orders/${token}${error ? "?payment=cannot_cancel" : ""}`);
 }
 
@@ -48,13 +49,15 @@ export async function claimMomoPayment(token: string, formData: FormData) {
   if (!isOrderToken(token)) redirect("/");
   if (formData.get("acceptDelivery") !== "yes") redirect(`/orders/${token}?payment=accept_delivery`);
   const reference = String(formData.get("reference") ?? "").trim().slice(0, 100);
+  const paidFrom = String(formData.get("paidFrom") ?? "").trim().slice(0, 20);
   const { data, error } = await createPublicClient().rpc("claim_momo_payment_by_token", {
     p_token: token,
     p_reference: reference,
+    p_paid_from: paidFrom,
   });
   if (error) {
     console.error("claim_momo_payment_by_token:", error.message);
-    redirect(`/orders/${token}?payment=error`);
+    redirect(`/orders/${token}?payment=${error.message.includes("SF:paid_from") ? "paid_from" : "error"}`);
   }
   if (typeof data === "string") after(() => alertMomoClaim(data));
   redirect(`/orders/${token}`);

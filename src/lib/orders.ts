@@ -51,6 +51,11 @@ export type OrderView = {
   momo_claimed_at: string | null;
   /** Ghana: staff couldn't find the MoMo payment. */
   momo_claim_rejected_at: string | null;
+  /** Ghana: the MoMo number the customer says they paid from (refunds go only to the paying number). */
+  momo_paid_from: string | null;
+  /** Cancelled after paying: amount to refund, and when it was sent. */
+  refund_due_minor: number | null;
+  refunded_at: string | null;
   courier: "dawurobo" | null;
   courier_eta: string | null;
   courier_tracking_url: string | null;

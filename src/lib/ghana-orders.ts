@@ -36,6 +36,10 @@ type GhOrder = {
   notes: string | null;
   delivery_quote_minor: number | null;
   momo_claim_ref: string | null;
+  momo_claimed_at: string | null;
+  momo_paid_from: string | null;
+  refund_due_minor: number | null;
+  refunded_at: string | null;
   courier_order_id: string | null;
   courier_status: string | null;
   courier_synced_at: string | null;
@@ -50,7 +54,7 @@ type GhOrder = {
 };
 
 const FIELDS =
-  "id, order_number, status, currency, contact_name, contact_phone, subtotal_minor, total_minor, notes, delivery_quote_minor, momo_claim_ref, courier_order_id, courier_status, courier_synced_at, own_rider, pickup_code, rider_name, rider_phone, rider_plate, rider_company, delivery_address, order_items(product_name, variant_label, quantity)";
+  "id, order_number, status, currency, contact_name, contact_phone, subtotal_minor, total_minor, notes, delivery_quote_minor, momo_claim_ref, momo_claimed_at, momo_paid_from, refund_due_minor, refunded_at, courier_order_id, courier_status, courier_synced_at, own_rider, pickup_code, rider_name, rider_phone, rider_plate, rider_company, delivery_address, order_items(product_name, variant_label, quantity)";
 
 async function loadOrder(match: { id?: string; order_number?: string }) {
   let q = createAdminClient().from("orders").select(FIELDS).eq("country", "GH");
@@ -118,7 +122,8 @@ export async function alertMomoClaim(orderNumber: string) {
       "",
       `Check the MoMo for <b>${money(o.total_minor)}</b> on ${GH_MOMO.number}`,
       `From: ${esc(o.contact_name)} · 📞 ${esc(o.contact_phone)}`,
-      o.momo_claim_ref ? `Reference they gave: <b>${esc(o.momo_claim_ref)}</b>` : "No reference given (look for the amount / their number).",
+      `Paid from MoMo number: <b>${esc(o.momo_paid_from ?? "not given")}</b>`,
+      ...(o.momo_claim_ref ? [`Reference they gave: <b>${esc(o.momo_claim_ref)}</b>`] : []),
       "",
       ...o.order_items.map((i) => `• ${i.quantity} × ${esc(i.product_name)} (${esc(i.variant_label)})`),
       "",
@@ -134,6 +139,12 @@ export async function alertMomoClaim(orderNumber: string) {
 /** Staff tapped a MoMo button. Returns the text to show in the chat. */
 export async function handleMomoButton(orderNumber: string, ok: boolean, by: string): Promise<string> {
   const db = createAdminClient();
+  const current = await loadOrder({ order_number: orderNumber });
+  if (current?.status === "cancelled") {
+    return `🚫 ${orderNumber} was cancelled by the customer.` + (current.refund_due_minor !== null && !current.refunded_at
+      ? " If the money arrived, refund it (see the cancel message)."
+      : "");
+  }
   if (!ok) {
     const { data } = await db.rpc("reject_momo_claim", { p_order_number: orderNumber, p_by: by });
     return data
@@ -194,6 +205,59 @@ export async function handleHandover(orderNumber: string, by: string): Promise<s
   return data
     ? `📦 ${orderNumber}: handed to the rider by ${esc(by)}. The customer can see it's on the way.`
     : `${orderNumber}: nothing to change (already handed over, or no rider yet).`;
+}
+
+// --- Cancellations and refunds ------------------------------------------------------
+
+export const refundButton = (orderNumber: string): Buttons => [
+  [{ text: "💸 Refunded", callback_data: `refund:${orderNumber}` }],
+];
+
+export function parseRefundButton(data: string) {
+  const m = /^refund:([\w-]{1,40})$/.exec(data);
+  return m ? m[1] : null;
+}
+
+/** A customer cancelled: tell staff, and if money was sent, how to refund it safely. */
+export async function alertCancelled(orderNumber: string) {
+  if (!telegramConfigured()) return;
+  const db = createAdminClient();
+  const { data } = await db.from("orders")
+    .select("order_number, country, currency, contact_name, contact_phone, rider_name, refund_due_minor, momo_paid_from, payments(status)")
+    .eq("order_number", orderNumber).maybeSingle();
+  const o = data as {
+    order_number: string; country: string; currency: Currency; contact_name: string; contact_phone: string;
+    rider_name: string | null; refund_due_minor: number | null; momo_paid_from: string | null; payments: { status: string }[];
+  } | null;
+  if (!o) return;
+  const confirmed = o.payments.some((p) => p.status === "success");
+  const lines = [
+    `🚫 <b>${esc(o.order_number)}: cancelled by the customer</b>`,
+    `${esc(o.contact_name)} · 📞 ${esc(o.contact_phone)}`,
+  ];
+  if (o.rider_name) lines.push("", `⚠️ Do NOT hand it to the rider (${esc(o.rider_name)}).`);
+  if (o.refund_due_minor !== null) {
+    lines.push(
+      "",
+      `💸 <b>Refund ${formatMoney(o.refund_due_minor, o.currency)} within 2 days</b>`,
+      confirmed ? "Payment was confirmed." : "They said they paid, but it wasn't confirmed yet: check the MoMo first. Nothing arrived = no refund.",
+      "Send it ONLY to the number the money came from, as shown on our MoMo statement.",
+      `They said they paid from: <b>${esc(o.momo_paid_from ?? "not given")}</b>`,
+      "Never refund to a different number, even if they ask.",
+      "",
+      "Tap 💸 once the refund is sent.",
+    );
+  }
+  await sendTelegram(lines.join("\n"), o.refund_due_minor !== null ? refundButton(o.order_number) : undefined);
+}
+
+/** Staff tapped "Refunded". */
+export async function handleRefunded(orderNumber: string, by: string): Promise<string> {
+  const { data, error } = await createAdminClient().rpc("mark_refunded", { p_order_number: orderNumber, p_by: by });
+  if (error) return `⚠️ ${orderNumber}: couldn't update (${esc(error.message)}).`;
+  return data
+    ? `💸 ${orderNumber}: refund sent by ${esc(by)}. The customer's page shows it.`
+    : `${orderNumber}: nothing to change (already marked refunded).`;
 }
 
 // --- 3. Book the Dawurobo rider -------------------------------------------------

@@ -37,6 +37,7 @@ const PAYMENT_MESSAGES: Record<string, { text: string; className: string }> = {
   rider_name: { text: "Please enter your rider's name.", className: "bg-red-50 text-red-900" },
   rider_phone: { text: "Please enter your rider's phone number (7 to 15 digits).", className: "bg-red-50 text-red-900" },
   cannot_cancel: { text: "This order can't be cancelled here any more. Please contact us.", className: "bg-red-50 text-red-900" },
+  paid_from: { text: "Please enter the MoMo number you paid from (e.g. 024 123 4567).", className: "bg-red-50 text-red-900" },
 };
 
 export default function OrderPage(props: PageProps<"/orders/[token]">) {
@@ -170,7 +171,10 @@ async function OrderDetails({ params, searchParams }: Pick<OrderPageProps, "para
 
       {order.can_cancel && (
         <form action={cancelOrder.bind(null, token)} className="mt-3 text-right">
-          <ConfirmButton label="Cancel this order" confirmText="Cancel this order? You can order again any time."
+          <ConfirmButton label="Cancel this order"
+            confirmText={order.momo_claimed_at || order.status === "paid" || order.status === "preparing"
+              ? `Cancel this order? We refund ${formatMoney(order.total_minor, order.currency)} within 2 days to the MoMo number you paid from.`
+              : "Cancel this order? You can order again any time."}
             className="text-sm font-medium text-stone-600 underline hover:text-red-700" />
         </form>
       )}
@@ -178,6 +182,13 @@ async function OrderDetails({ params, searchParams }: Pick<OrderPageProps, "para
       {order.status === "cancelled" && (
         <div className="mt-6 rounded-2xl bg-stone-100 p-5 text-stone-800">
           <p className="font-semibold">This order was cancelled.</p>
+          {order.refund_due_minor !== null && (
+            <p className="mt-1 text-sm">
+              {order.refunded_at
+                ? <>✅ Your refund of <strong>{formatMoney(order.refund_due_minor, order.currency)}</strong> has been sent to the MoMo number you paid from.</>
+                : <>Your refund of <strong>{formatMoney(order.refund_due_minor, order.currency)}</strong> will be sent within 2 days to the MoMo number you paid from{order.momo_paid_from ? ` (${order.momo_paid_from})` : ""}.</>}
+            </p>
+          )}
           <p className="mt-1 text-sm">Whenever you&apos;re ready, you can <Link href="/shop" className="font-medium text-orange-700 underline">order again</Link>.</p>
         </div>
       )}
@@ -375,9 +386,10 @@ function MomoPay({ order, token, quote }: { order: OrderView; token: string; quo
         </p>
       </div>
       <label className="block text-sm">
-        <span className="mb-1 block font-medium">MoMo transaction ID or the number you paid from (optional)</span>
-        <input name="reference" maxLength={100} placeholder="e.g. 0241234567 or the ID in your MoMo SMS"
+        <span className="mb-1 block font-medium">The MoMo number you paid from</span>
+        <input name="paidFrom" type="tel" required maxLength={20} placeholder="024 123 4567"
           className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-stone-900" />
+        <span className="mt-1 block text-xs text-stone-600">Any refund goes back to this number only.</span>
       </label>
       <label className="flex items-start gap-2 text-sm">
         <input type="checkbox" name="acceptDelivery" value="yes" required className="mt-0.5 h-4 w-4 accent-orange-700" />

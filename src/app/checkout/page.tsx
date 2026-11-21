@@ -15,8 +15,8 @@ export const metadata = { title: "Checkout · Suya Factory", robots: { index: fa
 export default function CheckoutPage() {
   return (
     <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-10">
-      <h1 className="text-3xl font-bold text-stone-900">Checkout</h1>
-      <Suspense fallback={<div className="mt-6 h-96 animate-pulse rounded-2xl bg-stone-200" />}>
+      <h1 className="text-3xl font-bold text-ink">Checkout</h1>
+      <Suspense fallback={<div className="mt-6 h-96 animate-pulse rounded-2xl bg-cream" />}>
         <PricedCheckout />
       </Suspense>
     </main>
@@ -72,7 +72,7 @@ function TeamAccountNotice() {
         Team accounts can&apos;t place orders. To order (or test an order), log out first and order as a guest, or use a
         customer account.
       </p>
-      <Link href="/account" className="mt-3 inline-block text-sm font-semibold text-orange-800 underline">Go to my account to log out</Link>
+      <Link href="/account" className="mt-3 inline-block text-sm font-semibold text-accent-strong underline">Go to my account to log out</Link>
     </div>
   );
 }

@@ -62,28 +62,28 @@ export function LocationPicker({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="group flex w-full items-center gap-4 rounded-2xl border border-stone-200 bg-white p-4 text-left transition hover:border-stone-300 hover:shadow-sm"
+        className="group flex w-full items-center gap-4 rounded-2xl border border-line bg-surface p-4 text-left transition hover:border-line hover:shadow-sm"
       >
-        <span className={`grid size-11 shrink-0 place-items-center rounded-full ${value ? "bg-orange-600 text-white" : "bg-stone-100 text-stone-500"}`}>
+        <span className={`grid size-11 shrink-0 place-items-center rounded-full ${value ? "bg-accent text-white" : "bg-cream text-muted"}`}>
           <PinIcon className="size-5" />
         </span>
         <span className="min-w-0 flex-1">
           {value ? (
             <>
-              <span className="block truncate font-semibold text-stone-900">{value.name}</span>
-              <span className="block truncate text-sm text-stone-500">{value.address}</span>
+              <span className="block truncate font-semibold text-ink">{value.name}</span>
+              <span className="block truncate text-sm text-muted">{value.address}</span>
             </>
           ) : (
             <>
-              <span className="block font-semibold text-stone-900">{emptyTitle}</span>
-              <span className="block text-sm text-stone-500">{emptyHint}</span>
+              <span className="block font-semibold text-ink">{emptyTitle}</span>
+              <span className="block text-sm text-muted">{emptyHint}</span>
             </>
           )}
         </span>
         {value ? (
-          <span className="text-sm font-medium text-orange-700 group-hover:underline">Change</span>
+          <span className="text-sm font-medium text-accent-strong group-hover:underline">Change</span>
         ) : (
-          <ChevronIcon className="size-5 text-stone-400" />
+          <ChevronIcon className="size-5 text-muted" />
         )}
       </button>
 
@@ -131,13 +131,13 @@ function Sheet({
   }, [onClose]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-stone-950/40 backdrop-blur-sm sm:items-center sm:p-6" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-night/40 backdrop-blur-sm sm:items-center sm:p-6" onClick={onClose}>
       <div
         role="dialog"
         aria-modal="true"
         aria-label="Delivery address"
         onClick={(e) => e.stopPropagation()}
-        className="relative flex h-dvh w-full flex-col overflow-hidden bg-white sm:h-[min(44rem,90dvh)] sm:max-w-lg sm:rounded-3xl sm:shadow-2xl"
+        className="relative flex h-dvh w-full flex-col overflow-hidden bg-surface sm:h-[min(44rem,90dvh)] sm:max-w-lg sm:rounded-3xl sm:shadow-2xl"
       >
         {step === "search" ? (
           <SearchStep
@@ -248,10 +248,10 @@ function SearchStep({
 
   return (
     <>
-      <div className="flex items-center gap-2 border-b border-stone-100 p-3">
+      <div className="flex items-center gap-2 border-b border-line p-3">
         <IconButton label="Close" onClick={onClose}><CloseIcon className="size-5" /></IconButton>
         <div className="relative flex-1">
-          <SearchIcon className="pointer-events-none absolute left-3.5 top-1/2 size-5 -translate-y-1/2 text-stone-400" />
+          <SearchIcon className="pointer-events-none absolute left-3.5 top-1/2 size-5 -translate-y-1/2 text-muted" />
           <input
             autoFocus
             type="search"
@@ -259,7 +259,7 @@ function SearchStep({
             onChange={(e) => search(e.target.value)}
             placeholder="Search street, estate or place"
             aria-label="Search for your delivery address"
-            className="w-full rounded-full bg-stone-100 py-3 pl-11 pr-4 text-[15px] text-stone-900 outline-none placeholder:text-stone-400 focus:bg-white focus:ring-2 focus:ring-orange-500"
+            className="w-full rounded-full bg-cream py-3 pl-11 pr-4 text-[15px] text-ink outline-none placeholder:text-muted focus:bg-surface focus:ring-2 focus:ring-orange-500"
           />
         </div>
       </div>
@@ -269,30 +269,30 @@ function SearchStep({
           type="button"
           onClick={useGps}
           disabled={locating}
-          className="flex w-full items-center gap-4 px-5 py-4 text-left hover:bg-stone-50 disabled:opacity-60"
+          className="flex w-full items-center gap-4 px-5 py-4 text-left hover:bg-cream disabled:opacity-60"
         >
-          <span className="grid size-10 place-items-center rounded-full bg-orange-50 text-orange-700">
+          <span className="grid size-10 place-items-center rounded-full bg-accent-soft text-accent-strong">
             <LocateIcon className={`size-5 ${locating ? "animate-pulse" : ""}`} />
           </span>
           <span>
-            <span className="block font-semibold text-stone-900">{locating ? "Finding you…" : "Use my current location"}</span>
-            <span className="block text-sm text-stone-500">Most accurate when you&apos;re at the delivery spot</span>
+            <span className="block font-semibold text-ink">{locating ? "Finding you…" : "Use my current location"}</span>
+            <span className="block text-sm text-muted">Most accurate when you&apos;re at the delivery spot</span>
           </span>
         </button>
 
         {error && <p role="alert" className="mx-5 mb-2 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-800">{error}</p>}
 
         {results.length > 0 && (
-          <ul className="border-t border-stone-100">
+          <ul className="border-t border-line">
             {results.map((p) => (
               <li key={`${p.lat},${p.lng},${p.name}`}>
-                <button type="button" onClick={() => onPick(p)} className="flex w-full items-center gap-4 px-5 py-3.5 text-left hover:bg-stone-50">
-                  <span className="grid size-10 shrink-0 place-items-center rounded-full bg-stone-100 text-stone-500">
+                <button type="button" onClick={() => onPick(p)} className="flex w-full items-center gap-4 px-5 py-3.5 text-left hover:bg-cream">
+                  <span className="grid size-10 shrink-0 place-items-center rounded-full bg-cream text-muted">
                     <PinIcon className="size-[18px]" />
                   </span>
                   <span className="min-w-0">
-                    <span className="block truncate font-medium text-stone-900">{p.name}</span>
-                    <span className="block truncate text-sm text-stone-500">{p.address.replace(`${p.name}, `, "")}</span>
+                    <span className="block truncate font-medium text-ink">{p.name}</span>
+                    <span className="block truncate text-sm text-muted">{p.address.replace(`${p.name}, `, "")}</span>
                   </span>
                 </button>
               </li>
@@ -301,7 +301,7 @@ function SearchStep({
         )}
 
         {query.trim().length >= 2 && !searching && results.length === 0 && !error && (
-          <div className="px-5 py-6 text-center text-sm text-stone-500">
+          <div className="px-5 py-6 text-center text-sm text-muted">
             <p>No places found. Try a nearby landmark or street name,</p>
             <p>or use your current location and move the pin.</p>
           </div>
@@ -383,7 +383,7 @@ function MapStep({
 
   return (
     <>
-      <div className="relative flex-1 bg-stone-100">
+      <div className="relative flex-1 bg-cream">
         {/* MapLibre's CSS forces position:relative on its container, so size it from a wrapper */}
         <div className="absolute inset-0">
           <div ref={box} className="h-full w-full" />
@@ -392,34 +392,34 @@ function MapStep({
         {/* Fixed centre pin: lifts while the map moves */}
         <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-full">
           <div className={`flex flex-col items-center transition-transform duration-200 ${moving ? "-translate-y-3" : ""}`}>
-            <span className="grid size-9 place-items-center rounded-full bg-orange-600 shadow-lg ring-4 ring-white">
-              <span className="size-2.5 rounded-full bg-white" />
+            <span className="grid size-9 place-items-center rounded-full bg-accent shadow-lg ring-4 ring-white">
+              <span className="size-2.5 rounded-full bg-surface" />
             </span>
-            <span className="h-4 w-0.5 bg-orange-600" />
+            <span className="h-4 w-0.5 bg-accent" />
           </div>
         </div>
-        <span className="pointer-events-none absolute left-1/2 top-1/2 h-1.5 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-stone-950/30" />
+        <span className="pointer-events-none absolute left-1/2 top-1/2 h-1.5 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-night/30" />
 
         <div className="absolute left-3 top-3">
           <IconButton label="Back to search" onClick={onBack} floating><BackIcon className="size-5" /></IconButton>
         </div>
         <div className="pointer-events-none absolute inset-x-0 top-4 flex justify-center">
-          <span className="rounded-full bg-stone-900/80 px-3 py-1.5 text-xs font-medium text-white backdrop-blur">Move the map to place the pin</span>
+          <span className="rounded-full bg-night/80 px-3 py-1.5 text-xs font-medium text-white backdrop-blur">Move the map to place the pin</span>
         </div>
       </div>
 
-      <div className="space-y-4 rounded-t-3xl bg-white p-5 shadow-[0_-8px_24px_-12px_rgb(0_0_0/0.2)]">
+      <div className="space-y-4 rounded-t-3xl bg-surface p-5 shadow-[0_-8px_24px_-12px_rgb(0_0_0/0.2)]">
         <div className="min-h-12">
           {moving || resolving ? (
             <div className="space-y-2">
-              <div className="h-4 w-1/2 animate-pulse rounded bg-stone-200" />
-              <div className="h-3 w-4/5 animate-pulse rounded bg-stone-100" />
+              <div className="h-4 w-1/2 animate-pulse rounded bg-cream" />
+              <div className="h-3 w-4/5 animate-pulse rounded bg-cream" />
             </div>
           ) : hasPlace ? (
             <>
               {editing ? (
                 <label className="block">
-                  <span className="mb-1.5 block text-sm font-medium text-stone-700">Your exact address</span>
+                  <span className="mb-1.5 block text-sm font-medium text-ink">Your exact address</span>
                   <input
                     autoFocus
                     value={draft.name}
@@ -427,18 +427,18 @@ function MapStep({
                     onChange={(e) => onChangeRef.current({ ...draft, name: e.target.value })}
                     onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), setEditing(false))}
                     placeholder="e.g. 12 Jibowu Road, blue gate"
-                    className="w-full rounded-xl border border-stone-300 px-3.5 py-2.5 text-stone-900 outline-none focus:border-orange-600 focus:ring-2 focus:ring-orange-200"
+                    className="w-full rounded-xl border border-line px-3.5 py-2.5 text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-soft"
                   />
                 </label>
               ) : (
                 <div className="flex items-start justify-between gap-3">
-                  <p className="font-semibold text-stone-900">{draft.name}</p>
-                  <button type="button" onClick={() => setEditing(true)} className="shrink-0 text-sm font-medium text-orange-700 hover:underline">
+                  <p className="font-semibold text-ink">{draft.name}</p>
+                  <button type="button" onClick={() => setEditing(true)} className="shrink-0 text-sm font-medium text-accent-strong hover:underline">
                     Edit
                   </button>
                 </div>
               )}
-              <p className="mt-1 text-sm text-stone-500">{draft.address}</p>
+              <p className="mt-1 text-sm text-muted">{draft.address}</p>
               {draft.accuracy !== null && draft.accuracy > 100 && (
                 <p className="mt-2 text-sm text-amber-700">
                   We could only find you to within about {draft.accuracy} m (common on laptops). Move the map to your exact gate.
@@ -446,14 +446,14 @@ function MapStep({
               )}
             </>
           ) : (
-            <p className="text-stone-500">Move the map to your delivery spot.</p>
+            <p className="text-muted">Move the map to your delivery spot.</p>
           )}
         </div>
         <button
           type="button"
           onClick={onConfirm}
           disabled={!hasPlace || moving || resolving || !draft.name.trim()}
-          className="w-full rounded-full bg-stone-900 px-4 py-3.5 font-semibold text-white transition hover:bg-stone-800 disabled:opacity-50"
+          className="w-full rounded-full bg-night px-4 py-3.5 font-semibold text-white transition hover:bg-stone-800 disabled:opacity-50"
         >
           Confirm location
         </button>
@@ -561,7 +561,7 @@ function IconButton({ label, onClick, children, floating }: { label: string; onC
       type="button"
       aria-label={label}
       onClick={onClick}
-      className={`grid size-11 shrink-0 place-items-center rounded-full text-stone-700 hover:bg-stone-100 ${floating ? "bg-white shadow-md" : ""}`}
+      className={`grid size-11 shrink-0 place-items-center rounded-full text-ink hover:bg-cream ${floating ? "bg-surface shadow-md" : ""}`}
     >
       {children}
     </button>

@@ -46,7 +46,7 @@ const PAYMENT_MESSAGES: Record<string, { text: string; className: string }> = {
 export default function OrderPage(props: PageProps<"/orders/[token]">) {
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-10">
-      <Suspense fallback={<div className="h-96 animate-pulse rounded-2xl bg-stone-200" />}>
+      <Suspense fallback={<div className="h-96 animate-pulse rounded-2xl bg-cream" />}>
         <OrderDetails params={props.params} searchParams={props.searchParams} />
       </Suspense>
     </main>
@@ -90,8 +90,8 @@ async function OrderDetails({ params, searchParams }: Pick<OrderPageProps, "para
     <>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-sm text-stone-500">{when(order.created_at)}</p>
-          <h1 className="text-3xl font-bold text-stone-900">Order {order.order_number}</h1>
+          <p className="text-sm text-muted">{when(order.created_at)}</p>
+          <h1 className="text-3xl font-bold text-ink">Order {order.order_number}</h1>
         </div>
         <span className={`rounded-full px-3 py-1 text-sm font-semibold ${status.className}`}>{status.label}</span>
       </div>
@@ -119,7 +119,7 @@ async function OrderDetails({ params, searchParams }: Pick<OrderPageProps, "para
 
       {/* 2. Price ready: accept & pay, ask for a new price, or cancel */}
       {order.status === "pending_payment" && quote !== null && (
-        <div className="mt-6 space-y-4 rounded-2xl border-2 border-orange-200 bg-orange-50 p-5 text-orange-950">
+        <div className="mt-6 space-y-4 rounded-2xl border-2 border-accent/40 bg-accent-soft p-5 text-ink">
           {order.own_rider ? (
             <div>
               <p className="text-sm">To pay by MoMo</p>
@@ -136,7 +136,7 @@ async function OrderDetails({ params, searchParams }: Pick<OrderPageProps, "para
                 : `Paid to the rider when they arrive.${order.delivery_quote_note ? ` ${order.delivery_quote_note}` : ""}`}
             </p>
             {order.quote_expires_at && !order.quote_expired && (
-              <p className="mt-1 text-xs text-orange-900/70">Price valid until {when(order.quote_expires_at)}.</p>
+              <p className="mt-1 text-xs text-ink/70">Price valid until {when(order.quote_expires_at)}.</p>
             )}
           </div>
           )}
@@ -144,7 +144,7 @@ async function OrderDetails({ params, searchParams }: Pick<OrderPageProps, "para
           {order.quote_expired ? (
             <form action={requestNewQuote.bind(null, token)}>
               <p className="mb-2 text-sm">This price has expired, because delivery prices change during the day.</p>
-              <button className="rounded-lg bg-orange-700 px-4 py-2.5 font-semibold text-white hover:bg-orange-800">
+              <button className="rounded-lg bg-accent px-4 py-2.5 font-semibold text-white hover:bg-accent-strong">
                 Get a new delivery price
               </button>
             </form>
@@ -162,7 +162,7 @@ async function OrderDetails({ params, searchParams }: Pick<OrderPageProps, "para
               <p className="text-xs">Card, bank transfer or USSD, securely through Paystack.</p>
             </form>
           ) : order.momo_claimed_at ? (
-            <div className="rounded-xl bg-white/70 p-4 text-sm">
+            <div className="rounded-xl bg-surface/70 p-4 text-sm">
               <p className="font-semibold">⏳ Thanks! We&apos;re checking your MoMo payment.</p>
               <p className="mt-1">
                 This usually takes a few minutes during the day. As soon as we see it,{" "}
@@ -181,12 +181,12 @@ async function OrderDetails({ params, searchParams }: Pick<OrderPageProps, "para
             confirmText={order.momo_claimed_at || order.status === "paid" || order.status === "preparing"
               ? `Cancel this order? We refund ${formatMoney(order.total_minor, order.currency)} within 2 days to the MoMo number you paid from.`
               : "Cancel this order? You can order again any time."}
-            className="text-sm font-medium text-stone-600 underline hover:text-red-700" />
+            className="text-sm font-medium text-muted underline hover:text-red-700" />
         </form>
       )}
 
       {order.status === "cancelled" && (
-        <div className="mt-6 rounded-2xl bg-stone-100 p-5 text-stone-800">
+        <div className="mt-6 rounded-2xl bg-cream p-5 text-ink">
           <p className="font-semibold">This order was cancelled.</p>
           {order.refund_due_minor !== null && (
             <p className="mt-1 text-sm">
@@ -196,7 +196,7 @@ async function OrderDetails({ params, searchParams }: Pick<OrderPageProps, "para
             </p>
           )}
           {order.cancel_reason === null && order.own_rider && <CancelReasonForm token={token} />}
-          <p className="mt-1 text-sm">Whenever you&apos;re ready, you can <Link href="/shop" className="font-medium text-orange-700 underline">order again</Link>.</p>
+          <p className="mt-1 text-sm">Whenever you&apos;re ready, you can <Link href="/shop" className="font-medium text-accent-strong underline">order again</Link>.</p>
         </div>
       )}
 
@@ -222,7 +222,7 @@ async function OrderDetails({ params, searchParams }: Pick<OrderPageProps, "para
       {order.courier_tracking_url && (order.status === "paid" || order.status === "preparing") && (
         <a href={order.courier_tracking_url} target="_blank" rel="noopener noreferrer"
           className="mt-3 inline-block rounded-lg bg-indigo-700 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-800">
-          🗺️ Track your delivery
+          Track your delivery
         </a>
       )}
 
@@ -242,29 +242,29 @@ async function OrderDetails({ params, searchParams }: Pick<OrderPageProps, "para
         </div>
       )}
 
-      <section className="mt-6 rounded-2xl border border-stone-200 bg-white p-6">
-        <h2 className="text-lg font-semibold text-stone-900">Items</h2>
-        <ul className="mt-2 divide-y divide-stone-100 text-sm">
+      <section className="mt-6 rounded-2xl border border-line bg-surface p-6">
+        <h2 className="text-lg font-semibold text-ink">Items</h2>
+        <ul className="mt-2 divide-y divide-line text-sm">
           {order.items.map((item, i) => (
             <li key={i} className="flex justify-between gap-3 py-2">
               <span>
-                <span className="font-medium text-stone-900">{item.quantity} × {item.product_name}</span>
-                <span className="block text-stone-500">{item.variant_label} · {money(item.unit_price_minor)} each</span>
+                <span className="font-medium text-ink">{item.quantity} × {item.product_name}</span>
+                <span className="block text-muted">{item.variant_label} · {money(item.unit_price_minor)} each</span>
               </span>
               <span className="tabular-nums">{money(item.line_total_minor)}</span>
             </li>
           ))}
         </ul>
-        <dl className="mt-2 space-y-1 border-t border-stone-200 pt-3 text-sm">
+        <dl className="mt-2 space-y-1 border-t border-line pt-3 text-sm">
           {order.delivery_fee_minor > 0 && (
             // Delivery paid online (automatic price, or older zone-based orders).
             <div className="flex justify-between"><dt>Delivery{a.zone_name ? ` (${a.zone_name})` : ""}</dt><dd className="tabular-nums">{money(order.delivery_fee_minor)}</dd></div>
           )}
           <div className="flex justify-between pt-1 text-lg font-bold"><dt>{order.currency === "GHS" ? "Kilishi (pay by MoMo)" : "Paid online"}</dt><dd className="tabular-nums">{money(order.total_minor)}</dd></div>
           {order.own_rider ? (
-            <div className="flex justify-between text-stone-600"><dt>Delivery</dt><dd>Your own rider (you pay them)</dd></div>
+            <div className="flex justify-between text-muted"><dt>Delivery</dt><dd>Your own rider (you pay them)</dd></div>
           ) : order.delivery_fee_minor === 0 && (
-            <div className="flex justify-between text-stone-600">
+            <div className="flex justify-between text-muted">
               <dt>Delivery fee (pay the rider)</dt>
               <dd className="tabular-nums">{quote !== null ? money(quote) : "Being checked…"}</dd>
             </div>
@@ -272,25 +272,25 @@ async function OrderDetails({ params, searchParams }: Pick<OrderPageProps, "para
         </dl>
       </section>
 
-      <section className="mt-6 grid gap-6 rounded-2xl border border-stone-200 bg-white p-6 text-sm sm:grid-cols-2">
+      <section className="mt-6 grid gap-6 rounded-2xl border border-line bg-surface p-6 text-sm sm:grid-cols-2">
         <div>
-          <h2 className="mb-2 text-lg font-semibold text-stone-900">Delivering to</h2>
+          <h2 className="mb-2 text-lg font-semibold text-ink">Delivering to</h2>
           <p>{order.contact_name}</p>
           <p>{a.line1}</p>
           {a.line2 && <p>{a.line2}</p>}
           <p>{[a.city, a.zone_name].filter(Boolean).join(" · ")}</p>
-          {a.landmark && <p className="text-stone-500">Near {a.landmark}</p>}
-          {a.lat !== undefined && <p className="mt-1 text-green-700">📍 Exact location pinned</p>}
+          {a.landmark && <p className="text-muted">Near {a.landmark}</p>}
+          {a.lat !== undefined && <p className="mt-1 text-green-700">Exact location pinned</p>}
         </div>
         <div>
-          <h2 className="mb-2 text-lg font-semibold text-stone-900">Contact</h2>
+          <h2 className="mb-2 text-lg font-semibold text-ink">Contact</h2>
           <p className="break-all">{order.contact_email}</p>
           <p><PhoneText value={order.contact_phone} /></p>
-          {order.notes && <p className="mt-3 text-stone-600">Note: {order.notes}</p>}
+          {order.notes && <p className="mt-3 text-muted">Note: {order.notes}</p>}
         </div>
       </section>
 
-      <Link href="/shop" className="mt-8 inline-block text-sm font-medium text-orange-700 hover:underline">
+      <Link href="/shop" className="mt-8 inline-block text-sm font-medium text-accent-strong hover:underline">
         ← Continue shopping
       </Link>
     </>
@@ -309,9 +309,9 @@ function Timeline({ order }: { order: OrderView }) {
         const at = done ? reachedAt.get(step) : undefined;
         return (
           <li key={step} aria-current={i === current ? "step" : undefined}>
-            <div className={`mx-auto mb-1 h-2 rounded-full ${done ? "bg-orange-600" : "bg-stone-200"}`} />
-            <span className={done ? "font-semibold text-stone-900" : "text-stone-400"}>{i === 1 && order.own_rider ? "Confirmed" : STEP_LABELS[i]}</span>
-            {at && <span className="block text-stone-500">{formatOrderDate(at, order.country)}</span>}
+            <div className={`mx-auto mb-1 h-2 rounded-full ${done ? "bg-accent" : "bg-cream"}`} />
+            <span className={done ? "font-semibold text-ink" : "text-muted"}>{i === 1 && order.own_rider ? "Confirmed" : STEP_LABELS[i]}</span>
+            {at && <span className="block text-muted">{formatOrderDate(at, order.country)}</span>}
           </li>
         );
       })}
@@ -331,9 +331,9 @@ function OwnRiderTimeline({ order }: { order: OrderView }) {
         const at = done ? reachedAt.get(step.status) ?? (step.status === "delivered" ? reachedAt.get("out_for_delivery") : undefined) : undefined;
         return (
           <li key={step.status} aria-current={i === current ? "step" : undefined}>
-            <div className={`mx-auto mb-1 h-2 rounded-full ${done ? "bg-orange-600" : "bg-stone-200"}`} />
-            <span className={done ? "font-semibold text-stone-900" : "text-stone-400"}>{step.label}</span>
-            {at && <span className="block text-stone-500">{formatOrderDate(at, order.country)}</span>}
+            <div className={`mx-auto mb-1 h-2 rounded-full ${done ? "bg-accent" : "bg-cream"}`} />
+            <span className={done ? "font-semibold text-ink" : "text-muted"}>{step.label}</span>
+            {at && <span className="block text-muted">{formatOrderDate(at, order.country)}</span>}
           </li>
         );
       })}
@@ -352,8 +352,8 @@ function ReadyText() {
 /** After cancelling: why? */
 function CancelReasonForm({ token }: { token: string }) {
   return (
-    <form action={setCancelReason.bind(null, token)} className="mt-4 space-y-2 rounded-xl bg-white p-4 text-sm ring-1 ring-stone-200">
-      <p className="font-medium text-stone-900">Can you tell us why you cancelled?</p>
+    <form action={setCancelReason.bind(null, token)} className="mt-4 space-y-2 rounded-xl bg-surface p-4 text-sm ring-1 ring-line">
+      <p className="font-medium text-ink">Can you tell us why you cancelled?</p>
       {CANCEL_REASONS.map((r) => (
         <label key={r} className="flex items-center gap-2">
           <input type="radio" name="reason" value={r} className="h-4 w-4 accent-orange-700" /> {r}
@@ -363,7 +363,7 @@ function CancelReasonForm({ token }: { token: string }) {
         <input type="radio" name="reason" value="other" className="h-4 w-4 accent-orange-700" /> Something else:
       </label>
       <input name="other" maxLength={300} placeholder="Tell us in your own words"
-        className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-stone-900" />
+        className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-ink" />
       <PayButton label="Send" pendingLabel="Sending…" />
     </form>
   );
@@ -387,7 +387,7 @@ function RiderCard({ order }: { order: OrderView }) {
           const at = done ? stageAt.get(s.stage) : undefined;
           return (
             <li key={s.stage} aria-current={i === current ? "step" : undefined}
-              className={`rounded-xl p-2 ${done ? "bg-indigo-600 text-white" : "bg-white text-stone-400"}`}>
+              className={`rounded-xl p-2 ${done ? "bg-indigo-600 text-white" : "bg-surface text-muted"}`}>
               <span className="block text-xl">{s.icon}</span>
               <span className="font-semibold">{s.label}</span>
               {at && <span className="block text-xs opacity-80">{formatOrderDate(at, order.country).split(", ")[1]}</span>}
@@ -397,7 +397,7 @@ function RiderCard({ order }: { order: OrderView }) {
       </ol>
 
       <div className="mt-4 flex flex-wrap gap-2">
-        <a href={telLink(digits)} className="rounded-lg bg-white px-4 py-2 font-semibold text-indigo-900 ring-1 ring-indigo-200 hover:bg-indigo-100">
+        <a href={telLink(digits)} className="rounded-lg bg-surface px-4 py-2 font-semibold text-indigo-900 ring-1 ring-indigo-200 hover:bg-indigo-100">
           📞 Call rider <span className="font-normal"><PhoneText value={rider.phone} /></span>
         </a>
         <a href={whatsappLink(digits, `Hi ${rider.name}, I'm expecting a Suya Factory delivery (order ${order.order_number}).`)}
@@ -405,7 +405,7 @@ function RiderCard({ order }: { order: OrderView }) {
           className="rounded-lg bg-green-600 px-4 py-2 font-semibold text-white hover:bg-green-700">💬 WhatsApp rider</a>
         {rider.tracking_url && (
           <a href={rider.tracking_url} target="_blank" rel="noopener noreferrer"
-            className="rounded-lg bg-indigo-700 px-4 py-2 font-semibold text-white hover:bg-indigo-800">🗺️ Track on map</a>
+            className="rounded-lg bg-indigo-700 px-4 py-2 font-semibold text-white hover:bg-indigo-800">Track on map</a>
         )}
       </div>
       {order.delivery_quote_minor !== null && !order.own_rider && (
@@ -426,23 +426,23 @@ function MomoPay({ order, token, quote }: { order: OrderView; token: string; quo
           us on {GH_MOMO.number}.
         </p>
       )}
-      <div className="rounded-xl bg-white p-4 text-stone-800 ring-2 ring-orange-300">
-        <p className="font-semibold text-stone-900">Pay for your kilishi by Mobile Money</p>
+      <div className="rounded-xl bg-surface p-4 text-ink ring-2 ring-accent-soft">
+        <p className="font-semibold text-ink">Pay for your kilishi by Mobile Money</p>
         <dl className="mt-3 grid gap-3 sm:grid-cols-2">
           <div>
-            <dt className="text-xs font-semibold uppercase tracking-wide text-stone-500">Send</dt>
-            <dd className="text-2xl font-extrabold text-stone-900 tabular-nums">{money(order.total_minor)}</dd>
+            <dt className="text-xs font-semibold uppercase tracking-wide text-muted">Send</dt>
+            <dd className="text-2xl font-extrabold text-ink tabular-nums">{money(order.total_minor)}</dd>
           </div>
           <div>
-            <dt className="text-xs font-semibold uppercase tracking-wide text-stone-500">To this MoMo number</dt>
-            <dd className="text-2xl font-extrabold tracking-wide text-orange-800 tabular-nums">
+            <dt className="text-xs font-semibold uppercase tracking-wide text-muted">To this MoMo number</dt>
+            <dd className="text-2xl font-extrabold tracking-wide text-accent-strong tabular-nums">
               {GH_MOMO.number.replace(/^(\d{3})(\d{3})(\d{4})$/, "$1 $2 $3")}
             </dd>
           </div>
           <div className="sm:col-span-2">
-            <dt className="text-xs font-semibold uppercase tracking-wide text-stone-500">Name on the account</dt>
-            <dd className="text-lg font-extrabold text-stone-900">
-              {GH_MOMO.names[0]} <span className="font-medium text-stone-500">or</span> {GH_MOMO.names[1]}
+            <dt className="text-xs font-semibold uppercase tracking-wide text-muted">Name on the account</dt>
+            <dd className="text-lg font-extrabold text-ink">
+              {GH_MOMO.names[0]} <span className="font-medium text-muted">or</span> {GH_MOMO.names[1]}
             </dd>
           </div>
         </dl>
@@ -453,8 +453,8 @@ function MomoPay({ order, token, quote }: { order: OrderView; token: string; quo
       <label className="block text-sm">
         <span className="mb-1 block font-medium">The MoMo number you paid from</span>
         <input name="paidFrom" type="tel" required maxLength={20} placeholder="024 123 4567"
-          className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-stone-900" />
-        <span className="mt-1 block text-xs text-stone-600">Any refund goes back to this number only.</span>
+          className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-ink" />
+        <span className="mt-1 block text-xs text-muted">Any refund goes back to this number only.</span>
       </label>
       <label className="flex items-start gap-2 text-sm">
         <input type="checkbox" name="acceptDelivery" value="yes" required className="mt-0.5 h-4 w-4 accent-orange-700" />
@@ -514,14 +514,14 @@ function OwnRiderSection({ order, token, pickup: p }: { order: OrderView; token:
           <ReadyText />
         )}
         {rider && order.pickup_code && (
-          <p className="mt-3 inline-block rounded-xl bg-white px-5 py-2 text-3xl font-bold tracking-[0.3em] text-green-900 ring-1 ring-green-200">
+          <p className="mt-3 inline-block rounded-xl bg-surface px-5 py-2 text-3xl font-bold tracking-[0.3em] text-green-900 ring-1 ring-green-200">
             {order.pickup_code}
           </p>
         )}
       </div>
       {rider ? (
         <details className="mt-3">
-          <summary className="cursor-pointer text-sm font-medium text-orange-700">Need a different rider?</summary>
+          <summary className="cursor-pointer text-sm font-medium text-accent-strong">Need a different rider?</summary>
           <OwnRiderStep action={setOwnRider.bind(null, token)} pickup={pickup} companies={GH_DELIVERY_COMPANIES} current={rider} dropoff={dropoff} details={details} />
         </details>
       ) : (

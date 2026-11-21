@@ -15,10 +15,10 @@ export type BuyBoxVariant = {
 const unique = <T,>(items: T[]) => [...new Set(items)];
 
 const optionClass = (selected: boolean) =>
-  `rounded-lg border px-4 py-2 text-sm font-semibold ${
+  `rounded-xl border-[1.5px] px-4 py-2.5 text-sm font-medium transition ${
     selected
-      ? "border-orange-700 bg-orange-50 text-orange-800"
-      : "border-stone-300 bg-white text-stone-700 hover:border-stone-400"
+      ? "border-accent bg-accent-soft text-ink"
+      : "border-line bg-surface text-ink hover:border-ink"
   }`;
 
 export function BuyBox({
@@ -58,16 +58,16 @@ export function BuyBox({
   if (inSupermarkets) {
     return (
       <div className="mt-6 space-y-4">
-        <p className="text-sm text-stone-700">
+        <p className="text-sm text-ink">
           <span className="font-medium">Pack sizes:</span> {sizes.join(", ")}
         </p>
-        <p className="text-stone-700">
+        <p className="text-ink">
           In {countryName}, {productName} is sold in supermarkets. Find the one nearest you, buy from them, and send a
           rider or pick it up yourself.
         </p>
         <Link href="/where-to-buy"
-          className="block w-full rounded-lg bg-orange-700 px-4 py-3 text-center font-semibold text-white hover:bg-orange-800">
-          📍 Find a supermarket near you
+          className="btn btn-primary w-full py-3.5 text-base">
+          Find a supermarket near you
         </Link>
       </div>
     );
@@ -76,7 +76,7 @@ export function BuyBox({
   return (
     <div className="mt-6 space-y-6">
       <fieldset>
-        <legend className="mb-2 text-sm font-medium text-stone-700">Size</legend>
+        <legend className="mb-2 text-sm font-medium text-ink">Size</legend>
         <div className="flex flex-wrap gap-2">
           {sizes.map((s) => (
             <button key={s} type="button" aria-pressed={s === size} className={optionClass(s === size)}
@@ -89,7 +89,7 @@ export function BuyBox({
 
       {spices.some((s) => s !== null) && (
         <fieldset>
-          <legend className="mb-2 text-sm font-medium text-stone-700">Spice level</legend>
+          <legend className="mb-2 text-sm font-medium text-ink">Spice level</legend>
           <div className="flex flex-wrap gap-2">
             {spices.map((s) =>
               s === null ? null : (
@@ -103,18 +103,18 @@ export function BuyBox({
         </fieldset>
       )}
 
-      <div className="flex items-end justify-between gap-4 border-t border-stone-200 pt-6">
+      <div className="flex items-end justify-between gap-4 border-t border-line pt-6">
         <div>
-          <p className="text-sm text-stone-500">Price</p>
-          <p className="text-3xl font-bold text-stone-900 tabular-nums">
+          <p className="text-sm text-muted">Price</p>
+          <p className="font-display text-3xl font-semibold text-ink tabular-nums">
             {variant?.price != null ? formatMoney(variant.price * quantity, currency) : "—"}
           </p>
           {quantity > 1 && variant?.price != null && (
-            <p className="text-xs text-stone-500">{formatMoney(variant.price, currency)} each</p>
+            <p className="text-xs text-muted">{formatMoney(variant.price, currency)} each</p>
           )}
         </div>
 
-        <div className="flex items-center rounded-lg border border-stone-300 bg-white" role="group" aria-label="Quantity">
+        <div className="flex items-center rounded-xl border border-line bg-surface" role="group" aria-label="Quantity">
           <button type="button" className="px-3 py-2 text-lg disabled:opacity-30" aria-label="One less"
             disabled={quantity <= 1} onClick={() => { setQuantity((q) => q - 1); setAdded(false); }}>−</button>
           <span className="w-8 text-center font-semibold tabular-nums" aria-live="polite">{quantity}</span>
@@ -124,16 +124,16 @@ export function BuyBox({
       </div>
 
       {teamView ? (
-        <p className="rounded-lg bg-stone-100 p-3 text-center text-sm font-medium text-stone-600">
-          👀 Team view: this is what customers see. Ordering is off for team accounts.
+        <p className="rounded-lg bg-cream p-3 text-center text-sm font-medium text-muted">
+          Team view: this is what customers see. Ordering is off for team accounts.
         </p>
       ) : variant?.price == null ? (
-        <p className="rounded-lg bg-stone-100 p-3 text-sm text-stone-700">
+        <p className="rounded-lg bg-cream p-3 text-sm text-ink">
           This option isn&apos;t available in {countryName} yet.
         </p>
       ) : (
         <button type="button" onClick={addToCart}
-          className="w-full rounded-lg bg-orange-700 px-4 py-3 font-semibold text-white hover:bg-orange-800">
+          className="btn btn-primary w-full py-3.5 text-base">
           Add to cart
         </button>
       )}

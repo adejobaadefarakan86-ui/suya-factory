@@ -15,20 +15,20 @@ export const metadata = {
 
 export default function BulkOrdersPage() {
   return (
-    <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-10">
-      <p className="text-sm font-semibold uppercase tracking-widest text-orange-700">{BULK_MIN_KG}kg and above</p>
+    <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-12 sm:py-16">
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">{BULK_MIN_KG}kg and above</p>
       <div className="flex items-start gap-6">
         <div className="min-w-0 flex-1">
-          <h1 className="mt-1 text-3xl font-bold text-stone-900">Bulk & custom orders</h1>
-          <p className="mt-2 max-w-2xl text-stone-600">
+          <h1 className="mt-2 font-display text-4xl font-semibold tracking-tight text-ink sm:text-5xl">Bulk &amp; custom orders</h1>
+          <p className="mt-3 max-w-2xl leading-relaxed text-muted">
             Buying for an event, your shop or as gifts? Order Beef Kilishi from {BULK_MIN_KG}kg upwards, with custom
             packaging if you need it. Talk to us directly, or send an enquiry and we&apos;ll get back to you.
           </p>
         </div>
-        <Image src="/images/kilishi-1kg.webp" alt="1kg of Suya Factory kilishi in a tray" width={160} height={154}
-          className="hidden shrink-0 rounded-2xl sm:block" />
+        <Image src="/images/kilishi-bulk-packs.jpg" alt="A pile of sealed Suya Factory kilishi packs" width={468} height={1040}
+          sizes="180px" className="hidden aspect-[4/5] w-44 shrink-0 rotate-2 rounded-2xl object-cover shadow-md sm:block" />
       </div>
-      <Suspense fallback={<div className="mt-8 h-96 animate-pulse rounded-2xl bg-stone-200" />}>
+      <Suspense fallback={<div className="mt-8 h-96 animate-pulse rounded-2xl bg-cream" />}>
         <BulkContent />
       </Suspense>
     </main>
@@ -51,8 +51,8 @@ async function BulkContent() {
     <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_1.2fr]">
       <section className="space-y-6">
         {order.map((c, i) => (
-          <div key={c} className={i === 0 ? "rounded-2xl border border-stone-200 bg-white p-6" : "rounded-2xl border border-dashed border-stone-300 p-6"}>
-            <h2 className="mb-4 text-lg font-semibold text-stone-900">
+          <div key={c} className={i === 0 ? "rounded-2xl border border-line bg-surface p-6" : "rounded-2xl border border-dashed border-line p-6"}>
+            <h2 className="mb-4 text-lg font-semibold text-ink">
               {c === "NG" ? "🇳🇬" : "🇬🇭"} {COUNTRIES[c].name}
             </h2>
             <ContactButtons whatsapp={CONTACTS[c].whatsapp} phones={CONTACTS[c].phones} />
@@ -60,8 +60,8 @@ async function BulkContent() {
         ))}
       </section>
 
-      <section className="rounded-2xl border border-stone-200 bg-white p-6">
-        <h2 className="mb-4 text-lg font-semibold text-stone-900">Send an enquiry</h2>
+      <section className="rounded-2xl border border-line bg-surface p-6">
+        <h2 className="mb-4 text-lg font-semibold text-ink">Send an enquiry</h2>
         <EnquiryForm
           country={country}
           defaults={{ name: user?.fullName ?? "", email: user?.email ?? "", phone }}

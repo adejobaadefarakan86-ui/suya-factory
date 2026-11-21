@@ -11,8 +11,8 @@ export const metadata = { title: "Your cart · Suya Factory" };
 export default function CartPage() {
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-10">
-      <h1 className="text-3xl font-bold text-stone-900">Your cart</h1>
-      <Suspense fallback={<div className="mt-6 h-48 animate-pulse rounded-2xl bg-stone-200" />}>
+      <h1 className="text-3xl font-bold text-ink">Your cart</h1>
+      <Suspense fallback={<div className="mt-6 h-48 animate-pulse rounded-2xl bg-cream" />}>
         <PricedCart />
       </Suspense>
     </main>

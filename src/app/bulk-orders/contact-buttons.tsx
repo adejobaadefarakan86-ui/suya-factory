@@ -25,41 +25,40 @@ export function ContactButtons({ whatsapp, phones }: { whatsapp: string; phones:
     }
   }
 
+  // One full-width row each: WhatsApp first, then each call number with its own Copy.
   return (
-    <div className="grid gap-3 sm:grid-cols-2">
+    <div className="space-y-2.5">
       <a
         href={whatsappLink(whatsapp)}
         target="_blank"
         rel="noopener noreferrer"
-        className="flex flex-col items-center justify-center rounded-xl bg-green-600 px-4 py-3 text-center font-semibold text-white hover:bg-green-700"
+        className="flex items-center justify-between gap-3 rounded-xl bg-green-600 px-4 py-3.5 text-white transition hover:bg-green-700"
       >
-        <span>💬 Chat on WhatsApp</span>
-        <span className="text-sm font-normal text-green-50">{inBrowser ? formatPhone(whatsapp) : " "}</span>
+        <span className="font-medium">Chat on WhatsApp</span>
+        <span className="text-sm tabular-nums text-green-50">{inBrowser ? formatPhone(whatsapp) : " "}</span>
       </a>
 
-      <div className="flex flex-col gap-2">
-        {/* tel: = an ordinary phone call. The phone chooses its calling app. Either number works. */}
-        {phones.map((phone) => (
-          <div key={phone} className="flex items-stretch gap-2">
-            <a
-              href={telLink(phone)}
-              className="flex flex-1 flex-col items-center rounded-xl border border-stone-300 bg-white px-4 py-3 text-center font-semibold text-stone-900 hover:bg-stone-50"
-            >
-              <span>📞 Call us</span>
-              <span className="text-sm font-normal text-stone-600">{inBrowser ? formatPhone(phone) : " "}</span>
-            </a>
-            <button
-              type="button"
-              onClick={() => copyNumber(phone)}
-              aria-label={`Copy ${formatPhone(phone)}`}
-              className="rounded-xl px-3 text-sm font-medium text-orange-700 hover:bg-orange-50"
-              aria-live="polite"
-            >
-              {copied === phone ? "✓" : "Copy"}
-            </button>
-          </div>
-        ))}
-      </div>
+      {/* tel: = an ordinary phone call. The phone chooses its calling app. Either number works. */}
+      {phones.map((phone) => (
+        <div key={phone} className="flex items-stretch gap-2">
+          <a
+            href={telLink(phone)}
+            className="flex flex-1 items-center justify-between gap-3 rounded-xl border border-line bg-surface px-4 py-3.5 text-ink transition hover:border-ink"
+          >
+            <span className="font-medium">Call us</span>
+            <span className="text-sm tabular-nums text-muted">{inBrowser ? formatPhone(phone) : " "}</span>
+          </a>
+          <button
+            type="button"
+            onClick={() => copyNumber(phone)}
+            aria-label={`Copy ${formatPhone(phone)}`}
+            className="rounded-xl border border-line px-3.5 text-sm font-medium text-accent-strong transition hover:border-ink"
+            aria-live="polite"
+          >
+            {copied === phone ? "Copied" : "Copy"}
+          </button>
+        </div>
+      ))}
     </div>
   );
 }

@@ -5,10 +5,12 @@ export const metadata = { title: "Shop · Suya Factory" };
 
 export default function ShopPage() {
   return (
-    <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-10">
-      <h1 className="text-3xl font-bold text-stone-900">Shop</h1>
-      <p className="mt-1 mb-8 text-stone-600">
-        Spicy beef kilishi in small and big packs. Need 1kg or more? Ask us about bulk orders.
+    <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-12 sm:py-16">
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">Shop</p>
+      <h1 className="mt-2 font-display text-4xl font-semibold tracking-tight text-ink sm:text-5xl">Spicy beef kilishi</h1>
+      <p className="mb-10 mt-3 max-w-xl leading-relaxed text-muted">
+        Small pack or big pack. Need 1kg or more?{" "}
+        <a href="/bulk-orders" className="font-medium text-accent-strong underline-offset-4 hover:underline">Ask about bulk orders</a>.
       </p>
       <Suspense fallback={<ProductGridSkeleton />}>
         <ProductGrid />

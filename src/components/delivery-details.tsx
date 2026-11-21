@@ -40,12 +40,12 @@ export function DeliveryDetails({ rows }: { rows: DetailRow[] }) {
   const line = (r: DetailRow) => (
     <li key={r.label} className="flex items-center justify-between gap-3 py-2">
       <div className="min-w-0">
-        <p className="text-xs font-semibold text-stone-500">{r.label}</p>
-        <p className={`break-words ${r.info ? "text-stone-500" : "font-medium text-stone-900"}`}>{r.value}</p>
+        <p className="text-xs font-semibold text-muted">{r.label}</p>
+        <p className={`break-words ${r.info ? "text-muted" : "font-medium text-ink"}`}>{r.value}</p>
       </div>
       {!r.info && (
         <button type="button" onClick={() => copy(r.label, r.value)} aria-label={`Copy ${r.label}`}
-          className="shrink-0 rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-sm font-medium text-stone-800 hover:border-stone-500">
+          className="shrink-0 rounded-lg border border-line bg-surface px-3 py-1.5 text-sm font-medium text-ink hover:border-ink">
           {copied === r.label ? "✓" : "Copy"}
         </button>
       )}
@@ -56,19 +56,19 @@ export function DeliveryDetails({ rows }: { rows: DetailRow[] }) {
   const extra = rows.filter((r) => r.more);
 
   return (
-    <div className="rounded-xl border border-stone-200 bg-stone-50 px-4 py-3">
+    <div className="rounded-xl border border-line bg-cream px-4 py-3">
       <div className="flex items-center justify-between gap-2">
-        <p className="font-semibold text-stone-900">Details for your app</p>
+        <p className="font-semibold text-ink">Details for your app</p>
         <button type="button" onClick={() => copy("__all", all)}
-          className="rounded-lg bg-stone-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-stone-800">
+          className="rounded-lg bg-night px-3 py-1.5 text-sm font-medium text-white hover:bg-stone-800">
           {copied === "__all" ? "✓ Copied" : "Copy all"}
         </button>
       </div>
-      <ul className="mt-1 divide-y divide-stone-200">{main.map(line)}</ul>
+      <ul className="mt-1 divide-y divide-line">{main.map(line)}</ul>
       {extra.length > 0 && (
         <details className="mt-1">
-          <summary className="cursor-pointer py-1 text-sm font-medium text-orange-700">More details</summary>
-          <ul className="divide-y divide-stone-200">{extra.map(line)}</ul>
+          <summary className="cursor-pointer py-1 text-sm font-medium text-accent-strong">More details</summary>
+          <ul className="divide-y divide-line">{extra.map(line)}</ul>
         </details>
       )}
     </div>

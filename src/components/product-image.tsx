@@ -26,7 +26,7 @@ export function ProductImage({
 }) {
   if (src) {
     return (
-      <div className={`relative aspect-[4/3] overflow-hidden bg-stone-200 ${className}`}>
+      <div className={`relative aspect-[4/3] overflow-hidden bg-cream ${className}`}>
         <Image src={src} alt={name} fill sizes={sizes} priority={priority} className="object-cover" />
       </div>
     );

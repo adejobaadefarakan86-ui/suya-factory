@@ -61,7 +61,7 @@ function loadSaved(): Saved | null {
 }
 
 const input =
-  "w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-stone-900 outline-none focus:border-orange-600 focus:ring-2 focus:ring-orange-200";
+  "w-full rounded-lg border border-line bg-surface px-3 py-2 text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent-soft";
 
 // Saved progress lives in this browser only, so wait until the page is running
 // in the browser before showing the finder.
@@ -69,7 +69,7 @@ const noSubscribe = () => () => {};
 
 export function StoreFinder({ stores, askFor }: { stores: Store[]; askFor: string }) {
   const inBrowser = useSyncExternalStore(noSubscribe, () => true, () => false);
-  if (!inBrowser) return <div className="mt-6 h-64 animate-pulse rounded-2xl bg-stone-200" />;
+  if (!inBrowser) return <div className="mt-6 h-64 animate-pulse rounded-2xl bg-cream" />;
   return <Finder stores={stores} askFor={askFor} saved={loadSaved()} />;
 }
 
@@ -127,7 +127,7 @@ function Finder({ stores, askFor, saved }: { stores: Store[]; askFor: string; sa
     return (
       <div className="mt-6 space-y-6">
         <button type="button" onClick={() => go(step === "contact" ? "list" : step === "rider" ? "contact" : "rider")}
-          className="text-sm text-stone-600 hover:text-orange-700">
+          className="text-sm text-muted hover:text-accent-strong">
           ← Back
         </button>
         <StepDots step={step} />
@@ -200,7 +200,7 @@ function StepDots({ step }: { step: Step }) {
   return (
     <ol className="flex gap-2 text-xs font-medium">
       {steps.map(([s, label], i) => (
-        <li key={s} className={`flex-1 rounded-full px-3 py-1.5 text-center ${i <= at ? "bg-orange-700 text-white" : "bg-stone-200 text-stone-600"}`}>
+        <li key={s} className={`flex-1 rounded-full px-3 py-1.5 text-center ${i <= at ? "bg-accent text-white" : "bg-cream text-muted"}`}>
           {i + 1}. {label}
         </li>
       ))}
@@ -234,19 +234,19 @@ function StoreCard({
   const distance = kmText(km);
 
   return (
-    <li className={`rounded-2xl border bg-white p-5 ${store.inStock ? "border-stone-200" : "border-stone-200 opacity-70"}`}>
+    <li className={`rounded-2xl border bg-surface p-5 ${store.inStock ? "border-line" : "border-line opacity-70"}`}>
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="font-semibold text-stone-900">{storeTitle(store)}</h3>
+            <h3 className="font-semibold text-ink">{storeTitle(store)}</h3>
             {best && <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-800">Nearest</span>}
             {!store.inStock && <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-800">Out of stock</span>}
           </div>
-          <p className="mt-1 text-sm text-stone-600">{store.address}</p>
-          <p className="mt-1 text-sm text-stone-500">
+          <p className="mt-1 text-sm text-muted">{store.address}</p>
+          <p className="mt-1 text-sm text-muted">
             {[distance, store.openingHours].filter(Boolean).join(" · ")}
           </p>
-          {store.packs && <p className="mt-1 text-sm text-stone-700">{store.packs}</p>}
+          {store.packs && <p className="mt-1 text-sm text-ink">{store.packs}</p>}
           {store.inStock && store.outReportedAt && (
             <p className="mt-1 text-xs text-amber-700">A customer recently said they may have run out. Please call to check.</p>
           )}
@@ -255,27 +255,27 @@ function StoreCard({
 
       <div className="mt-4 grid grid-cols-3 gap-2 text-sm">
         {store.phone ? (
-          <a href={telLink(store.phone)} className="rounded-lg border border-stone-300 px-3 py-2 text-center font-medium text-stone-800 hover:bg-stone-50">📞 Call</a>
+          <a href={telLink(store.phone)} className="rounded-lg border border-line px-3 py-2 text-center font-medium text-ink hover:bg-cream">📞 Call</a>
         ) : <span />}
         {store.whatsapp ? (
           <a href={whatsappLink(store.whatsapp, enquiryMessage(store, askFor))} target="_blank" rel="noopener noreferrer"
             className="rounded-lg border border-green-600 px-3 py-2 text-center font-medium text-green-700 hover:bg-green-50">💬 WhatsApp</a>
         ) : <span />}
         <a href={directionsLink(store)} target="_blank" rel="noopener noreferrer"
-          className="rounded-lg border border-stone-300 px-3 py-2 text-center font-medium text-stone-800 hover:bg-stone-50">🧭 Directions</a>
+          className="rounded-lg border border-line px-3 py-2 text-center font-medium text-ink hover:bg-cream">Directions</a>
       </div>
 
       {store.inStock && (
         <>
           <button type="button" onClick={onChoose}
-            className="mt-3 w-full rounded-lg bg-orange-700 px-4 py-2.5 font-semibold text-white hover:bg-orange-800">
+            className="mt-3 w-full rounded-lg bg-accent px-4 py-2.5 font-semibold text-white hover:bg-accent-strong">
             Buy from this supermarket →
           </button>
           <div className="mt-2 text-center text-xs">
             {report === "done" ? (
-              <span className="text-stone-500">Thanks for telling us. We&apos;ll check with the supermarket.</span>
+              <span className="text-muted">Thanks for telling us. We&apos;ll check with the supermarket.</span>
             ) : (
-              <button type="button" disabled={report === "sending"} className="text-stone-500 underline hover:text-stone-700"
+              <button type="button" disabled={report === "sending"} className="text-muted underline hover:text-ink"
                 onClick={async () => {
                   setReport("sending");
                   await reportOutOfStock(store.id);
@@ -305,18 +305,18 @@ function ContactStep({ store, km, askFor, onReady }: { store: Store; km: number 
 
   return (
     <div className="space-y-6">
-      <section className="rounded-2xl border border-stone-200 bg-white p-5">
-        <p className="text-sm text-stone-500">You&apos;re buying from</p>
-        <h2 className="text-xl font-bold text-stone-900">{storeTitle(store)}</h2>
-        <p className="mt-1 text-sm text-stone-600">{store.address}{km !== null ? ` · ${kmText(km)}` : ""}</p>
+      <section className="rounded-2xl border border-line bg-surface p-5">
+        <p className="text-sm text-muted">You&apos;re buying from</p>
+        <h2 className="text-xl font-bold text-ink">{storeTitle(store)}</h2>
+        <p className="mt-1 text-sm text-muted">{store.address}{km !== null ? ` · ${kmText(km)}` : ""}</p>
 
-        <ol className="mt-5 space-y-4 text-sm text-stone-700">
+        <ol className="mt-5 space-y-4 text-sm text-ink">
           <li>
-            <p className="font-semibold text-stone-900">1. Call or WhatsApp the supermarket</p>
+            <p className="font-semibold text-ink">1. Call or WhatsApp the supermarket</p>
             <p>Ask for <strong>Suya Factory Beef Kilishi</strong> ({askFor}) and say how many packs you want. They&apos;ll tell you the price and their account number.</p>
             <div className="mt-2 flex flex-wrap gap-2">
               {store.phone && (
-                <a href={telLink(store.phone)} className="rounded-lg border border-stone-300 px-3 py-2 font-medium hover:bg-stone-50">
+                <a href={telLink(store.phone)} className="rounded-lg border border-line px-3 py-2 font-medium hover:bg-cream">
                   📞 Call {formatPhone(store.phone)}
                 </a>
               )}
@@ -327,18 +327,18 @@ function ContactStep({ store, km, askFor, onReady }: { store: Store; km: number 
             </div>
           </li>
           <li>
-            <p className="font-semibold text-stone-900">2. Pay the supermarket</p>
+            <p className="font-semibold text-ink">2. Pay the supermarket</p>
             <p>Pay into the supermarket&apos;s account, then wait for them to confirm they&apos;ve received it. Suya Factory doesn&apos;t take this payment.</p>
           </li>
         </ol>
       </section>
 
-      <section className="rounded-2xl border-2 border-orange-200 bg-orange-50/50 p-5">
-        <h2 className="text-lg font-bold text-stone-900">Is your kilishi ready for pickup?</h2>
-        <p className="mt-1 text-sm text-stone-600">Before you book a rider, make sure:</p>
+      <section className="rounded-2xl border-2 border-accent/40 bg-accent-soft/50 p-5">
+        <h2 className="text-lg font-bold text-ink">Is your kilishi ready for pickup?</h2>
+        <p className="mt-1 text-sm text-muted">Before you book a rider, make sure:</p>
         <div className="mt-3 space-y-2">
           {items.map((text, i) => (
-            <label key={text} className="flex items-start gap-3 rounded-lg bg-white p-3 text-sm text-stone-800">
+            <label key={text} className="flex items-start gap-3 rounded-lg bg-surface p-3 text-sm text-ink">
               <input type="checkbox" checked={checks[i]} className="mt-0.5 h-4 w-4 accent-orange-700"
                 onChange={(e) => setChecks((c) => c.map((v, j) => (j === i ? e.target.checked : v)))} />
               <span>{text}</span>
@@ -347,22 +347,22 @@ function ContactStep({ store, km, askFor, onReady }: { store: Store; km: number 
         </div>
         <div className="mt-4 grid gap-2 sm:grid-cols-2">
           <button type="button" disabled={!all} onClick={onReady}
-            className="rounded-lg bg-orange-700 px-4 py-2.5 font-semibold text-white hover:bg-orange-800 disabled:opacity-50">
+            className="rounded-lg bg-accent px-4 py-2.5 font-semibold text-white hover:bg-accent-strong disabled:opacity-50">
             Yes, it&apos;s ready: choose a rider
           </button>
           <button type="button" onClick={() => setNotYet(true)}
-            className="rounded-lg border border-stone-300 bg-white px-4 py-2.5 font-semibold text-stone-800 hover:bg-stone-50">
+            className="rounded-lg border border-line bg-surface px-4 py-2.5 font-semibold text-ink hover:bg-cream">
             Not yet
           </button>
         </div>
         {notYet && (
-          <p className="mt-3 text-sm text-stone-700">
+          <p className="mt-3 text-sm text-ink">
             No problem. Call the supermarket, pay, and come back to this page when they&apos;ve confirmed. We&apos;ll remember where you were.
           </p>
         )}
-        <p className="mt-4 text-sm text-stone-600">
+        <p className="mt-4 text-sm text-muted">
           Picking it up yourself?{" "}
-          <a href={directionsLink(store)} target="_blank" rel="noopener noreferrer" className="font-medium text-orange-700 underline">Get directions</a>
+          <a href={directionsLink(store)} target="_blank" rel="noopener noreferrer" className="font-medium text-accent-strong underline">Get directions</a>
         </p>
       </section>
     </div>
@@ -431,54 +431,54 @@ function RiderStep({
 
   return (
     <div className="space-y-6">
-      <section className="rounded-2xl border border-stone-200 bg-white p-5">
-        <h2 className="text-lg font-bold text-stone-900">Book a rider to pick it up</h2>
-        <p className="mt-1 text-sm text-stone-600">Send it as a <strong>parcel</strong> from the supermarket to you. You pay the rider.</p>
+      <section className="rounded-2xl border border-line bg-surface p-5">
+        <h2 className="text-lg font-bold text-ink">Book a rider to pick it up</h2>
+        <p className="mt-1 text-sm text-muted">Send it as a <strong>parcel</strong> from the supermarket to you. You pay the rider.</p>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
-          <label className="block"><span className="mb-1 block text-sm font-medium text-stone-700">Your name</span>
+          <label className="block"><span className="mb-1 block text-sm font-medium text-ink">Your name</span>
             <input maxLength={100} value={form.customerName} onChange={set("customerName")} className={input} autoComplete="name" /></label>
-          <label className="block"><span className="mb-1 block text-sm font-medium text-stone-700">Your phone</span>
+          <label className="block"><span className="mb-1 block text-sm font-medium text-ink">Your phone</span>
             <input type="tel" maxLength={20} value={form.customerPhone} onChange={set("customerPhone")} className={input} autoComplete="tel" placeholder="0803 000 0000" /></label>
         </div>
-        <p className="mt-4 text-sm font-semibold text-stone-800">1. Copy these into your app</p>
+        <p className="mt-4 text-sm font-semibold text-ink">1. Copy these into your app</p>
         <div className="mt-2">
           <DeliveryDetails rows={details} />
           <a href={mapPinLink(store)} target="_blank" rel="noopener noreferrer"
-            className="mt-2 inline-block text-sm font-medium text-orange-700 underline">See the supermarket on a map</a>
+            className="mt-2 inline-block text-sm font-medium text-accent-strong underline">See the supermarket on a map</a>
         </div>
 
-        <p className="mt-5 text-sm font-semibold text-stone-800">2. Open your app</p>
-        <p className="mt-1 text-xs text-stone-500">If a store page opens, tap <strong>Open</strong>.</p>
+        <p className="mt-5 text-sm font-semibold text-ink">2. Open your app</p>
+        <p className="mt-1 text-xs text-muted">If a store page opens, tap <strong>Open</strong>.</p>
         <ul className="mt-2 grid gap-2 sm:grid-cols-2">
           {DELIVERY_COMPANIES.map((c) => (
             <li key={c.id}>
               <a href={appLink(c, userAgent, { lat: store.lat, lng: store.lng }, null)}
                 {...(onPhone ? {} : { target: "_blank", rel: "noopener noreferrer" })}
                 onClick={() => setForm((f) => ({ ...f, deliveryCompany: c.id }))}
-                className={`block h-full rounded-xl border p-3 hover:border-orange-400 ${form.deliveryCompany === c.id ? "border-orange-600 bg-orange-50" : "border-stone-200"}`}>
-                <span className="block font-semibold text-stone-900">{c.name} ↗</span>
-                <span className="mt-0.5 block text-xs text-stone-600">{c.note}</span>
+                className={`block h-full rounded-xl border p-3 hover:border-accent ${form.deliveryCompany === c.id ? "border-accent bg-accent-soft" : "border-line"}`}>
+                <span className="block font-semibold text-ink">{c.name} ↗</span>
+                <span className="mt-0.5 block text-xs text-muted">{c.note}</span>
               </a>
             </li>
           ))}
         </ul>
       </section>
 
-      <form onSubmit={submit} className="space-y-4 rounded-2xl border border-stone-200 bg-white p-5">
+      <form onSubmit={submit} className="space-y-4 rounded-2xl border border-line bg-surface p-5">
         <div>
-          <h2 className="text-lg font-bold text-stone-900">3. Booked your rider? Tell the supermarket</h2>
-          <p className="mt-1 text-sm text-stone-600">We&apos;ll write the message for you, so the supermarket hands your pack to the right rider.</p>
+          <h2 className="text-lg font-bold text-ink">3. Booked your rider? Tell the supermarket</h2>
+          <p className="mt-1 text-sm text-muted">We&apos;ll write the message for you, so the supermarket hands your pack to the right rider.</p>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
-          <label className="block sm:col-span-2"><span className="mb-1 block text-sm font-medium text-stone-700">Name on the account you paid from</span>
+          <label className="block sm:col-span-2"><span className="mb-1 block text-sm font-medium text-ink">Name on the account you paid from</span>
             <input maxLength={100} value={form.paidFrom} onChange={set("paidFrom")} className={input} placeholder="So the supermarket can match your payment" /></label>
-          <label className="block"><span className="mb-1 block text-sm font-medium text-stone-700">Rider&apos;s name</span>
+          <label className="block"><span className="mb-1 block text-sm font-medium text-ink">Rider&apos;s name</span>
             <input required maxLength={100} value={form.riderName} onChange={set("riderName")} className={input} /></label>
-          <label className="block"><span className="mb-1 block text-sm font-medium text-stone-700">Rider&apos;s phone</span>
+          <label className="block"><span className="mb-1 block text-sm font-medium text-ink">Rider&apos;s phone</span>
             <input required type="tel" maxLength={20} value={form.riderPhone} onChange={set("riderPhone")} className={input} /></label>
-          <label className="block"><span className="mb-1 block text-sm font-medium text-stone-700">Bike / car plate number <span className="font-normal text-stone-500">(if you have it)</span></span>
+          <label className="block"><span className="mb-1 block text-sm font-medium text-ink">Bike / car plate number <span className="font-normal text-muted">(if you have it)</span></span>
             <input maxLength={20} value={form.riderPlate} onChange={set("riderPlate")} className={input} placeholder="e.g. LSR-123-AB" /></label>
-          <label className="block"><span className="mb-1 block text-sm font-medium text-stone-700">Delivery app</span>
+          <label className="block"><span className="mb-1 block text-sm font-medium text-ink">Delivery app</span>
             <select required value={listedApp ? form.deliveryCompany : otherApp || form.deliveryCompany ? "other" : ""}
               onChange={(e) => {
                 const v = e.target.value;
@@ -490,16 +490,16 @@ function RiderStep({
               <option value="other">Other app…</option>
             </select></label>
           {!listedApp && (otherApp || form.deliveryCompany !== "") && (
-            <label className="block sm:col-span-2"><span className="mb-1 block text-sm font-medium text-stone-700">Which app?</span>
+            <label className="block sm:col-span-2"><span className="mb-1 block text-sm font-medium text-ink">Which app?</span>
               <input required maxLength={50} value={form.deliveryCompany} onChange={set("deliveryCompany")} className={input}
                 placeholder="The name of the delivery app you used" /></label>
           )}
         </div>
-        <p className="text-xs text-stone-600">
+        <p className="text-xs text-muted">
           We need your rider&apos;s name and phone before the supermarket can hand over your kilishi.
         </p>
         {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
-        <button disabled={pending} className="w-full rounded-lg bg-orange-700 px-4 py-2.5 font-semibold text-white hover:bg-orange-800 disabled:opacity-60">
+        <button disabled={pending} className="w-full rounded-lg bg-accent px-4 py-2.5 font-semibold text-white hover:bg-accent-strong disabled:opacity-60">
           {pending ? "Please wait…" : "Next: send to the supermarket"}
         </button>
       </form>
@@ -537,15 +537,15 @@ function SendStep({ store, form, code, onStartOver }: { store: Store; form: Ride
 
   return (
     <div className="space-y-6">
-      <section className="rounded-2xl border border-stone-200 bg-white p-5 text-center">
-        <p className="text-sm text-stone-600">Your pickup code</p>
-        <p className="mt-1 text-4xl font-extrabold tracking-wider text-stone-900">{code}</p>
-        <p className="mt-2 text-sm text-stone-600">Tell your rider to say this code at the supermarket counter.</p>
+      <section className="rounded-2xl border border-line bg-surface p-5 text-center">
+        <p className="text-sm text-muted">Your pickup code</p>
+        <p className="mt-1 text-4xl font-extrabold tracking-wider text-ink">{code}</p>
+        <p className="mt-2 text-sm text-muted">Tell your rider to say this code at the supermarket counter.</p>
       </section>
 
-      <section className="rounded-2xl border border-stone-200 bg-white p-5">
-        <h2 className="text-lg font-bold text-stone-900">Send this to {storeTitle(store)}</h2>
-        <pre className="mt-3 whitespace-pre-wrap rounded-xl bg-stone-50 p-4 font-sans text-sm text-stone-800">{message}</pre>
+      <section className="rounded-2xl border border-line bg-surface p-5">
+        <h2 className="text-lg font-bold text-ink">Send this to {storeTitle(store)}</h2>
+        <pre className="mt-3 whitespace-pre-wrap rounded-xl bg-cream p-4 font-sans text-sm text-ink">{message}</pre>
         <div className="mt-4 grid gap-2 sm:grid-cols-2">
           {store.whatsapp && (
             <a href={whatsappLink(store.whatsapp, message)} target="_blank" rel="noopener noreferrer"
@@ -554,21 +554,21 @@ function SendStep({ store, form, code, onStartOver }: { store: Store; form: Ride
           {store.phone && (
             // "?&body=" works on both Android and iPhone.
             <a href={`sms:+${store.phone}?&body=${encodeURIComponent(message)}`}
-              className="rounded-lg border border-stone-300 px-4 py-2.5 text-center font-semibold text-stone-800 hover:bg-stone-50">✉️ Send as text message</a>
+              className="rounded-lg border border-line px-4 py-2.5 text-center font-semibold text-ink hover:bg-cream">✉️ Send as text message</a>
           )}
           <button type="button" onClick={copy}
-            className="rounded-lg border border-stone-300 px-4 py-2.5 font-semibold text-stone-800 hover:bg-stone-50">
+            className="rounded-lg border border-line px-4 py-2.5 font-semibold text-ink hover:bg-cream">
             {copied ? "✓ Copied" : "Copy message"}
           </button>
           {store.phone && (
-            <a href={telLink(store.phone)} className="rounded-lg border border-stone-300 px-4 py-2.5 text-center font-semibold text-stone-800 hover:bg-stone-50">📞 Call the supermarket</a>
+            <a href={telLink(store.phone)} className="rounded-lg border border-line px-4 py-2.5 text-center font-semibold text-ink hover:bg-cream">📞 Call the supermarket</a>
           )}
         </div>
       </section>
 
-      <p className="text-center text-sm text-stone-600">
+      <p className="text-center text-sm text-muted">
         Enjoy your kilishi! 🌶️{" "}
-        <button type="button" onClick={onStartOver} className="font-medium text-orange-700 underline">Buy again</button>
+        <button type="button" onClick={onStartOver} className="font-medium text-accent-strong underline">Buy again</button>
       </p>
     </div>
   );

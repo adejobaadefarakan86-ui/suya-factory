@@ -6,6 +6,7 @@ import { formatMoney, type Currency } from "@/lib/money";
 import { ORDER_STATUS, formatOrderDate, type OrderStatus } from "@/lib/orders";
 import type { CountryCode } from "@/lib/countries";
 import { signOut } from "../(auth)/actions";
+import { ThemeSwitcher } from "@/components/theme";
 
 type OrderRow = {
   order_number: string;
@@ -30,18 +31,18 @@ async function MyOrders({ userId }: { userId: string }) {
 
   return (
     <section className="mt-8">
-      <h2 className="text-xl font-semibold text-stone-900">My orders</h2>
+      <h2 className="text-xl font-semibold text-ink">My orders</h2>
       {orders.length === 0 ? (
-        <p className="mt-2 text-sm text-stone-500">
-          No orders yet. <Link href="/shop" className="text-orange-700 hover:underline">Visit the shop</Link>
+        <p className="mt-2 text-sm text-muted">
+          No orders yet. <Link href="/shop" className="text-accent-strong hover:underline">Visit the shop</Link>
         </p>
       ) : (
-        <ul className="mt-3 divide-y divide-stone-200 rounded-2xl border border-stone-200 bg-white">
+        <ul className="mt-3 divide-y divide-line rounded-2xl border border-line bg-surface">
           {orders.map((o) => (
             <li key={o.order_number}>
-              <Link href={`/orders/${o.access_token}`} className="flex flex-wrap items-center gap-x-4 gap-y-1 p-4 hover:bg-stone-50">
-                <span className="font-semibold text-stone-900">{o.order_number}</span>
-                <span className="text-sm text-stone-500">{formatOrderDate(o.created_at, o.country)}</span>
+              <Link href={`/orders/${o.access_token}`} className="flex flex-wrap items-center gap-x-4 gap-y-1 p-4 hover:bg-cream">
+                <span className="font-semibold text-ink">{o.order_number}</span>
+                <span className="text-sm text-muted">{formatOrderDate(o.created_at, o.country)}</span>
                 <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${ORDER_STATUS[o.status].className}`}>
                   {ORDER_STATUS[o.status].label}
                 </span>
@@ -60,7 +61,7 @@ export const metadata = { title: "My account · Suya Factory" };
 export default function AccountPage(props: PageProps<"/account">) {
   return (
     <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-12">
-      <Suspense fallback={<p className="text-stone-400">Loading your account…</p>}>
+      <Suspense fallback={<p className="text-muted">Loading your account…</p>}>
         <AccountDetails searchParams={props.searchParams} />
       </Suspense>
     </main>
@@ -73,7 +74,7 @@ async function AccountDetails({ searchParams }: { searchParams: PageProps<"/acco
 
   return (
     <>
-      <h1 className="text-3xl font-bold text-stone-900">
+      <h1 className="text-3xl font-bold text-ink">
         Hello{user.fullName ? `, ${user.fullName.split(" ")[0]}` : ""} 👋
       </h1>
 
@@ -83,22 +84,31 @@ async function AccountDetails({ searchParams }: { searchParams: PageProps<"/acco
         </p>
       )}
 
-      <dl className="mt-6 grid grid-cols-[8rem_1fr] gap-y-2 rounded-2xl border border-stone-200 bg-white p-6 text-sm">
-        <dt className="text-stone-500">Name</dt>
-        <dd className="text-stone-900">{user.fullName ?? "—"}</dd>
-        <dt className="text-stone-500">Email</dt>
-        <dd className="break-all text-stone-900">{user.email ?? "—"}</dd>
-        <dt className="text-stone-500">Account type</dt>
-        <dd className="capitalize text-stone-900">{user.role}</dd>
+      <dl className="mt-6 grid grid-cols-[8rem_1fr] gap-y-2 rounded-2xl border border-line bg-surface p-6 text-sm">
+        <dt className="text-muted">Name</dt>
+        <dd className="text-ink">{user.fullName ?? "—"}</dd>
+        <dt className="text-muted">Email</dt>
+        <dd className="break-all text-ink">{user.email ?? "—"}</dd>
+        <dt className="text-muted">Account type</dt>
+        <dd className="capitalize text-ink">{user.role}</dd>
       </dl>
 
       <MyOrders userId={user.id} />
+
+      {/* Settings: the look of the site on this device. */}
+      <section className="mt-8 rounded-2xl border border-line bg-surface p-5">
+        <h2 className="text-xl font-semibold text-ink">Settings</h2>
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+          <p className="text-sm text-muted">Theme · <span className="text-ink">Auto</span> follows your phone or computer.</p>
+          <ThemeSwitcher />
+        </div>
+      </section>
 
       <div className="mt-8 flex flex-wrap gap-3">
         {isStaff(user) && (
           <Link
             href="/admin"
-            className="rounded-lg bg-stone-900 px-4 py-2 font-semibold text-white hover:bg-stone-700"
+            className="btn bg-ink text-bg hover:bg-accent hover:text-on-accent"
           >
             Go to admin
           </Link>
@@ -106,7 +116,7 @@ async function AccountDetails({ searchParams }: { searchParams: PageProps<"/acco
         <form action={signOut}>
           <button
             type="submit"
-            className="rounded-lg border border-stone-300 bg-white px-4 py-2 font-semibold text-stone-700 hover:bg-stone-100"
+            className="btn btn-ghost"
           >
             Log out
           </button>

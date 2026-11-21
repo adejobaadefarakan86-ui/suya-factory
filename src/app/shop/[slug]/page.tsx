@@ -25,11 +25,11 @@ export async function generateMetadata(props: PageProps<"/shop/[slug]">) {
 
 export default function ProductPage(props: PageProps<"/shop/[slug]">) {
   return (
-    <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-10">
-      <Link href="/shop" className="text-sm text-stone-600 hover:text-orange-700">
+    <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:py-12">
+      <Link href="/shop" className="text-sm text-muted hover:text-accent-strong">
         ← Back to shop
       </Link>
-      <Suspense fallback={<div className="mt-6 h-96 animate-pulse rounded-2xl bg-stone-200" />}>
+      <Suspense fallback={<div className="mt-6 h-96 animate-pulse rounded-2xl bg-cream" />}>
         <ProductDetail params={props.params} />
       </Suspense>
     </main>
@@ -45,10 +45,10 @@ async function ProductDetail({ params }: { params: PageProps<"/shop/[slug]">["pa
   const index = catalog.findIndex((p) => p.id === product.id);
 
   return (
-    <div className="mt-6 grid gap-8 md:grid-cols-2">
+    <div className="mt-6 grid gap-10 md:grid-cols-[1.1fr_1fr] lg:gap-14">
       <div>
-        <ProductImage name={product.name} src={product.imageUrls[0]} index={index} className="rounded-2xl"
-          sizes="(min-width: 768px) 480px, 100vw" priority />
+        <ProductImage name={product.name} src={product.imageUrls[0]} index={index} className="rounded-[1.5rem]"
+          sizes="(min-width: 768px) 600px, 100vw" priority />
         {product.imageUrls.length > 1 && (
           <ul className="mt-3 grid grid-cols-3 gap-3">
             {product.imageUrls.slice(1, 4).map((src) => (
@@ -60,30 +60,30 @@ async function ProductDetail({ params }: { params: PageProps<"/shop/[slug]">["pa
         )}
       </div>
       <div>
-        <p className="text-sm uppercase tracking-wide text-stone-500">{product.category?.name}</p>
-        <h1 className="text-3xl font-bold text-stone-900">{product.name}</h1>
-        {product.description && <p className="mt-3 text-stone-700">{product.description}</p>}
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">{product.category?.name}</p>
+        <h1 className="mt-2 font-display text-4xl font-semibold tracking-tight text-ink sm:text-5xl">{product.name}</h1>
+        {product.description && <p className="mt-4 leading-relaxed text-muted">{product.description}</p>}
 
         <p className="mt-3 flex flex-wrap gap-2 text-sm">
-          {FOOD_INFO.halal && <span className="rounded-full bg-green-100 px-3 py-1 font-semibold text-green-800">Halal</span>}
-          <span className="rounded-full bg-amber-100 px-3 py-1 font-semibold text-amber-900">Contains: {FOOD_INFO.allergens}</span>
+          {FOOD_INFO.halal && <span className="rounded-lg bg-green-100 px-2.5 py-1 font-medium text-green-800">Halal</span>}
+          <span className="rounded-lg bg-amber-100 px-2.5 py-1 font-medium text-amber-900">Contains: {FOOD_INFO.allergens}</span>
         </p>
-        <details className="mt-3 text-sm text-stone-700">
-          <summary className="cursor-pointer font-medium text-orange-700">Ingredients &amp; storage</summary>
+        <details className="mt-3 text-sm text-ink">
+          <summary className="cursor-pointer font-medium text-accent-strong">Ingredients &amp; storage</summary>
           <p className="mt-2"><span className="font-semibold">Ingredients:</span> {FOOD_INFO.ingredients}</p>
           <p className="mt-1"><span className="font-semibold">Best before:</span> {FOOD_INFO.shelfLife} from packing</p>
           <p className="mt-1"><span className="font-semibold">Storage:</span> {FOOD_INFO.storage}</p>
         </details>
 
         {/* Prices depend on the visitor's country (a cookie), so this part streams in. */}
-        <Suspense fallback={<div className="mt-6 h-64 animate-pulse rounded-xl bg-stone-100" />}>
+        <Suspense fallback={<div className="mt-6 h-64 animate-pulse rounded-xl bg-cream" />}>
           <PricedBuyBox slug={product.slug} />
         </Suspense>
 
         <Link href="/bulk-orders"
-          className="mt-8 block rounded-xl border border-orange-200 bg-orange-50 p-4 hover:border-orange-400">
-          <span className="font-semibold text-orange-900">Need 1kg or more?</span>
-          <span className="block text-sm text-orange-900/80">
+          className="mt-8 block rounded-xl border border-accent/40 bg-accent-soft p-4 hover:border-accent">
+          <span className="font-semibold text-ink">Need 1kg or more?</span>
+          <span className="block text-sm text-ink/80">
             Bulk & custom orders: chat with us on WhatsApp, call, or send an enquiry →
           </span>
         </Link>
@@ -122,7 +122,7 @@ async function PricedBuyBox({ slug }: { slug: string }) {
       {/* key: switching country starts the size choice afresh (packs differ per country). */}
       <BuyBox key={currency} productName={product.name} variants={variants} currency={currency} countryName={name}
         inSupermarkets={SELLS_VIA_SUPERMARKETS[country]} teamView={isStaff(user)} />
-      {regNo && <p className="mt-3 text-xs text-stone-500">{regNo}</p>}
+      {regNo && <p className="mt-3 text-xs text-muted">{regNo}</p>}
     </>
   );
 }

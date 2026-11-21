@@ -94,8 +94,8 @@ function Hero() {
           <div aria-hidden="true"
             className="absolute -inset-4 -z-0 rotate-3 rounded-[2.25rem] bg-gradient-to-br from-accent via-[color-mix(in_srgb,var(--accent)_60%,var(--sun))] to-sun opacity-90" />
           <div className="relative overflow-hidden rounded-[1.75rem] shadow-[0_30px_60px_-30px_rgba(60,25,5,0.55)]">
-            <Image src="/images/kilishi-closeup.webp" alt="Close-up of Suya Factory beef kilishi, coated in spice"
-              width={930} height={630} priority sizes="(min-width: 768px) 560px, 100vw"
+            <Image src="/images/kilishi-plate.jpg" alt="Suya Factory beef kilishi on a white plate, coated in red pepper spice"
+              width={1080} height={1078} priority sizes="(min-width: 768px) 560px, 100vw"
               className="aspect-[5/4] w-full object-cover" />
           </div>
           <p className="absolute -bottom-5 left-5 rounded-xl border border-line bg-surface px-4 py-2.5 text-sm font-medium text-ink shadow-sm">
@@ -121,20 +121,29 @@ const HIGHLIGHTS = [
 function Highlights() {
   return (
     <section className="bg-cream py-20 sm:py-24">
-      <div className={wrap}>
-        <Reveal>
-          <h2 className="max-w-xl font-display text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
-            Definitely not your ordinary kilishi
-          </h2>
+      <div className={`${wrap} grid items-center gap-12 md:grid-cols-[0.9fr_1.1fr]`}>
+        <Reveal className="relative mx-auto w-full max-w-sm md:max-w-none">
+          <div className="overflow-hidden rounded-[1.5rem]">
+            <Image src="/images/kitchen-packing.jpg" alt="A Suya Factory team member in a hairnet and mask packing kilishi into sealed tubs"
+              width={719} height={890} sizes="(min-width: 768px) 440px, 90vw" className="aspect-[4/5] w-full object-cover" />
+          </div>
+          <p className="absolute -bottom-4 right-4 rounded-xl bg-night px-4 py-2 text-sm font-medium text-on-night">Packed by hand, sealed fresh</p>
         </Reveal>
-        <ul className="mt-12 grid gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
-          {HIGHLIGHTS.map((h) => (
-            <Reveal as="li" key={h.title} className="border-t-2 border-ink pt-5">
-              <h3 className="font-display text-xl font-semibold text-ink">{h.title}</h3>
-              <p className="mt-2 leading-relaxed text-muted">{h.text}</p>
-            </Reveal>
-          ))}
-        </ul>
+        <div>
+          <Reveal>
+            <h2 className="max-w-md font-display text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
+              Definitely not your ordinary kilishi
+            </h2>
+          </Reveal>
+          <ul className="mt-10 grid gap-x-8 gap-y-8 sm:grid-cols-2">
+            {HIGHLIGHTS.map((h) => (
+              <Reveal as="li" key={h.title} className="border-t-2 border-ink pt-4">
+                <h3 className="font-display text-xl font-semibold text-ink">{h.title}</h3>
+                <p className="mt-2 leading-relaxed text-muted">{h.text}</p>
+              </Reveal>
+            ))}
+          </ul>
+        </div>
       </div>
     </section>
   );

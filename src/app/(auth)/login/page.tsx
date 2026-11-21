@@ -12,16 +12,16 @@ export const metadata = { title: "Log in · Suya Factory" };
 export default function LoginPage(props: PageProps<"/login">) {
   return (
     <>
-      <h1 className="text-2xl font-bold text-stone-900">Welcome back</h1>
-      <p className="mt-1 mb-6 text-sm text-stone-600">Log in to your Suya Factory account.</p>
+      <h1 className="text-2xl font-bold text-ink">Welcome back</h1>
+      <p className="mt-1 mb-6 text-sm text-muted">Log in to your Suya Factory account.</p>
 
-      <Suspense fallback={<p className="text-sm text-stone-400">Loading…</p>}>
+      <Suspense fallback={<p className="text-sm text-muted">Loading…</p>}>
         <LoginContent searchParams={props.searchParams} />
       </Suspense>
 
-      <p className="mt-6 text-center text-sm text-stone-600">
+      <p className="mt-6 text-center text-sm text-muted">
         New here?{" "}
-        <Link href="/signup" className="font-semibold text-orange-700 hover:underline">
+        <Link href="/signup" className="font-semibold text-accent-strong hover:underline">
           Create an account
         </Link>
       </p>

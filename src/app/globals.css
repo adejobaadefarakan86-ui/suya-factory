@@ -149,13 +149,35 @@ h1, h2, h3 {
 .btn-night { background: var(--on-night); color: var(--night); }
 .btn-night:hover { background: var(--sun); }
 
-/* ---------- Gentle reveal on scroll ----------
-   Content is visible by default. Only when JavaScript runs (html.js) and the
-   visitor hasn't asked for less motion do sections start slightly lowered and
-   fade up as they come into view (see components/reveal.tsx). */
+/* ---------- Scroll reveals (components/reveal.tsx) ----------
+   Played once per section. Content is visible by default; the hidden starting
+   state only applies when JavaScript runs (html.js) and motion is welcome. */
+.rv-mask { display: block; overflow: hidden; padding-bottom: 0.1em; margin-bottom: -0.1em; }
+.rv-line { display: inline-block; }
+[data-reveal="image"] { overflow: hidden; }
+[data-reveal="line"] { position: relative; }
+[data-reveal="line"]::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 2px; background: var(--ink); transform-origin: left; }
+
 @media (prefers-reduced-motion: no-preference) {
-  html.js [data-reveal]:not([data-revealed]) { opacity: 0; transform: translateY(18px); }
-  html.js [data-reveal] { transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1); }
+  /* rise: lifts 24px into place */
+  html.js [data-reveal="rise"] { transition: opacity 0.9s ease, transform 1s cubic-bezier(0.16, 1, 0.3, 1); transition-delay: calc(var(--i, 0) * 90ms); }
+  html.js [data-reveal="rise"]:not([data-revealed]) { opacity: 0; transform: translateY(24px); }
+
+  /* mask: each line slides up from behind the edge, one after another */
+  html.js [data-reveal="mask"] .rv-line { transition: transform 1.05s cubic-bezier(0.16, 1, 0.3, 1); transition-delay: calc(var(--l, 0) * 110ms); }
+  html.js [data-reveal="mask"]:not([data-revealed]) .rv-line { transform: translateY(110%); }
+
+  /* image: the frame opens out while the photo settles from a slight zoom */
+  html.js [data-reveal="image"] { transition: clip-path 1.25s cubic-bezier(0.16, 1, 0.3, 1); clip-path: inset(0 0 0 0 round 1.5rem); }
+  html.js [data-reveal="image"]:not([data-revealed]) { clip-path: inset(14% 10% 14% 10% round 2.5rem); }
+  html.js [data-reveal="image"] img { transition: transform 1.6s cubic-bezier(0.16, 1, 0.3, 1); }
+  html.js [data-reveal="image"]:not([data-revealed]) img { transform: scale(1.14); }
+
+  /* line: the rule draws left to right, then the content rises after it */
+  html.js [data-reveal="line"]::before { transition: transform 0.9s cubic-bezier(0.65, 0, 0.35, 1); transition-delay: calc(var(--i, 0) * 120ms); }
+  html.js [data-reveal="line"]:not([data-revealed])::before { transform: scaleX(0); }
+  html.js [data-reveal="line"] > * { transition: opacity 0.8s ease, transform 0.9s cubic-bezier(0.16, 1, 0.3, 1); transition-delay: calc(var(--i, 0) * 120ms + 0.35s); }
+  html.js [data-reveal="line"]:not([data-revealed]) > * { opacity: 0; transform: translateY(14px); }
 }
 
 /* ---------- Spice loader: particles swirl, gather, and fade ---------- */
@@ -197,10 +219,11 @@ h1, h2, h3 {
   z-index: 100;
   display: grid;
   place-items: center;
+  /* Brand orange (same in light and dark), with a warm yellow glow and a deeper corner. */
   background:
-    radial-gradient(circle at 50% 38%, color-mix(in srgb, var(--accent) 20%, transparent), transparent 55%),
-    radial-gradient(circle at 80% 90%, color-mix(in srgb, var(--sun) 25%, transparent), transparent 50%),
-    linear-gradient(165deg, var(--cream), var(--bg));
+    radial-gradient(circle at 50% 36%, rgba(255, 200, 90, 0.45), transparent 55%),
+    radial-gradient(circle at 15% 100%, rgba(150, 40, 10, 0.45), transparent 55%),
+    linear-gradient(160deg, #f07a2a, #e4570f 55%, #c9440c);
   animation: splash-out 0.5s ease 2s forwards;
 }
 @keyframes splash-out { to { opacity: 0; visibility: hidden; } }
@@ -228,7 +251,8 @@ html[data-motion="reduce"] *, html[data-motion="reduce"] *::before, html[data-mo
   animation-iteration-count: 1 !important;
   transition: none !important;
 }
-html[data-motion="reduce"] [data-reveal] { opacity: 1 !important; transform: none !important; }
+html[data-motion="reduce"] [data-reveal], html[data-motion="reduce"] [data-reveal] * { opacity: 1 !important; transform: none !important; clip-path: none !important; }
+html[data-motion="reduce"] [data-reveal="line"]::before { transform: none !important; }
 
 /* ---------- Small brand animations (only when motion is welcome) ---------- */
 @media (prefers-reduced-motion: no-preference) {

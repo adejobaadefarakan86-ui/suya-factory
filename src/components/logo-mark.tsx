@@ -4,8 +4,12 @@
 // red-to-orange. `draw` makes the lines draw themselves (splash screen).
 // `gid`: a different name per place on the page (top bar, footer, splash), so each
 // copy finds its own colour gradient even when another copy is hidden.
-export function LogoMark({ className = "", draw = false, gid = "sf-heat" }: { className?: string; draw?: boolean; gid?: string }) {
-  const heat = `url(#${gid})`;
+export function LogoMark({ className = "", draw = false, gid = "sf-heat", mono = false }: {
+  className?: string; draw?: boolean; gid?: string;
+  /** All lines in the text colour (e.g. white on the orange opening screen). */
+  mono?: boolean;
+}) {
+  const heat = mono ? "currentColor" : `url(#${gid})`;
   const s = { fill: "none", strokeLinecap: "round", strokeLinejoin: "round" } as const;
   return (
     <svg viewBox="0 0 64 64" className={`${draw ? "logo-draw" : ""} ${className}`} aria-hidden="true">

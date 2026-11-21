@@ -6,6 +6,7 @@ import { COUNTRIES } from "@/lib/countries";
 import { formatMoney } from "@/lib/money";
 import { FOOD_INFO } from "@/lib/business";
 import { ProductImage } from "@/components/product-image";
+import { Reveal } from "@/components/reveal";
 import { AddPackButton } from "@/components/add-pack-button";
 import { SELLS_VIA_SUPERMARKETS } from "@/lib/stores";
 import { Chilli, Flame } from "@/components/doodles";
@@ -41,11 +42,11 @@ export async function ProductGrid() {
             className="overflow-hidden rounded-[1.5rem] border border-line bg-surface md:grid md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
             {/* The photo sits inside the card with a margin, never edge to edge. */}
             <Link href={href} aria-label={`${product.name}: see details`} className="group relative block p-3 md:h-full">
-              <span className="block overflow-hidden rounded-[1.1rem] md:h-full">
+              <Reveal variant="image" className="block rounded-[1.1rem] md:h-full">
                 <ProductImage name={product.name} src={product.imageUrls[0]} index={i}
-                  className="transition duration-700 group-hover:scale-[1.03] md:aspect-auto md:h-full md:min-h-96"
+                  className="md:aspect-auto md:h-full md:min-h-96"
                   sizes="(min-width: 768px) 540px, 92vw" />
-              </span>
+              </Reveal>
               <span className="absolute right-7 top-7 grid h-11 w-11 place-items-center rounded-full bg-night/85 text-sun">
                 <Flame className="flicker h-6 w-5" />
               </span>

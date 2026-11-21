@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { ProductGrid, ProductGridSkeleton } from "@/components/product-grid";
 import { OrderBarForPage } from "@/components/quick-order";
-import { Reveal } from "@/components/reveal";
+import { MaskHeading, Reveal } from "@/components/reveal";
 import { Flame, Sparks, Squiggle, Swirl } from "@/components/doodles";
 import { getCountry } from "@/lib/country";
 import { getCurrentUser, isStaff } from "@/lib/auth";
@@ -28,7 +28,7 @@ export default function HomePage() {
           <Reveal className="mb-10 flex flex-wrap items-end justify-between gap-4">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">The one and only</p>
-              <h2 className="mt-2 font-display text-3xl font-semibold tracking-tight text-ink sm:text-4xl">Our beef kilishi</h2>
+              <MaskHeading lines={["Our beef kilishi"]} className="mt-2 font-display text-3xl font-semibold tracking-tight text-ink sm:text-4xl" />
             </div>
             <Flame className="flicker hidden h-12 w-10 text-accent sm:block" />
           </Reveal>
@@ -138,21 +138,18 @@ function Highlights() {
   return (
     <section className="bg-bg py-20 sm:py-24">
       <div className={`${wrap} grid items-center gap-12 md:grid-cols-[0.8fr_1.2fr]`}>
-        <Reveal className="mx-auto w-full max-w-[17rem] md:max-w-sm">
+        <Reveal variant="image" className="mx-auto w-full max-w-[17rem] rounded-[1.5rem] md:max-w-sm">
           <div className="overflow-hidden rounded-[1.5rem]">
             <Image src="/images/kitchen-packing.jpg" alt="A Suya Factory team member in a hairnet and mask packing kilishi into sealed tubs"
               width={719} height={890} sizes="(min-width: 768px) 384px, 272px" className="aspect-[4/5] w-full object-cover" />
           </div>
         </Reveal>
         <div>
-          <Reveal>
-            <h2 className="max-w-md font-display text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
-              Definitely not your ordinary kilishi
-            </h2>
-          </Reveal>
+          <MaskHeading lines={["Definitely not your", "ordinary kilishi"]}
+            className="max-w-md font-display text-3xl font-semibold tracking-tight text-ink sm:text-4xl" />
           <ul className="mt-10 grid gap-x-8 gap-y-8 sm:grid-cols-2">
-            {HIGHLIGHTS.map((h) => (
-              <Reveal as="li" key={h.title} className="border-t-2 border-ink pt-4">
+            {HIGHLIGHTS.map((h, i) => (
+              <Reveal as="li" key={h.title} variant="line" index={i} className="pt-5">
                 <h3 className="font-display text-xl font-semibold text-ink">{h.title}</h3>
                 <p className="mt-2 leading-relaxed text-muted">{h.text}</p>
               </Reveal>
@@ -184,9 +181,8 @@ function ComingSoon() {
       <div className={`${wrap} relative py-24 sm:py-32`}>
         <Reveal className="max-w-xl">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sun">Coming soon</p>
-          <h2 className="mt-4 font-display text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">
-            Something new is simmering.
-          </h2>
+          <MaskHeading lines={["Something new", "is simmering."]}
+            className="mt-4 font-display text-4xl font-semibold leading-tight tracking-tight sm:text-5xl" />
           <p className="mt-5 text-lg leading-relaxed text-night-muted">
             The kitchen never really closes. More from Suya Factory is on the way. No spoilers yet.
           </p>
@@ -216,13 +212,13 @@ function CustomOrders() {
     <section className="bg-bg py-20 sm:py-24">
       <div className={wrap}>
         <Reveal className="grid items-center gap-8 rounded-[1.75rem] border border-line bg-surface p-4 sm:p-6 md:grid-cols-2 md:gap-10">
-          <div className="relative mx-auto aspect-[4/3] w-full max-w-md overflow-hidden rounded-[1.25rem]">
+          <Reveal variant="image" className="relative mx-auto aspect-[4/3] w-full max-w-md rounded-[1.25rem]">
             <Image src="/images/kilishi-tubs.webp" alt="Suya Factory kilishi in sealed tubs" fill
               sizes="(min-width: 768px) 448px, 90vw" className="object-cover" />
-          </div>
+          </Reveal>
           <div className="px-2 pb-4 md:px-0 md:pb-0">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">Custom orders</p>
-            <h2 className="mt-2 font-display text-3xl font-semibold tracking-tight text-ink">Planning a party, an event, or stocking your shop?</h2>
+            <MaskHeading lines={["Planning a party, an event,", "or stocking your shop?"]} className="mt-2 font-display text-3xl font-semibold tracking-tight text-ink" />
             <p className="mt-3 leading-relaxed text-muted">
               Order 1kg or more, with custom packaging if you need it. We&apos;ll agree the price with you directly.
             </p>

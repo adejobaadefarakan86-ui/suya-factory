@@ -8,8 +8,10 @@ import { useEffect, useState } from "react";
 const KEY = "sf-theme";
 export type ThemeChoice = "system" | "light" | "dark";
 
-/** Runs in <head> before anything shows: sets data-theme (and notes a seen intro). */
-export const THEME_SCRIPT = `(function(){var d=document.documentElement;d.classList.add("js");try{var t=localStorage.getItem("${KEY}");var dark=t==="dark"||(t!=="light"&&matchMedia("(prefers-color-scheme: dark)").matches);d.dataset.theme=dark?"dark":"light";if(localStorage.getItem("sf-motion")==="reduce")d.dataset.motion="reduce";if(localStorage.getItem("sf-text")==="large")d.dataset.text="large";if(sessionStorage.getItem("sf-intro"))d.dataset.introSeen="1";else sessionStorage.setItem("sf-intro","1")}catch(e){d.dataset.theme="light"}})();`;
+/** Runs in <head> before anything shows: sets data-theme, the customer settings, and
+ *  whether the opening screen plays (yes when the app was opened fresh or after 30+
+ *  minutes away; no while moving around an app that is already open). */
+export const THEME_SCRIPT = `(function(){var d=document.documentElement;d.classList.add("js");try{var t=localStorage.getItem("${KEY}");var dark=t==="dark"||(t!=="light"&&matchMedia("(prefers-color-scheme: dark)").matches);d.dataset.theme=dark?"dark":"light";if(localStorage.getItem("sf-motion")==="reduce")d.dataset.motion="reduce";if(localStorage.getItem("sf-text")==="large")d.dataset.text="large";var last=+sessionStorage.getItem("sf-intro")||0,now=Date.now();if(now-last<18e5)d.dataset.introSeen="1";var mark=function(){try{sessionStorage.setItem("sf-intro",String(Date.now()))}catch(e){}};mark();document.addEventListener("visibilitychange",mark)}catch(e){d.dataset.theme="light"}})();`;
 
 function apply(choice: ThemeChoice) {
   const dark = choice === "dark" || (choice === "system" && matchMedia("(prefers-color-scheme: dark)").matches);

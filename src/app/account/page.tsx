@@ -99,7 +99,7 @@ async function AccountDetails({ searchParams }: { searchParams: PageProps<"/acco
       <section className="mt-8 rounded-2xl border border-line bg-surface p-5">
         <h2 className="text-xl font-semibold text-ink">Settings</h2>
         <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-          <p className="text-sm text-muted">Theme · <span className="text-ink">Auto</span> follows your phone or computer.</p>
+          <p className="text-sm text-muted">Theme · <span className="text-ink">System</span> follows your phone or computer. <a href="/settings" className="text-accent-strong underline-offset-4 hover:underline">All settings</a></p>
           <ThemeSwitcher />
         </div>
       </section>

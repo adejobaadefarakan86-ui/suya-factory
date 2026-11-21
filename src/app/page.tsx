@@ -1,25 +1,29 @@
-// Home page: hero, the kilishi, why it's good, how buying works (by country),
-// a teaser for what's next, and bulk orders. Real photos only.
+// Home page, in this order: a short opening about us with the main button in
+// the middle, "Definitely not your ordinary kilishi", our kilishi, what's
+// coming, custom orders. Real photos only, kept inside the page (never edge to edge).
 import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
 import { ProductGrid, ProductGridSkeleton } from "@/components/product-grid";
-import { HeroOrder, OrderBarForPage } from "@/components/quick-order";
+import { OrderBarForPage } from "@/components/quick-order";
 import { Reveal } from "@/components/reveal";
-import { Cow, Flame, Sparks, Squiggle, Swirl } from "@/components/doodles";
+import { Flame, Sparks, Squiggle, Swirl } from "@/components/doodles";
 import { getCountry } from "@/lib/country";
+import { getCurrentUser, isStaff } from "@/lib/auth";
 import { SELLS_VIA_SUPERMARKETS } from "@/lib/stores";
 import { SOCIAL } from "@/lib/business";
 
 const wrap = "mx-auto w-full max-w-6xl px-4";
+const delay = (d: number) => ({ "--d": `${d}s` }) as React.CSSProperties;
 
 export default function HomePage() {
   return (
     <main className="flex-1 overflow-x-clip">
       <Hero />
+      <Highlights />
 
-      {/* The kilishi */}
-      <section className="bg-bg py-20 sm:py-24">
+      {/* Our kilishi (the main button jumps here in Ghana) */}
+      <section id="kilishi" className="scroll-mt-20 bg-cream py-20 sm:py-24">
         <div className={wrap}>
           <Reveal className="mb-10 flex flex-wrap items-end justify-between gap-4">
             <div>
@@ -36,20 +40,12 @@ export default function HomePage() {
         </div>
       </section>
 
-      <Highlights />
-
-      <section id="how-it-works" className="scroll-mt-20 bg-bg py-20 sm:py-24">
-        <Suspense fallback={<div className="h-64" />}>
-          <HowItWorks />
-        </Suspense>
-      </section>
-
       <ComingSoon />
-      <BulkBand />
+      <CustomOrders />
 
       {/* Phones: "Order now" bar once you scroll past the top. */}
       <Suspense fallback={null}>
-        <OrderBarForPage orderHref="#order" />
+        <OrderBarForPage orderHref="#kilishi" />
       </Suspense>
     </main>
   );
@@ -57,58 +53,75 @@ export default function HomePage() {
 
 // ---------------------------------------------------------------------------
 
+/** Short and about us; the main button sits in the middle. */
 function Hero() {
+  const words = ["No", "rules,", "just", "bite."];
   return (
-    <section className="relative bg-cream">
-      {/* Soft orange-to-yellow glow, top right */}
-      <div aria-hidden="true"
-        className="pointer-events-none absolute -right-40 -top-40 h-[34rem] w-[34rem] rounded-full bg-[radial-gradient(circle,color-mix(in_srgb,var(--sun)_45%,transparent),transparent_65%)] opacity-70" />
-      <div className={`${wrap} relative grid items-center gap-12 py-7 sm:py-20 md:grid-cols-[1.05fr_1fr] md:py-24`}>
-        <div>
-          <p className="hero-in inline-flex items-center gap-2 rounded-lg border border-line bg-surface/70 px-3 py-1.5 text-xs font-medium text-muted">
-            <Flame className="flicker h-4 w-3.5 text-accent" />
-            Spicy beef kilishi · Lagos &amp; Accra
-          </p>
-          <h1 style={{ "--d": "0.08s" } as React.CSSProperties} className="hero-in mt-4 font-display text-[2.6rem] font-semibold sm:mt-6 sm:text-5xl leading-[1.02] tracking-tight text-ink md:text-6xl lg:text-7xl">
-            No rules,
-            <br />
-            <span className="relative inline-block">
-              just bite.
-              <Squiggle className="draw absolute -bottom-3 left-0 h-4 w-full text-accent" />
+    <section className="relative overflow-hidden bg-cream">
+      {/* Soft orange and yellow glows */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+        <div className="absolute -right-32 -top-40 h-[30rem] w-[30rem] rounded-full bg-[radial-gradient(circle,color-mix(in_srgb,var(--sun)_40%,transparent),transparent_65%)]" />
+        <div className="absolute -bottom-48 -left-40 h-[28rem] w-[28rem] rounded-full bg-[radial-gradient(circle,color-mix(in_srgb,var(--accent)_22%,transparent),transparent_65%)]" />
+      </div>
+      <Sparks className="twinkle absolute right-[8%] top-16 hidden h-10 w-10 text-ink/60 sm:block" />
+      <Swirl className="absolute left-[5%] top-24 hidden h-10 w-28 text-ink/40 lg:block" />
+
+      <div className={`${wrap} relative flex flex-col items-center py-14 text-center sm:py-20`}>
+        <p style={delay(0)} className="hero-in inline-flex items-center gap-2 rounded-lg border border-line bg-surface/70 px-3 py-1.5 text-xs font-medium text-muted">
+          <Flame className="flicker h-4 w-3.5 text-accent" />
+          Spicy beef kilishi · Made in Nigeria
+        </p>
+
+        {/* One line, the words arriving one after another */}
+        <h1 className="mt-6 whitespace-nowrap font-display text-[clamp(2.1rem,9vw,5.5rem)] font-semibold leading-none tracking-tight text-ink">
+          {words.map((w, i) => (
+            <span key={w} style={delay(0.08 + i * 0.12)} className={`hero-in inline-block ${i < words.length - 1 ? "mr-[0.25em]" : "relative"}`}>
+              {w}
+              {i === words.length - 1 && <Squiggle className="draw absolute -bottom-3 left-0 h-3.5 w-full text-accent" />}
             </span>
-          </h1>
-          <p style={{ "--d": "0.16s" } as React.CSSProperties} className="hero-in mt-5 max-w-md leading-relaxed text-muted sm:mt-7 sm:text-lg">
-            Soft and crunchy in every piece. Prepared in a clean kitchen, sealed fresh, and seriously spicy.
-          </p>
-          {/* Order straight from the first screen: no scrolling needed. */}
-          <div style={{ "--d": "0.24s" } as React.CSSProperties} className="hero-in">
-            <Suspense fallback={<div className="mt-8 h-44 max-w-md animate-pulse rounded-2xl bg-surface" />}>
-              <HeroOrder />
-            </Suspense>
-          </div>
-          <a href="#how-it-works" className="mt-4 inline-block text-sm font-medium text-muted underline-offset-4 hover:text-ink hover:underline">
-            How it works
-          </a>
+          ))}
+        </h1>
+
+        <p style={delay(0.6)} className="hero-in mt-8 max-w-xl text-base leading-relaxed text-muted sm:text-lg">
+          We&apos;re Suya Factory. We make spicy beef kilishi in a clean, hygienic kitchen and seal every pack fresh.
+          Soft and crunchy in every piece, from Lagos to Accra.
+        </p>
+
+        {/* The main button, in the middle */}
+        <div style={delay(0.75)} className="hero-in mt-8 flex flex-col items-center gap-3">
+          <Suspense fallback={<span className="btn btn-primary px-8 py-4 text-base opacity-60">Order now</span>}>
+            <HeroButton />
+          </Suspense>
+          <Link href="/bulk-orders" className="text-sm font-medium text-muted underline-offset-4 hover:text-ink hover:underline">
+            or ask about custom orders
+          </Link>
         </div>
 
-        <div className="relative mx-auto w-full max-w-lg md:max-w-none">
-          {/* Abstract shape behind the photo */}
+        {/* The photo, framed and kept inside the page */}
+        <div style={delay(0.9)} className="hero-in relative mt-14 w-full max-w-[18rem] sm:max-w-md">
           <div aria-hidden="true"
-            className="tilt-in absolute -inset-4 -z-0 rotate-3 rounded-[2.25rem] bg-gradient-to-br from-accent via-[color-mix(in_srgb,var(--accent)_60%,var(--sun))] to-sun opacity-90" />
-          <div className="relative overflow-hidden rounded-[1.75rem] shadow-[0_30px_60px_-30px_rgba(60,25,5,0.55)]">
+            className="tilt-in absolute -inset-3 rotate-3 rounded-[2rem] bg-gradient-to-br from-accent via-[color-mix(in_srgb,var(--accent)_60%,var(--sun))] to-sun opacity-90" />
+          <div className="relative overflow-hidden rounded-[1.6rem] shadow-[0_30px_60px_-30px_rgba(60,25,5,0.55)]">
             <Image src="/images/kilishi-plate.jpg" alt="Suya Factory beef kilishi on a white plate, coated in red pepper spice"
-              width={1080} height={1078} priority sizes="(min-width: 768px) 560px, 100vw"
+              width={1080} height={1078} priority sizes="(min-width: 640px) 448px, 288px"
               className="aspect-[5/4] w-full object-cover" />
           </div>
-          <p className="absolute -bottom-5 left-5 flex items-center gap-2.5 rounded-xl border border-line bg-surface py-2 pl-2.5 pr-4 text-sm font-medium text-ink shadow-sm">
-            <Cow className="h-8 w-8 text-ink" />
-            <span>Halal beef<span className="block text-xs font-normal text-muted">Sealed fresh</span></span>
-          </p>
-          <Sparks className="twinkle absolute -right-3 -top-9 h-10 w-10 text-ink/70" />
-          <Swirl className="absolute -left-14 top-8 hidden h-10 w-28 text-ink/50 lg:block" />
         </div>
       </div>
     </section>
+  );
+}
+
+// The main button follows the visitor's country (a cookie) and account.
+async function HeroButton() {
+  const [country, user] = await Promise.all([getCountry(), getCurrentUser()]);
+  if (SELLS_VIA_SUPERMARKETS[country]) {
+    return <Link href="/where-to-buy" className="btn btn-primary px-8 py-4 text-base">Find the nearest supermarket</Link>;
+  }
+  return (
+    <a href="#kilishi" className="btn btn-primary px-8 py-4 text-base">
+      {isStaff(user) ? "See our kilishi" : "Order now"}
+    </a>
   );
 }
 
@@ -117,20 +130,19 @@ function Hero() {
 const HIGHLIGHTS = [
   { title: "Halal beef", text: "Every pack is made with halal beef." },
   { title: "Soft meets crunchy", text: "Tender inside, crisp at the edges, spice in every bite." },
-  { title: "Clean kitchen", text: "Prepared in a clean, hygienic kitchen and packed with care." },
+  { title: "Clean kitchen", text: "Prepared in a clean, hygienic kitchen and packed by hand." },
   { title: "Keeps for 3 months", text: "Sealed fresh. Store it somewhere cool and dry." },
 ];
 
 function Highlights() {
   return (
-    <section className="bg-cream py-20 sm:py-24">
-      <div className={`${wrap} grid items-center gap-12 md:grid-cols-[0.9fr_1.1fr]`}>
-        <Reveal className="relative mx-auto w-full max-w-sm md:max-w-none">
+    <section className="bg-bg py-20 sm:py-24">
+      <div className={`${wrap} grid items-center gap-12 md:grid-cols-[0.8fr_1.2fr]`}>
+        <Reveal className="mx-auto w-full max-w-[17rem] md:max-w-sm">
           <div className="overflow-hidden rounded-[1.5rem]">
             <Image src="/images/kitchen-packing.jpg" alt="A Suya Factory team member in a hairnet and mask packing kilishi into sealed tubs"
-              width={719} height={890} sizes="(min-width: 768px) 440px, 90vw" className="aspect-[4/5] w-full object-cover" />
+              width={719} height={890} sizes="(min-width: 768px) 384px, 272px" className="aspect-[4/5] w-full object-cover" />
           </div>
-          <p className="absolute -bottom-4 right-4 rounded-xl bg-night px-4 py-2 text-sm font-medium text-on-night">Packed by hand, sealed fresh</p>
         </Reveal>
         <div>
           <Reveal>
@@ -154,39 +166,6 @@ function Highlights() {
 
 // ---------------------------------------------------------------------------
 
-async function HowItWorks() {
-  const steps = SELLS_VIA_SUPERMARKETS[await getCountry()]
-    ? [
-        ["Find a supermarket", "We show you the nearest supermarket that has our kilishi in stock."],
-        ["Buy from them", "Call or WhatsApp the supermarket, pay them, and they keep your pack ready."],
-        ["Send a rider", "Book a rider in Bolt or inDrive with the details we give you. Or pick it up yourself."],
-      ]
-    : [
-        ["Pick your pack", "Small pack or big pack. Delivery inside Greater Accra."],
-        ["Pay by MoMo", "Send Mobile Money to our number and tap “I've paid”. We confirm it quickly."],
-        ["Book your rider", "Use Bolt, Uber, Yango or Qargo to collect it from us. You pay the rider."],
-      ];
-  return (
-    <div className={wrap}>
-      <Reveal className="flex items-end justify-between gap-4">
-        <h2 className="font-display text-3xl font-semibold tracking-tight text-ink sm:text-4xl">How it works</h2>
-        <Link href="/bulk-orders" className="text-sm font-medium text-accent hover:underline">Need 1kg or more?</Link>
-      </Reveal>
-      <ol className="mt-10 grid gap-4 md:grid-cols-3">
-        {steps.map(([title, text], i) => (
-          <Reveal as="li" key={title} className="rounded-2xl border border-line bg-surface p-6">
-            <span className="grid h-9 w-9 place-items-center rounded-lg bg-accent-soft font-display font-semibold text-accent">{i + 1}</span>
-            <h3 className="mt-5 font-display text-xl font-semibold text-ink">{title}</h3>
-            <p className="mt-2 leading-relaxed text-muted">{text}</p>
-          </Reveal>
-        ))}
-      </ol>
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-
 /** What's next: a teaser only. No names, photos or products. */
 function ComingSoon() {
   return (
@@ -194,12 +173,10 @@ function ComingSoon() {
       <div aria-hidden="true" className="pointer-events-none absolute inset-0">
         <div className="absolute -left-24 top-1/2 h-96 w-96 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,color-mix(in_srgb,var(--accent)_55%,transparent),transparent_70%)] blur-2xl" />
         <div className="absolute -right-16 -top-20 h-80 w-80 rounded-full bg-[radial-gradient(circle,color-mix(in_srgb,var(--sun)_40%,transparent),transparent_70%)] blur-2xl" />
-        {/* Thin rings, like ripples in a pot */}
         <svg viewBox="0 0 400 400" className="absolute right-[6%] top-1/2 hidden h-[26rem] w-[26rem] -translate-y-1/2 text-on-night/15 md:block">
           {[70, 110, 150, 190].map((r) => <circle key={r} cx="200" cy="200" r={r} fill="none" stroke="currentColor" strokeWidth="1" />)}
           {[0, 1.5, 3].map((d) => (
-            <circle key={d} className="ripple" style={{ "--d": `${d}s` } as React.CSSProperties}
-              cx="200" cy="200" r="120" fill="none" stroke="var(--accent)" strokeWidth="1" />
+            <circle key={d} className="ripple" style={delay(d)} cx="200" cy="200" r="120" fill="none" stroke="var(--accent)" strokeWidth="1" />
           ))}
           <circle cx="200" cy="200" r="30" fill="none" stroke="var(--accent)" strokeWidth="1.5" />
         </svg>
@@ -234,22 +211,23 @@ async function FollowLink() {
 
 // ---------------------------------------------------------------------------
 
-function BulkBand() {
+function CustomOrders() {
   return (
     <section className="bg-bg py-20 sm:py-24">
       <div className={wrap}>
-        <Reveal className="grid overflow-hidden rounded-[1.75rem] border border-line bg-surface md:grid-cols-2">
-          <div className="relative min-h-64">
+        <Reveal className="grid items-center gap-8 rounded-[1.75rem] border border-line bg-surface p-4 sm:p-6 md:grid-cols-2 md:gap-10">
+          <div className="relative mx-auto aspect-[4/3] w-full max-w-md overflow-hidden rounded-[1.25rem]">
             <Image src="/images/kilishi-tubs.webp" alt="Suya Factory kilishi in sealed tubs" fill
-              sizes="(min-width: 768px) 560px, 100vw" className="object-cover" />
+              sizes="(min-width: 768px) 448px, 90vw" className="object-cover" />
           </div>
-          <div className="flex flex-col justify-center p-8 sm:p-12">
-            <h2 className="font-display text-3xl font-semibold tracking-tight text-ink">Buying for a party, office or shop?</h2>
+          <div className="px-2 pb-4 md:px-0 md:pb-0">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">Custom orders</p>
+            <h2 className="mt-2 font-display text-3xl font-semibold tracking-tight text-ink">Planning a party, an event, or stocking your shop?</h2>
             <p className="mt-3 leading-relaxed text-muted">
-              Order 1kg or more and we&apos;ll agree the price with you directly. Chat with us on WhatsApp, call, or send an enquiry.
+              Order 1kg or more, with custom packaging if you need it. We&apos;ll agree the price with you directly.
             </p>
             <div className="mt-7">
-              <Link href="/bulk-orders" className="btn btn-primary px-6 py-3.5 text-base">Ask about bulk orders</Link>
+              <Link href="/bulk-orders" className="btn btn-primary px-6 py-3.5 text-base">Ask about a custom order</Link>
             </div>
           </div>
         </Reveal>

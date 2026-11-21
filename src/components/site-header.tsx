@@ -1,10 +1,10 @@
-import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
 import { getCurrentUser, isStaff } from "@/lib/auth";
 import { CartLink } from "@/components/cart-link";
 import { CountrySwitcher } from "@/components/country-switcher";
 import { MobileMenu } from "@/components/mobile-menu";
+import { LogoMark } from "@/components/logo-mark";
 import { NAV_LINKS } from "@/lib/nav";
 import { getCatalog } from "@/lib/catalog";
 
@@ -52,7 +52,7 @@ export function SiteHeader() {
     <header className="sticky top-0 z-40 border-b border-line bg-bg">
       <div className="relative mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4">
         <Link href="/" className="flex shrink-0 items-center gap-2.5">
-          <Image src="/images/logo-mark.png" alt="" width={36} height={36} className="rounded-lg" priority />
+          <LogoMark gid="sf-heat-top" className="h-10 w-10 text-ink" />
           <span className="font-display text-lg font-semibold tracking-tight text-ink">Suya Factory</span>
         </Link>
 
@@ -67,6 +67,13 @@ export function SiteHeader() {
           <div className="hidden items-center gap-4 md:flex">
             <Suspense fallback={<span className="w-20" />}><CountrySwitcher /></Suspense>
             <Suspense fallback={<span className="w-12" />}><UserLinks /></Suspense>
+            <Link href="/settings" aria-label="Settings" title="Settings"
+              className="grid h-9 w-9 place-items-center rounded-xl text-muted transition hover:bg-cream hover:text-ink">
+              <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="3" />
+                <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" />
+              </svg>
+            </Link>
           </div>
           <Suspense fallback={<CartLink />}><CartForCustomers /></Suspense>
           {/* Phone: everything else lives in the menu (it knows the current page, so it streams in). */}

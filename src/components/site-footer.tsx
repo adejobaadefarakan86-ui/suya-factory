@@ -1,10 +1,10 @@
-import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
 import { BUSINESS, SOCIAL } from "@/lib/business";
 import { getCountry } from "@/lib/country";
 import { ThemeSwitcher } from "@/components/theme";
 import { Flame } from "@/components/doodles";
+import { LogoMark } from "@/components/logo-mark";
 
 export function SiteFooter() {
   return (
@@ -12,7 +12,7 @@ export function SiteFooter() {
       <div className="mx-auto grid max-w-6xl gap-10 px-4 py-14 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1.2fr]">
         <div>
           <Link href="/" className="inline-flex items-center gap-3">
-            <Image src="/images/logo-mark.png" alt="" width={44} height={44} className="rounded-xl" />
+            <LogoMark gid="sf-heat-foot" className="h-12 w-12 text-on-night" />
             <span className="font-display text-xl font-semibold">Suya Factory</span>
           </Link>
           <p className="mt-4 flex items-center gap-2 font-display text-2xl text-on-night">
@@ -21,8 +21,8 @@ export function SiteFooter() {
           </p>
         </div>
 
-        <FooterLinks title="Shop" links={[["Beef kilishi", "/shop"], ["Where to buy", "/where-to-buy"], ["Bulk orders", "/bulk-orders"]]} />
-        <FooterLinks title="Help" links={[["My account", "/account"], ["Terms of sale", "/terms"], ["Privacy", "/privacy"]]} />
+        <FooterLinks title="Shop" links={[["Beef kilishi", "/shop"], ["Where to buy", "/where-to-buy"], ["Custom orders", "/bulk-orders"]]} />
+        <FooterLinks title="Help" links={[["Settings", "/settings"], ["My account", "/account"], ["Terms of sale", "/terms"], ["Privacy", "/privacy"]]} />
 
         <div className="space-y-5">
           <div>

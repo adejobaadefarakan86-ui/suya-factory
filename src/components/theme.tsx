@@ -9,7 +9,7 @@ const KEY = "sf-theme";
 export type ThemeChoice = "system" | "light" | "dark";
 
 /** Runs in <head> before anything shows: sets data-theme (and notes a seen intro). */
-export const THEME_SCRIPT = `(function(){var d=document.documentElement;d.classList.add("js");try{var t=localStorage.getItem("${KEY}");var dark=t==="dark"||(t!=="light"&&matchMedia("(prefers-color-scheme: dark)").matches);d.dataset.theme=dark?"dark":"light";if(sessionStorage.getItem("sf-intro"))d.dataset.introSeen="1";else sessionStorage.setItem("sf-intro","1")}catch(e){d.dataset.theme="light"}})();`;
+export const THEME_SCRIPT = `(function(){var d=document.documentElement;d.classList.add("js");try{var t=localStorage.getItem("${KEY}");var dark=t==="dark"||(t!=="light"&&matchMedia("(prefers-color-scheme: dark)").matches);d.dataset.theme=dark?"dark":"light";if(localStorage.getItem("sf-motion")==="reduce")d.dataset.motion="reduce";if(localStorage.getItem("sf-text")==="large")d.dataset.text="large";if(sessionStorage.getItem("sf-intro"))d.dataset.introSeen="1";else sessionStorage.setItem("sf-intro","1")}catch(e){d.dataset.theme="light"}})();`;
 
 function apply(choice: ThemeChoice) {
   const dark = choice === "dark" || (choice === "system" && matchMedia("(prefers-color-scheme: dark)").matches);
@@ -26,7 +26,7 @@ function readChoice(): ThemeChoice {
 }
 
 const OPTIONS: { value: ThemeChoice; label: string }[] = [
-  { value: "system", label: "Auto" },
+  { value: "system", label: "System" },
   { value: "light", label: "Light" },
   { value: "dark", label: "Dark" },
 ];

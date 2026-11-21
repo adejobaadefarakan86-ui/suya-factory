@@ -23,12 +23,3 @@ export function SpiceLoader({ label = "Loading" }: { label?: string }) {
     </div>
   );
 }
-
-/** First visit in a session: the loader plays once over the page (under a second), then fades away. */
-export function IntroLoader() {
-  return (
-    <div className="intro-loader" aria-hidden="true">
-      <SpiceLoader label="Suya Factory" />
-    </div>
-  );
-}

@@ -2,5 +2,5 @@
 export const NAV_LINKS = [
   { href: "/shop", label: "Shop" },
   { href: "/where-to-buy", label: "Where to buy" },
-  { href: "/bulk-orders", label: "Bulk orders" },
+  { href: "/bulk-orders", label: "Custom orders" },
 ];

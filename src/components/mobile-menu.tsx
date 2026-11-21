@@ -30,6 +30,9 @@ export function MobileMenu({ children }: { children: React.ReactNode }) {
             </Link>
           ))}
         </nav>
+        <Link href="/settings" className="flex items-center justify-between border-b border-line py-3.5 font-display text-xl text-ink">
+          Settings
+        </Link>
         <div className="mt-5 flex flex-wrap items-center justify-between gap-3">{children}</div>
       </div>
     </div>

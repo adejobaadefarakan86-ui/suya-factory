@@ -3,7 +3,7 @@ import { Inter, Outfit } from "next/font/google";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { THEME_SCRIPT } from "@/components/theme";
-import { IntroLoader } from "@/components/spice-loader";
+import { Splash } from "@/components/splash";
 import "./globals.css";
 
 // Headings: Outfit, soft and geometric like the lettering in our logo.
@@ -24,7 +24,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
       </head>
       <body className="flex min-h-full flex-col">
-        <IntroLoader />
+        <Splash />
         <SiteHeader />
         {children}
         <SiteFooter />

@@ -12,3 +12,17 @@ export const BUSINESS = {
   /** Food registration number shown on product pages, per country (only Ghana for now). */
   foodRegNo: { GH: "NAFDAC Reg. No. A-8119868L" } as Partial<Record<string, string>>,
 };
+
+/** Social pages per country (tracking bits removed from the links). TikTok is shared. */
+export const SOCIAL: Record<"NG" | "GH", { name: string; url: string }[]> = {
+  NG: [
+    { name: "Instagram", url: "https://www.instagram.com/suyafactorynaija" },
+    { name: "TikTok", url: "https://www.tiktok.com/@suyafactory" },
+    { name: "Facebook", url: "https://www.facebook.com/share/1EB61dQQ1M/" },
+  ],
+  GH: [
+    { name: "Instagram", url: "https://www.instagram.com/suyafactorygh" },
+    { name: "TikTok", url: "https://www.tiktok.com/@suyafactory" },
+    { name: "Facebook", url: "https://www.facebook.com/share/1EB61dQQ1M/" },
+  ],
+};

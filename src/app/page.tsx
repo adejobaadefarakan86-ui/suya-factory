@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
 import { ProductGrid, ProductGridSkeleton } from "@/components/product-grid";
+import { HeroOrder, OrderBarForPage } from "@/components/quick-order";
 import { Reveal } from "@/components/reveal";
 import { Flame, Sparks, Squiggle, Swirl } from "@/components/doodles";
 import { getCountry } from "@/lib/country";
@@ -45,6 +46,11 @@ export default function HomePage() {
 
       <ComingSoon />
       <BulkBand />
+
+      {/* Phones: "Order now" bar once you scroll past the top. */}
+      <Suspense fallback={null}>
+        <OrderBarForPage orderHref="#order" />
+      </Suspense>
     </main>
   );
 }
@@ -57,13 +63,13 @@ function Hero() {
       {/* Soft orange-to-yellow glow, top right */}
       <div aria-hidden="true"
         className="pointer-events-none absolute -right-40 -top-40 h-[34rem] w-[34rem] rounded-full bg-[radial-gradient(circle,color-mix(in_srgb,var(--sun)_45%,transparent),transparent_65%)] opacity-70" />
-      <div className={`${wrap} relative grid items-center gap-12 py-14 sm:py-20 md:grid-cols-[1.05fr_1fr] md:py-24`}>
+      <div className={`${wrap} relative grid items-center gap-12 py-7 sm:py-20 md:grid-cols-[1.05fr_1fr] md:py-24`}>
         <div>
           <p className="inline-flex items-center gap-2 rounded-lg border border-line bg-surface/70 px-3 py-1.5 text-xs font-medium text-muted">
             <Flame className="h-4 w-3.5 text-accent" />
             Spicy beef kilishi · Lagos &amp; Accra
           </p>
-          <h1 className="mt-6 font-display text-5xl font-semibold leading-[1.02] tracking-tight text-ink sm:text-6xl lg:text-7xl">
+          <h1 className="mt-4 font-display text-[2.6rem] font-semibold sm:mt-6 sm:text-5xl leading-[1.02] tracking-tight text-ink md:text-6xl lg:text-7xl">
             No rules,
             <br />
             <span className="relative inline-block">
@@ -71,15 +77,16 @@ function Hero() {
               <Squiggle className="absolute -bottom-3 left-0 h-4 w-full text-accent" />
             </span>
           </h1>
-          <p className="mt-8 max-w-md text-lg leading-relaxed text-muted">
+          <p className="mt-5 max-w-md leading-relaxed text-muted sm:mt-7 sm:text-lg">
             Soft and crunchy in every piece. Prepared in a clean kitchen, sealed fresh, and seriously spicy.
           </p>
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Suspense fallback={<Link href="/shop" className="btn btn-primary px-6 py-3.5 text-base">Shop kilishi</Link>}>
-              <HeroButton />
-            </Suspense>
-            <a href="#how-it-works" className="btn btn-ghost px-6 py-3.5 text-base">How it works</a>
-          </div>
+          {/* Order straight from the first screen: no scrolling needed. */}
+          <Suspense fallback={<div className="mt-8 h-44 max-w-md animate-pulse rounded-2xl bg-surface" />}>
+            <HeroOrder />
+          </Suspense>
+          <a href="#how-it-works" className="mt-4 inline-block text-sm font-medium text-muted underline-offset-4 hover:text-ink hover:underline">
+            How it works
+          </a>
         </div>
 
         <div className="relative mx-auto w-full max-w-lg md:max-w-none">
@@ -100,14 +107,6 @@ function Hero() {
       </div>
     </section>
   );
-}
-
-// The main button depends on the visitor's country (a cookie).
-async function HeroButton() {
-  if (SELLS_VIA_SUPERMARKETS[await getCountry()]) {
-    return <Link href="/where-to-buy" className="btn btn-primary px-6 py-3.5 text-base">Find a supermarket</Link>;
-  }
-  return <Link href="/shop" className="btn btn-primary px-6 py-3.5 text-base">Shop kilishi</Link>;
 }
 
 // ---------------------------------------------------------------------------

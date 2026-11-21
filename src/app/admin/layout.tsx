@@ -36,8 +36,11 @@ export default function AdminLayout({ children }: LayoutProps<"/admin">) {
         </div>
 
         <div className="mt-5">
-          <AdminNav items={NAV} badges={NAV.map((item) =>
-            item.href === "/stock" ? <Suspense key={item.href} fallback={null}><StockSignal /></Suspense> : null)} />
+          {/* The menu highlights the current page (known only in the browser), so it streams in. */}
+          <Suspense fallback={<PlainNav />}>
+            <AdminNav items={NAV} badges={NAV.map((item) =>
+              item.href === "/stock" ? <Suspense key={item.href} fallback={null}><StockSignal /></Suspense> : null)} />
+          </Suspense>
         </div>
 
         <div className="mt-6 hidden border-t border-white/10 pt-4 text-sm md:block">
@@ -47,6 +50,20 @@ export default function AdminLayout({ children }: LayoutProps<"/admin">) {
       </aside>
       <div className="min-w-0 flex-1 px-4 py-8 md:px-10">{children}</div>
     </div>
+  );
+}
+
+/** The same menu without the highlight, shown for a moment while the page loads. */
+function PlainNav() {
+  return (
+    <nav className="flex gap-1 overflow-x-auto md:flex-col" aria-label="Admin">
+      {NAV.map((item) => (
+        <Link key={item.href} href={item.href} className="flex shrink-0 items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-stone-300">
+          <span className="text-base" aria-hidden>{item.icon}</span>
+          <span className="flex-1">{item.label}</span>
+        </Link>
+      ))}
+    </nav>
   );
 }
 

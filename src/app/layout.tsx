@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Outfit } from "next/font/google";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
@@ -14,6 +14,17 @@ const body = Inter({ variable: "--font-body", subsets: ["latin"], display: "swap
 export const metadata: Metadata = {
   title: "Suya Factory",
   description: "Spicy beef kilishi, hygienically prepared and delivered across Nigeria and Ghana.",
+  applicationName: "Suya Factory",
+  // iPhone "Add to Home Screen": opens full screen like an app, named Suya Factory.
+  appleWebApp: { capable: true, title: "Suya Factory", statusBarStyle: "default" },
+};
+
+// The phone status bar blends with the page (cream in light, warm dark in dark).
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#fffdf9" },
+    { media: "(prefers-color-scheme: dark)", color: "#15110d" },
+  ],
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

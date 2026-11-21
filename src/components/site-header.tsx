@@ -49,7 +49,7 @@ function MenuPlaceholder() {
 
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-bg">
+    <header className="site-header sticky top-0 z-40 border-b border-line bg-bg">
       <div className="relative mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4">
         <Link href="/" className="flex shrink-0 items-center gap-2.5">
           <LogoMark gid="sf-heat-top" className="h-10 w-10 text-ink" />

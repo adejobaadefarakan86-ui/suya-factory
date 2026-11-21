@@ -55,7 +55,7 @@ async function Overview() {
     { label: "MoMo payments to check", count: check.count ?? 0, href: "/admin/orders?tab=check", icon: "💸" },
     { label: "Ready to hand to a rider", count: handover.count ?? 0, href: "/admin/orders?tab=handover", icon: "📦" },
     { label: "Refunds to send", count: refund.count ?? 0, href: "/admin/orders?tab=refund", icon: "↩️" },
-    { label: "New bulk enquiries", count: newEnquiries.count ?? 0, href: "/admin/enquiries?status=new", icon: "📨" },
+    { label: "New custom order requests", count: newEnquiries.count ?? 0, href: "/admin/enquiries?status=new", icon: "📨" },
   ].filter((c) => c.count > 0);
 
   const sales = new Map<Currency, number>();

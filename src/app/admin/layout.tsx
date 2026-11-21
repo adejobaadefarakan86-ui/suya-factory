@@ -1,9 +1,9 @@
-import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
 import { getCurrentUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { AdminNav, type NavItem } from "./admin-nav";
+import { LogoMark } from "@/components/logo-mark";
 
 // The admin "frame": a dark control-room sidebar. The ACCESS CHECK is not done
 // here: layouts don't re-run when you move between pages, so every admin page
@@ -12,7 +12,7 @@ const NAV: NavItem[] = [
   { href: "/admin", label: "Overview", icon: "🏠" },
   { href: "/admin/orders", label: "Orders", icon: "🧾" },
   { href: "/admin/stores", label: "Supermarkets", icon: "🏪" },
-  { href: "/admin/enquiries", label: "Bulk enquiries", icon: "📦" },
+  { href: "/admin/enquiries", label: "Custom orders", icon: "📦" },
   { href: "/admin/products", label: "Products", icon: "🥩" },
   { href: "/admin/delivery", label: "Pickup & delivery", icon: "🛵" },
   { href: "/admin/team", label: "Team", icon: "👥" },
@@ -21,10 +21,10 @@ const NAV: NavItem[] = [
 export default function AdminLayout({ children }: LayoutProps<"/admin">) {
   return (
     // data-theme-lock: the admin keeps its light look even when a visitor picks the dark theme.
-    <div data-theme-lock="" className="flex flex-1 flex-col bg-stone-100 md:flex-row">
+    <div data-theme-lock="" className="flex min-h-screen flex-1 flex-col bg-stone-100 md:flex-row">
       <aside className="bg-stone-950 px-4 py-5 text-stone-100 md:sticky md:top-0 md:h-screen md:w-64 md:shrink-0 md:overflow-y-auto">
         <Link href="/admin" className="flex items-center gap-3">
-          <Image src="/images/logo-mark.png" alt="" width={40} height={40} className="rounded-xl ring-2 ring-orange-500/60" />
+          <span className="grid h-11 w-11 place-items-center rounded-xl bg-white/10"><LogoMark gid="sf-heat-admin" className="h-9 w-9 text-white" /></span>
           <span>
             <span className="block text-base font-extrabold leading-tight">Suya Factory</span>
             <span className="block text-xs font-semibold uppercase tracking-widest text-orange-400">Control room</span>

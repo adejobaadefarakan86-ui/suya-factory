@@ -8,7 +8,7 @@ import { LogoMark } from "@/components/logo-mark";
 
 export function SiteFooter() {
   return (
-    <footer className="mt-auto bg-night text-on-night">
+    <footer className="site-footer mt-auto bg-night text-on-night">
       <div className="mx-auto grid max-w-6xl gap-10 px-4 py-14 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1.2fr]">
         <div>
           <Link href="/" className="inline-flex items-center gap-3">

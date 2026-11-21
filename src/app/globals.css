@@ -224,23 +224,23 @@ body:has([data-theme-lock]) .intro-loader { display: none; }
   html:not([data-intro-seen]) .draw path { animation-delay: 1.5s; }
   @keyframes draw { to { stroke-dashoffset: 0; } }
 
-  /* Flames flicker softly; sparks twinkle. */
-  .flicker { transform-origin: 50% 100%; animation: flicker 2.6s ease-in-out infinite; }
+  /* Per the brief: no constant movement. Flames flicker twice, sparks twinkle twice, then stay still. */
+  .flicker { transform-origin: 50% 100%; animation: flicker 2.6s ease-in-out 2; }
   @keyframes flicker {
     0%, 100% { transform: scale(1, 1) skewX(0deg); }
     30% { transform: scale(0.97, 1.06) skewX(-2deg); }
     60% { transform: scale(1.02, 0.97) skewX(2deg); }
   }
-  .twinkle { animation: twinkle 2.4s ease-in-out infinite; }
+  .twinkle { animation: twinkle 2.4s ease-in-out 2; }
   @keyframes twinkle { 50% { opacity: 0.35; transform: scale(0.85) rotate(12deg); } }
 
-  /* "Something new is simmering": rings ripple out like a simmering pot. */
-  .ripple { transform-origin: center; transform-box: fill-box; animation: ripple 4.5s ease-out infinite; animation-delay: var(--d, 0s); }
+  /* "Something new is simmering": a few slow ripples, then the rings rest. */
+  .ripple { transform-origin: center; transform-box: fill-box; opacity: 0; animation: ripple 4.5s ease-out 2 both; animation-delay: var(--d, 0s); }
   @keyframes ripple { from { transform: scale(0.55); opacity: 0.9; } to { transform: scale(1.35); opacity: 0; } }
 
-  /* Cart number pops when it changes. */
-  .bump { animation: bump 0.45s cubic-bezier(0.3, 1.6, 0.5, 1); }
-  @keyframes bump { 40% { transform: scale(1.35); } }
+  /* Cart number: a soft pulse when it changes (no bounce). */
+  .bump { animation: bump 0.4s ease-out; }
+  @keyframes bump { 45% { transform: scale(1.15); } }
 
   /* Buttons lift a touch on hover. */
   .btn:hover { transform: translateY(-1px); }

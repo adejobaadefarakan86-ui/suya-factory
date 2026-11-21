@@ -19,7 +19,7 @@ export function OrderBar({ title, note, href, action }: { title: string; note: s
 
   return (
     <div aria-hidden={!show}
-      className={`fixed inset-x-0 bottom-0 z-30 border-t border-line bg-bg/95 px-4 pt-3 backdrop-blur-sm transition-transform duration-300 md:hidden ${
+      className={`fixed inset-x-0 bottom-0 z-30 border-t border-line bg-bg px-4 pt-3 transition-transform duration-300 md:hidden ${
         show ? "translate-y-0" : "pointer-events-none translate-y-full"
       }`}
       style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom, 0px))" }}>

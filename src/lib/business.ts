@@ -26,3 +26,12 @@ export const SOCIAL: Record<"NG" | "GH", { name: string; url: string }[]> = {
     { name: "Facebook", url: "https://www.facebook.com/share/1EB61dQQ1M/" },
   ],
 };
+
+/** Food facts for our kilishi (all products), shown on the product page. */
+export const FOOD_INFO = {
+  ingredients: "Beef, groundnut (peanut), chilli pepper, ginger, garlic, onion, iodized salt",
+  allergens: "Groundnut (peanut)",
+  halal: true,
+  shelfLife: "3 months",
+  storage: "Store in a cool, dry place, away from moisture and water.",
+};

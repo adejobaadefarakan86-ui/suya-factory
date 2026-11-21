@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { getCatalog, getProduct } from "@/lib/catalog";
 import { getCountry } from "@/lib/country";
-import { BUSINESS } from "@/lib/business";
+import { BUSINESS, FOOD_INFO } from "@/lib/business";
 import { COUNTRIES } from "@/lib/countries";
 import { SELLS_VIA_SUPERMARKETS } from "@/lib/stores";
 import { ProductImage } from "@/components/product-image";
@@ -62,6 +62,17 @@ async function ProductDetail({ params }: { params: PageProps<"/shop/[slug]">["pa
         <p className="text-sm uppercase tracking-wide text-stone-500">{product.category?.name}</p>
         <h1 className="text-3xl font-bold text-stone-900">{product.name}</h1>
         {product.description && <p className="mt-3 text-stone-700">{product.description}</p>}
+
+        <p className="mt-3 flex flex-wrap gap-2 text-sm">
+          {FOOD_INFO.halal && <span className="rounded-full bg-green-100 px-3 py-1 font-semibold text-green-800">Halal</span>}
+          <span className="rounded-full bg-amber-100 px-3 py-1 font-semibold text-amber-900">Contains: {FOOD_INFO.allergens}</span>
+        </p>
+        <details className="mt-3 text-sm text-stone-700">
+          <summary className="cursor-pointer font-medium text-orange-700">Ingredients &amp; storage</summary>
+          <p className="mt-2"><span className="font-semibold">Ingredients:</span> {FOOD_INFO.ingredients}</p>
+          <p className="mt-1"><span className="font-semibold">Best before:</span> {FOOD_INFO.shelfLife} from packing</p>
+          <p className="mt-1"><span className="font-semibold">Storage:</span> {FOOD_INFO.storage}</p>
+        </details>
 
         {/* Prices depend on the visitor's country (a cookie), so this part streams in. */}
         <Suspense fallback={<div className="mt-6 h-64 animate-pulse rounded-xl bg-stone-100" />}>

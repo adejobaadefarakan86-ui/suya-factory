@@ -27,6 +27,7 @@ export function BuyBox({
   currency,
   countryName,
   inSupermarkets = false,
+  teamView = false,
 }: {
   productName: string;
   variants: BuyBoxVariant[];
@@ -34,6 +35,8 @@ export function BuyBox({
   countryName: string;
   /** Sold through supermarkets in this country: show sizes, then "find a supermarket". */
   inSupermarkets?: boolean;
+  /** Signed in with a team account: see everything, but no buying. */
+  teamView?: boolean;
 }) {
   const sizes = unique(variants.map((v) => v.sizeLabel));
   const [size, setSize] = useState(sizes[0]);
@@ -120,7 +123,11 @@ export function BuyBox({
         </div>
       </div>
 
-      {variant?.price == null ? (
+      {teamView ? (
+        <p className="rounded-lg bg-stone-100 p-3 text-center text-sm font-medium text-stone-600">
+          👀 Team view: this is what customers see. Ordering is off for team accounts.
+        </p>
+      ) : variant?.price == null ? (
         <p className="rounded-lg bg-stone-100 p-3 text-sm text-stone-700">
           This option isn&apos;t available in {countryName} yet.
         </p>

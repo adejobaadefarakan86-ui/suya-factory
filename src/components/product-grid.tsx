@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getCatalog, lowestPrice, variantLabel } from "@/lib/catalog";
 import { getCountry } from "@/lib/country";
+import { getCurrentUser, isStaff } from "@/lib/auth";
 import { COUNTRIES } from "@/lib/countries";
 import { formatMoney } from "@/lib/money";
 import { ProductImage } from "@/components/product-image";
@@ -13,7 +14,8 @@ import { SELLS_VIA_SUPERMARKETS } from "@/lib/stores";
  * Reads the country cookie, so always render it inside <Suspense>.
  */
 export async function ProductGrid() {
-  const [catalog, country] = await Promise.all([getCatalog(), getCountry()]);
+  const [catalog, country, user] = await Promise.all([getCatalog(), getCountry(), getCurrentUser()]);
+  const teamView = isStaff(user);
   const { currency } = COUNTRIES[country];
   const viaSupermarkets = SELLS_VIA_SUPERMARKETS[country];
 
@@ -73,7 +75,7 @@ export async function ProductGrid() {
                 ) : (
                   <Link href={href}
                     className="rounded-xl bg-orange-700 px-6 py-3.5 text-center text-lg font-bold text-white shadow-sm hover:bg-orange-800">
-                    Choose pack &amp; order →
+                    {teamView ? "See the product →" : <>Choose pack &amp; order →</>}
                   </Link>
                 )}
                 <Link href={href}

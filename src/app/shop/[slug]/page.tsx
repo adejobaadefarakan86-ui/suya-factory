@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { getCatalog, getProduct } from "@/lib/catalog";
 import { getCountry } from "@/lib/country";
+import { getCurrentUser, isStaff } from "@/lib/auth";
 import { BUSINESS, FOOD_INFO } from "@/lib/business";
 import { COUNTRIES } from "@/lib/countries";
 import { SELLS_VIA_SUPERMARKETS } from "@/lib/stores";
@@ -92,7 +93,7 @@ async function ProductDetail({ params }: { params: PageProps<"/shop/[slug]">["pa
 }
 
 async function PricedBuyBox({ slug }: { slug: string }) {
-  const [product, country] = await Promise.all([getProduct(slug), getCountry()]);
+  const [product, country, user] = await Promise.all([getProduct(slug), getCountry(), getCurrentUser()]);
   if (!product) return null;
   const { currency, name } = COUNTRIES[country];
 
@@ -118,8 +119,9 @@ async function PricedBuyBox({ slug }: { slug: string }) {
   const regNo = BUSINESS.foodRegNo[country];
   return (
     <>
-      <BuyBox productName={product.name} variants={variants} currency={currency} countryName={name}
-        inSupermarkets={SELLS_VIA_SUPERMARKETS[country]} />
+      {/* key: switching country starts the size choice afresh (packs differ per country). */}
+      <BuyBox key={currency} productName={product.name} variants={variants} currency={currency} countryName={name}
+        inSupermarkets={SELLS_VIA_SUPERMARKETS[country]} teamView={isStaff(user)} />
       {regNo && <p className="mt-3 text-xs text-stone-500">{regNo}</p>}
     </>
   );

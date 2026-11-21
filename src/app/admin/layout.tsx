@@ -1,45 +1,51 @@
+import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
 import { getCurrentUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { AdminNav, type NavItem } from "./admin-nav";
 
-// The admin "frame" (sidebar). The ACCESS CHECK is not done here: layouts
-// don't re-run when you move between pages, so every admin page checks
-// requireStaff() itself. This layout only shows who is logged in.
-const NAV = [
-  { href: "/admin", label: "Overview" },
-  { href: "/admin/orders", label: "Orders" },
-  { href: "/admin/enquiries", label: "Bulk enquiries" },
-  { href: "/admin/stores", label: "Supermarkets" },
-  { href: "/stock", label: "Stock check (phone)" },
-  { href: "/admin/products", label: "Products" },
-  { href: "/admin/delivery", label: "Delivery settings" },
-  { href: "/admin/team", label: "Team (admins)" },
+// The admin "frame": a dark control-room sidebar. The ACCESS CHECK is not done
+// here: layouts don't re-run when you move between pages, so every admin page
+// checks requireStaff() itself. This layout only shows who is logged in.
+const NAV: NavItem[] = [
+  { href: "/admin", label: "Overview", icon: "🏠" },
+  { href: "/admin/orders", label: "Orders", icon: "🧾" },
+  { href: "/stock", label: "Supermarket stock", icon: "🏪" },
+  { href: "/admin/stores", label: "Supermarkets", icon: "📍" },
+  { href: "/admin/enquiries", label: "Bulk enquiries", icon: "📦" },
+  { href: "/admin/products", label: "Products", icon: "🥩" },
+  { href: "/admin/delivery", label: "Pickup & delivery", icon: "🛵" },
+  { href: "/admin/team", label: "Team", icon: "👥" },
 ];
 
 export default function AdminLayout({ children }: LayoutProps<"/admin">) {
   return (
-    <div className="flex flex-1 flex-col md:flex-row">
-      <aside className="border-b border-stone-200 bg-stone-900 px-4 py-4 text-stone-100 md:w-56 md:border-r md:border-b-0">
-        <p className="text-lg font-bold">Suya Factory</p>
-        <p className="mb-4 text-xs text-stone-400">
-          Admin ·{" "}
-          <Suspense fallback="…">
-            <WhoAmI />
-          </Suspense>
-        </p>
-        <nav className="flex flex-wrap gap-x-4 gap-y-2 text-sm md:flex-col md:gap-2">
-          {NAV.map((item) => (
-            <Link key={item.href} href={item.href} className="hover:text-orange-300">
-              {item.label}
-              {item.href === "/stock" && <Suspense fallback={null}><StockSignal /></Suspense>}
-            </Link>
-          ))}
-          <span className="text-stone-500" title="Coming in a later phase">Kitchen &amp; stock</span>
-          <Link href="/account" className="hover:text-orange-300">My account</Link>
-        </nav>
+    <div className="flex flex-1 flex-col bg-stone-100 md:flex-row">
+      <aside className="bg-stone-950 px-4 py-5 text-stone-100 md:sticky md:top-0 md:h-screen md:w-64 md:shrink-0 md:overflow-y-auto">
+        <Link href="/admin" className="flex items-center gap-3">
+          <Image src="/images/logo-mark.png" alt="" width={40} height={40} className="rounded-xl ring-2 ring-orange-500/60" />
+          <span>
+            <span className="block text-base font-extrabold leading-tight">Suya Factory</span>
+            <span className="block text-xs font-semibold uppercase tracking-widest text-orange-400">Control room</span>
+          </span>
+        </Link>
+
+        <div className="mt-5 rounded-xl bg-white/5 px-3 py-2 text-xs text-stone-300">
+          <Suspense fallback="…"><WhoAmI /></Suspense>
+        </div>
+
+        <div className="mt-5">
+          <AdminNav items={NAV} badges={NAV.map((item) =>
+            item.href === "/stock" ? <Suspense key={item.href} fallback={null}><StockSignal /></Suspense> : null)} />
+        </div>
+
+        <div className="mt-6 hidden border-t border-white/10 pt-4 text-sm md:block">
+          <Link href="/" className="block rounded-xl px-3 py-2 text-stone-400 hover:bg-white/10 hover:text-white">👀 See the shop as customers do</Link>
+          <Link href="/account" className="block rounded-xl px-3 py-2 text-stone-400 hover:bg-white/10 hover:text-white">⚙️ My account</Link>
+        </div>
       </aside>
-      <div className="min-w-0 flex-1 px-4 py-8 md:px-8">{children}</div>
+      <div className="min-w-0 flex-1 px-4 py-8 md:px-10">{children}</div>
     </div>
   );
 }
@@ -52,11 +58,17 @@ async function StockSignal() {
     .from("stores").select("in_stock, out_reported_at").eq("active", true);
   const n = (data ?? []).filter((s) => !s.in_stock || s.out_reported_at).length;
   return n > 0
-    ? <span className="ml-2 rounded-full bg-red-600 px-1.5 text-xs font-bold text-white" aria-label={`${n} need attention`}>{n}</span>
+    ? <span className="rounded-full bg-red-600 px-2 text-xs font-bold text-white" aria-label={`${n} need attention`}>{n}</span>
     : null;
 }
 
 async function WhoAmI() {
   const user = await getCurrentUser();
-  return user ? `${user.fullName ?? user.email} (${user.role})` : null;
+  if (!user) return null;
+  return (
+    <>
+      <span className="block font-semibold text-white">{user.fullName ?? user.email}</span>
+      <span className="text-orange-300">{user.role === "admin" ? "Admin · full access" : "Staff"}</span>
+    </>
+  );
 }

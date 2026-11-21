@@ -12,6 +12,12 @@ async function CartLinkWithCatalog() {
   return <CartLink validIds={catalog.flatMap((p) => p.variants.map((v) => v.id))} />;
 }
 
+// Team accounts don't buy, so no cart for them.
+async function CartForCustomers() {
+  if (isStaff(await getCurrentUser())) return null;
+  return <CartLinkWithCatalog />;
+}
+
 // Parts that depend on the visitor (login, country) sit in their own
 // <Suspense>, so the rest of the page can load without waiting for them.
 async function UserLinks() {
@@ -25,7 +31,12 @@ async function UserLinks() {
 
   return (
     <>
-      {isStaff(user) && <Link href="/admin" className="hidden hover:text-orange-700 sm:inline">Admin</Link>}
+      {isStaff(user) && (
+        <Link href="/admin" className="rounded-full bg-stone-900 px-3 py-1 text-xs font-semibold text-white hover:bg-orange-700"
+          title="You're signed in with a team account: you see the shop like a customer, without buying.">
+          👀 Team view · Admin
+        </Link>
+      )}
       <Link href="/account" className="hover:text-orange-700">Account</Link>
     </>
   );
@@ -50,7 +61,7 @@ export function SiteHeader() {
             <UserLinks />
           </Suspense>
           <Suspense fallback={<CartLink />}>
-            <CartLinkWithCatalog />
+            <CartForCustomers />
           </Suspense>
         </nav>
       </div>

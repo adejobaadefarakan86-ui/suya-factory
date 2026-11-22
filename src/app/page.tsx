@@ -7,6 +7,7 @@ import { Suspense } from "react";
 import { ProductGrid, ProductGridSkeleton } from "@/components/product-grid";
 import { OrderBarForPage } from "@/components/quick-order";
 import { MaskHeading, Reveal } from "@/components/reveal";
+import { HeroDone } from "@/components/hero-done";
 import { Flame, Sparks, Squiggle, Swirl } from "@/components/doodles";
 import { getCountry } from "@/lib/country";
 import { getCurrentUser, isStaff } from "@/lib/auth";
@@ -58,6 +59,7 @@ function Hero() {
   const words = ["No", "rules,", "just", "bite."];
   return (
     <section className="relative overflow-hidden bg-cream">
+      <HeroDone />
       {/* Soft orange and yellow glows */}
       <div aria-hidden="true" className="pointer-events-none absolute inset-0">
         <div className="absolute -right-32 -top-40 h-[30rem] w-[30rem] rounded-full bg-[radial-gradient(circle,color-mix(in_srgb,var(--sun)_40%,transparent),transparent_65%)]" />

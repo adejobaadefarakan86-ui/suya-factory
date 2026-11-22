@@ -44,7 +44,7 @@ async function AccountButton() {
   if (!user) {
     return (
       <Link href="/login" aria-label="Log in"
-        className="flex h-10 items-center gap-1.5 rounded-xl border border-line px-2.5 text-sm font-medium text-ink transition hover:border-ink sm:px-3">
+        className="appear flex h-10 items-center gap-1.5 rounded-xl border border-line px-2.5 text-sm font-medium text-ink transition hover:border-ink sm:px-3">
         <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
           <circle cx="12" cy="8" r="4" /><path d="M4 20c1.5-4 4.5-6 8-6s6.5 2 8 6" />
         </svg>
@@ -55,7 +55,7 @@ async function AccountButton() {
   const initials = (user.fullName ?? user.email ?? "?").split(/[\s@]+/).filter(Boolean).slice(0, 2).map((w) => w[0]!.toUpperCase()).join("");
   return (
     <Link href="/account" aria-label="My account" title={user.fullName ?? "My account"}
-      className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-accent to-[color-mix(in_srgb,var(--accent)_55%,var(--sun))] font-display text-sm font-semibold text-white shadow-sm ring-2 ring-bg transition hover:brightness-110">
+      className="appear grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-accent to-[color-mix(in_srgb,var(--accent)_55%,var(--sun))] font-display text-sm font-semibold text-white shadow-sm ring-2 ring-bg transition hover:brightness-110">
       {initials}
     </Link>
   );

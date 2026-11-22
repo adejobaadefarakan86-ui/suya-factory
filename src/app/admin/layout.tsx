@@ -27,7 +27,7 @@ export default function AdminLayout({ children }: LayoutProps<"/admin">) {
         <div className="flex items-center gap-1">
         <Suspense fallback={null}><BackButton tone="night" /></Suspense>
         <Link href="/admin" className="flex items-center gap-3">
-          <span className="grid h-11 w-11 place-items-center rounded-xl bg-white/10"><LogoMark gid="sf-heat-admin" className="h-9 w-9 text-white" /></span>
+          <LogoMark gid="sf-heat-admin" className="h-11 w-11 shrink-0 text-white" />
           <span>
             <span className="block text-base font-extrabold leading-tight">Suya Factory</span>
             <span className="block text-xs font-semibold uppercase tracking-widest text-orange-400">Control room</span>

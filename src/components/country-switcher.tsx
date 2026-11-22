@@ -7,7 +7,7 @@ export async function CountrySwitcher() {
   const current = await getCountry();
 
   return (
-    <form action={setCountry} className="flex rounded-xl border border-line bg-surface p-1 text-xs" aria-label="Shopping country">
+    <form action={setCountry} className="appear flex rounded-xl border border-line bg-surface p-1 text-xs" aria-label="Shopping country">
       {(Object.keys(COUNTRIES) as CountryCode[]).map((code) => {
         const active = code === current;
         return (

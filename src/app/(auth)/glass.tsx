@@ -2,7 +2,7 @@
 // Pieces for the glass login / sign-up card: frosted inputs, the cream button,
 // and the full-screen spice loader shown while we sign someone in.
 import type { InputHTMLAttributes } from "react";
-import { SpiceLoader } from "@/components/spice-loader";
+import { LogoLoader } from "@/components/logo-loader";
 
 type FieldProps = InputHTMLAttributes<HTMLInputElement> & { label: string; name: string; hint?: string };
 
@@ -38,7 +38,7 @@ export function SigningIn({ show, text }: { show: boolean; text: string }) {
     <div role="status" aria-live="polite"
       className="fixed inset-0 z-[90] grid place-items-center bg-black/70 backdrop-blur-md">
       <div className="flex flex-col items-center gap-5 text-white">
-        <SpiceLoader label={text} />
+        <LogoLoader label={text} tone="night" />
         <p className="font-display text-lg">{text}</p>
       </div>
     </div>

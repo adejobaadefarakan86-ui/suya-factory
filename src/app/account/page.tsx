@@ -8,7 +8,7 @@ import { formatMoney, type Currency } from "@/lib/money";
 import { ORDER_STATUS, formatOrderDate, statusLabel, type OrderStatus } from "@/lib/orders";
 import type { CountryCode } from "@/lib/countries";
 import { signOut } from "../(auth)/actions";
-import { SpiceLoader } from "@/components/spice-loader";
+import { LogoLoader } from "@/components/logo-loader";
 import { Flame, Sparks } from "@/components/doodles";
 
 type OrderRow = {
@@ -27,7 +27,7 @@ export const metadata = { title: "My account · Suya Factory" };
 export default function AccountPage(props: PageProps<"/account">) {
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-10 sm:py-14">
-      <Suspense fallback={<div className="grid place-items-center py-24"><SpiceLoader label="Loading your account" /></div>}>
+      <Suspense fallback={<div className="grid place-items-center py-24"><LogoLoader label="Loading your account" /></div>}>
         <AccountDetails searchParams={props.searchParams} />
       </Suspense>
     </main>

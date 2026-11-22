@@ -51,8 +51,7 @@ async function AccountDetails({ searchParams }: { searchParams: PageProps<"/acco
       )}
 
       {/* Profile card: brand orange, frosted like the login page */}
-      <section className="relative overflow-hidden rounded-[1.75rem] p-6 text-white shadow-[0_30px_60px_-35px_rgba(90,25,5,0.8)] sm:p-8"
-        style={{ background: "radial-gradient(circle at 15% 10%, rgba(255,205,100,0.5), transparent 45%), radial-gradient(circle at 90% 100%, rgba(140,35,8,0.55), transparent 55%), linear-gradient(150deg, #f2852f, #e4570f 55%, #c2410c)" }}>
+      <section className="bg-ember relative overflow-hidden rounded-[1.75rem] p-6 text-white shadow-[0_30px_60px_-35px_rgba(90,20,10,0.85)] sm:p-8">
         <Sparks className="absolute right-6 top-6 h-9 w-9 text-white/45" />
         <Flame className="absolute -bottom-2 right-10 h-20 w-16 text-white/15" />
         <div className="relative flex items-center gap-4">

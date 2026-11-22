@@ -1,65 +1,73 @@
 @import "tailwindcss";
 
 /* =====================================================================
-   Suya Factory design foundation
-   Look: modern, clean, slightly futuristic. White and warm cream, dark
-   ink, orange for actions, a little yellow, occasional dark bands.
-   Every colour is a token, defined for light and dark.
-   The theme comes from <html data-theme="light|dark">, set before the page
-   paints by the small script in layout.tsx (customer choice, else the phone's
-   own setting). The admin keeps its light look: pages that contain
-   [data-theme-lock] never switch to dark.
+   Suya Factory colours, built from the logo plus a few supporting colours:
+     Flame Red  #E2402F (logo)   main actions        Ember Orange #F2892E (logo)  warmth
+     Chili Crimson #8F1D16       depth, hovers       Saffron Gold #FFB547         glow, sparingly
+     Charcoal #0F0D0C (logo)     dark bands, dark    White / Smoke #F6F4F2        clean pages
+   The "Ember" gradient (gold glow > orange > red > crimson) is kept for the big
+   moments only: opening screen, login, profile card, the plate disc.
+   Every colour is a token for light and dark. The theme comes from
+   <html data-theme>, set before the page paints (layout.tsx). The admin keeps
+   its own look: pages containing [data-theme-lock] never switch to dark.
    ===================================================================== */
 
 :root {
-  --bg: #fffdf9;          /* page: warm white */
-  --cream: #fbf3e6;       /* warm cream bands */
+  --bg: #ffffff;          /* page: white */
+  --cream: #f6f4f2;       /* smoke: soft off-white for alternating sections */
   --surface: #ffffff;     /* cards, inputs */
-  --ink: #18130e;         /* text */
-  --muted: #6e6357;       /* secondary text */
-  --line: #ece2d3;        /* hairlines and borders */
-  --accent: #e4570f;      /* orange: buttons, links, highlights */
-  --accent-strong: #c2410c;
-  --accent-soft: #fde7d6; /* orange tint behind small things */
-  --on-accent: #ffffff;   /* text on orange */
-  --sun: #f4b52b;         /* yellow, used sparingly */
-  --night: #17120e;       /* dark bands (footer, story) */
-  --on-night: #f7efe4;
-  --night-muted: #b5a998;
+  --ink: #141110;         /* text: near charcoal */
+  --muted: #6b6560;       /* secondary text */
+  --line: #ebe7e3;        /* hairlines and borders */
+  --accent: #e2402f;      /* flame red: buttons, links, highlights */
+  --accent-strong: #b8301f;
+  --accent-soft: #fde8e4; /* red tint behind small things */
+  --on-accent: #ffffff;
+  --sun: #f2892e;         /* ember orange */
+  --gold: #ffb547;        /* saffron glow, sparingly */
+  --crimson: #8f1d16;     /* chili crimson, depth */
+  --night: #0f0d0c;       /* charcoal: dark bands */
+  --on-night: #ffffff;
+  --night-muted: #a39d98;
+  --ember: radial-gradient(circle at 22% 12%, rgba(255, 181, 71, 0.65), transparent 42%),
+    radial-gradient(circle at 92% 100%, rgba(143, 29, 22, 0.75), transparent 55%),
+    linear-gradient(155deg, #f2892e 0%, #e2402f 58%, #b8301f 100%);
 }
 
-/* Dark theme: soft warm darks rather than pure black. */
+/* Dark theme: logo charcoal, white text, the same flame red a touch brighter. */
 :root[data-theme="dark"] body:not(:has([data-theme-lock])) {
   color-scheme: dark;
-  --bg: #15110d;
-  --cream: #1d1813;
-  --surface: #221c16;
-  --ink: #f6eee3;
-  --muted: #b3a797;
-  --line: #3a3129;
-  --accent: #ff7a2e;
-  --accent-strong: #ff9150;
-  --accent-soft: #3a2416;
-  --on-accent: #1a0f07;
-  --sun: #ffc94d;
-  --night: #0e0b08;
-  --on-night: #f7efe4;
-  --night-muted: #a99d8c;
+  --bg: #0f0d0c;
+  --cream: #171413;
+  --surface: #1c1817;
+  --ink: #ffffff;
+  --muted: #aaa39d;
+  --line: #2d2826;
+  --accent: #f04a35;
+  --accent-strong: #ff6b55;
+  --accent-soft: #2e1612;
+  --on-accent: #ffffff;
+  --sun: #ff9440;
+  --gold: #ffc061;
+  --crimson: #a3241b;
+  --night: #000000;
+  --on-night: #ffffff;
+  --night-muted: #9a938e;
 
   /* Pages still using Tailwind's stone/white/tint colours follow the dark theme too
      (the neutral scale is flipped, light tints become dark tints). */
-  --color-white: #221c16;
-  --color-stone-50: #1c1814;
-  --color-stone-100: #241f1a;
-  --color-stone-200: #342c25;
-  --color-stone-300: #463c33;
-  --color-stone-400: #7a6e62;
-  --color-stone-500: #a0948a;
-  --color-stone-600: #bdb2a6;
-  --color-stone-700: #d3c9bd;
-  --color-stone-800: #e6ded4;
-  --color-stone-900: #f2ebe2;
-  --color-stone-950: #faf6f0;
+  --color-white: #1c1817;
+  --color-stone-50: #171413;
+  --color-stone-100: #1f1b1a;
+  --color-stone-200: #2d2826;
+  --color-stone-300: #3d3734;
+  --color-stone-400: #736c68;
+  --color-stone-500: #9a938e;
+  --color-stone-600: #bcb6b2;
+  --color-stone-700: #d6d1cd;
+  --color-stone-800: #e8e4e1;
+  --color-stone-900: #f4f1ef;
+  --color-stone-950: #fbfaf9;
   --color-orange-50: #2e1d12;
   --color-orange-100: #3a2416;
   --color-orange-200: #5a3218;
@@ -103,6 +111,8 @@
   --color-accent-soft: var(--accent-soft);
   --color-on-accent: var(--on-accent);
   --color-sun: var(--sun);
+  --color-gold: var(--gold);
+  --color-crimson: var(--crimson);
   --color-night: var(--night);
   --color-on-night: var(--on-night);
   --color-night-muted: var(--night-muted);
@@ -143,11 +153,11 @@ h1, h2, h3 {
 .btn:active { transform: translateY(1px); }
 .btn:disabled { cursor: wait; opacity: 0.6; }
 .btn-primary { background: var(--accent); color: var(--on-accent); box-shadow: 0 6px 18px -8px color-mix(in srgb, var(--accent) 70%, transparent); }
-.btn-primary:hover { background: var(--accent-strong); }
+.btn-primary:hover { background: var(--crimson); }
 .btn-ghost { border: 1.5px solid var(--line); color: var(--ink); background: transparent; }
 .btn-ghost:hover { border-color: var(--ink); }
 .btn-night { background: var(--on-night); color: var(--night); }
-.btn-night:hover { background: var(--sun); }
+.btn-night:hover { background: var(--gold); }
 
 /* ---------- Scroll reveals (components/reveal.tsx) ----------
    Played once per section. Content is visible by default; the hidden starting
@@ -219,11 +229,8 @@ h1, h2, h3 {
   z-index: 100;
   display: grid;
   place-items: center;
-  /* Brand orange (same in light and dark), with a warm yellow glow and a deeper corner. */
-  background:
-    radial-gradient(circle at 50% 36%, rgba(255, 200, 90, 0.45), transparent 55%),
-    radial-gradient(circle at 15% 100%, rgba(150, 40, 10, 0.45), transparent 55%),
-    linear-gradient(160deg, #f07a2a, #e4570f 55%, #c9440c);
+  /* The Ember gradient, with the saffron glow behind the logo. */
+  background: radial-gradient(circle at 50% 38%, rgba(255, 181, 71, 0.5), transparent 50%), var(--ember);
   animation: splash-out 0.6s ease 2.7s forwards;
 }
 @keyframes splash-out { to { opacity: 0; visibility: hidden; } }
@@ -319,4 +326,15 @@ body:has([data-theme-lock]) .site-footer { display: none; }
   /* A soft fade in (with a touch of focus), and a gentle fade out after a few seconds. */
   .welcome-in { animation: welcome-in 0.7s ease-out both; }
   @keyframes welcome-in { from { opacity: 0; filter: blur(6px); transform: scale(0.98); } }
+}
+
+/* The Ember gradient for big brand moments (opening screen, login, profile card). */
+.bg-ember { background: var(--ember); }
+
+/* First-open welcome: the screen fades in and the glass card settles. */
+@media (prefers-reduced-motion: no-preference) {
+  .onboard-in { animation: onboard-fade 0.5s ease-out both; }
+  .onboard-card { animation: onboard-card 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both; }
+  @keyframes onboard-fade { from { opacity: 0; } }
+  @keyframes onboard-card { from { opacity: 0; transform: translateY(18px) scale(0.97); } }
 }

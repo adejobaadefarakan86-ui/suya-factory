@@ -40,7 +40,7 @@ export function Welcome() {
   return (
     <div role="status" aria-live="polite"
       className={`welcome-in pointer-events-none fixed inset-x-0 top-20 z-[80] flex justify-center px-4 transition-opacity duration-700 ease-out ${leaving ? "opacity-0" : ""}`}>
-      <p className="flex items-center gap-3 rounded-2xl border border-white/40 bg-[#e4570f]/85 px-5 py-3 text-white shadow-[0_20px_50px_-20px_rgba(60,15,0,0.7)] backdrop-blur-xl">
+      <p className="flex items-center gap-3 rounded-2xl border border-white/40 bg-accent/90 px-5 py-3 text-white shadow-[0_20px_50px_-20px_rgba(60,15,0,0.7)] backdrop-blur-xl">
         <span className="font-display text-lg font-semibold">
           {note.kind === "new" ? `Welcome to Suya Factory${who}!` : `Welcome back${who}`}
         </span>

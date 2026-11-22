@@ -7,6 +7,8 @@ import { THEME_SCRIPT } from "@/components/theme";
 import { Splash } from "@/components/splash";
 import { ServiceWorker } from "@/components/service-worker";
 import { Welcome } from "@/components/welcome";
+import { Onboarding } from "@/components/onboarding";
+import { getCurrentUser } from "@/lib/auth";
 import "./globals.css";
 
 // Headings: Outfit, soft and geometric like the lettering in our logo.
@@ -25,8 +27,8 @@ export const metadata: Metadata = {
 // The phone status bar blends with the page (cream in light, warm dark in dark).
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#fffdf9" },
-    { media: "(prefers-color-scheme: dark)", color: "#15110d" },
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#0f0d0c" },
   ],
 };
 
@@ -42,10 +44,17 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <ServiceWorker />
         {/* Knows the current page, so it streams in. */}
         <Suspense fallback={null}><Welcome /></Suspense>
+        {/* First-open welcome (log in / create account / guest), after the opening screen. */}
+        <Suspense fallback={null}><OnboardingGate /></Suspense>
         <SiteHeader />
         {children}
         <SiteFooter />
       </body>
     </html>
   );
+}
+
+/** Knows whether someone is logged in, so the welcome screen can stay away for members. */
+async function OnboardingGate() {
+  return <Onboarding loggedIn={Boolean(await getCurrentUser())} />;
 }

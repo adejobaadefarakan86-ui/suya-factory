@@ -39,7 +39,7 @@ async function LoginContent({ searchParams }: { searchParams: PageProps<"/login"
   return (
     <>
       {error === "confirm" && (
-        <p role="alert" className="mb-4 rounded-xl border border-white/40 bg-[#5a1503]/45 p-3 text-sm text-white">
+        <p role="alert" className="mb-4 rounded-xl border border-white/40 bg-black/35 p-3 text-sm text-white">
           That confirmation link is invalid or has expired. Try logging in, or sign up again.
         </p>
       )}

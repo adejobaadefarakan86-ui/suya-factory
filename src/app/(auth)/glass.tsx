@@ -21,14 +21,14 @@ export function GlassField({ label, name, hint, ...input }: FieldProps) {
 export function GlassButton({ children, pending }: { children: React.ReactNode; pending: boolean }) {
   return (
     <button type="submit" disabled={pending}
-      className="btn w-full bg-[#fff6ea] py-3.5 text-base font-semibold text-[#7a2a06] shadow-[0_10px_30px_-12px_rgba(60,15,0,0.6)] hover:bg-white disabled:opacity-70">
+      className="btn w-full bg-white py-3.5 text-base font-semibold text-crimson shadow-[0_10px_30px_-12px_rgba(60,10,5,0.65)] hover:bg-[#fff4ec] disabled:opacity-70">
       {children}
     </button>
   );
 }
 
 export function GlassError({ children }: { children: React.ReactNode }) {
-  return <p role="alert" className="rounded-xl border border-white/40 bg-[#5a1503]/45 p-3 text-sm text-white">{children}</p>;
+  return <p role="alert" className="rounded-xl border border-white/40 bg-black/35 p-3 text-sm text-white">{children}</p>;
 }
 
 /** Full-screen spice loader while the account is being opened. */
@@ -36,7 +36,7 @@ export function SigningIn({ show, text }: { show: boolean; text: string }) {
   if (!show) return null;
   return (
     <div role="status" aria-live="polite"
-      className="fixed inset-0 z-[90] grid place-items-center bg-[#17120e]/70 backdrop-blur-md">
+      className="fixed inset-0 z-[90] grid place-items-center bg-black/70 backdrop-blur-md">
       <div className="flex flex-col items-center gap-5 text-white">
         <SpiceLoader label={text} />
         <p className="font-display text-lg">{text}</p>

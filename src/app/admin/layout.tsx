@@ -60,11 +60,11 @@ export default function AdminLayout({ children }: LayoutProps<"/admin">) {
 /** The same menu without the highlight, shown for a moment while the page loads. */
 function PlainNav() {
   return (
-    <nav className="flex gap-1 overflow-x-auto md:flex-col" aria-label="Admin">
+    <nav className="grid grid-cols-2 gap-1 md:flex md:flex-col" aria-label="Admin">
       {NAV.map((item) => (
-        <Link key={item.href} href={item.href} className="flex shrink-0 items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-stone-300">
+        <Link key={item.href} href={item.href} data-tour={"nav-" + (item.href.split("/")[2] ?? "overview")} className="flex min-w-0 items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-stone-300">
           <span className="text-base" aria-hidden>{item.icon}</span>
-          <span className="flex-1">{item.label}</span>
+          <span className="flex-1 truncate">{item.label}</span>
         </Link>
       ))}
     </nav>

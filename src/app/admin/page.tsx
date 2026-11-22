@@ -4,6 +4,7 @@ import { requireStaff } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { formatMoney, type Currency } from "@/lib/money";
 import { AutoRefresh } from "@/components/auto-refresh";
+import { FirstAdminTour, TourButton } from "@/components/tour";
 
 export const metadata = { title: "Overview · Admin · Suya Factory" };
 
@@ -11,6 +12,7 @@ export default function AdminOverviewPage() {
   return (
     <>
       <AutoRefresh seconds={60} />
+      <FirstAdminTour />
       <Suspense fallback={<div className="h-40 animate-pulse rounded-3xl bg-stone-200" />}>
         <Overview />
       </Suspense>
@@ -86,7 +88,7 @@ async function Overview() {
 
       {/* To do */}
       <section>
-        <h2 className="mb-3 text-lg font-bold text-stone-900">Needs you now</h2>
+        <h2 data-tour="admin-today" className="mb-3 text-lg font-bold text-stone-900">Needs you now</h2>
         {todo.length === 0 ? (
           <p className="rounded-2xl border border-dashed border-stone-300 bg-white p-6 text-center text-stone-500">✅ Nothing to do. Well done!</p>
         ) : (
@@ -113,6 +115,9 @@ async function Overview() {
       <section>
         <h2 className="mb-3 text-lg font-bold text-stone-900">Shortcuts</h2>
         <div className="flex flex-wrap gap-2 text-sm">
+          <TourButton tour="admin" className="rounded-full bg-stone-900 px-4 py-2 font-medium text-white shadow-sm hover:bg-orange-600">
+            Take the tour
+          </TourButton>
           {[
             ["🧾 All orders", "/admin/orders"],
             ["🏪 Supermarkets", "/admin/stores"],

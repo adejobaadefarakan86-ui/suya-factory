@@ -6,6 +6,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { LogoMark } from "@/components/logo-mark";
+import { startTour } from "@/components/tour";
 
 const SEEN = "sf-onboard-seen";   // a choice was made on this device
 const MEMBER = "sf-has-account";  // someone has logged in on this device
@@ -87,10 +88,17 @@ export function Onboarding({ loggedIn }: { loggedIn: boolean }) {
             Create an account
           </Link>
         </div>
-        <button type="button" onClick={choose}
-          className="mt-5 text-sm font-medium text-white/80 underline-offset-4 transition hover:text-white hover:underline">
-          Continue as guest
-        </button>
+        <div className="mt-5 flex items-center justify-center gap-4 text-sm font-medium text-white/80">
+          <button type="button" onClick={() => { choose(); setTimeout(() => startTour("shop"), 300); }}
+            className="underline-offset-4 transition hover:text-white hover:underline">
+            Show me around
+          </button>
+          <span aria-hidden="true" className="text-white/40">·</span>
+          <button type="button" onClick={choose}
+            className="underline-offset-4 transition hover:text-white hover:underline">
+            Continue as guest
+          </button>
+        </div>
       </div>
     </div>
   );

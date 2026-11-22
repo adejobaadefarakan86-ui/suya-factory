@@ -43,6 +43,7 @@ export const DELIVERY_COMPANIES: DeliveryCompany[] = [
     note: "Choose “Courier”. You agree the price with the rider.",
     android: "sinet.startup.inDriver",
     androidScheme: "indriver",
+    ios: "https://apps.apple.com/ng/app/id780125801",
   },
 ];
 
@@ -99,11 +100,19 @@ type Point = { lat: number; lng: number; label?: string };
 /** The best link for this phone: the app itself where possible, else its store page, else the website. */
 export function appLink(c: DeliveryCompany, userAgent: string, pickup: Point, dropoff: Point | null) {
   if (c.uberLink) {
-    // Documented at developer.uber.com (deep links): opens the Uber app, or m.uber.com in the browser.
-    const spot = (p: Point) => JSON.stringify({ latitude: p.lat, longitude: p.lng, ...(p.label ? { addressLine1: p.label } : {}) });
-    const q = new URLSearchParams({ pickup: spot(pickup) });
-    if (dropoff) q.set("drop[0]", spot(dropoff));
-    return `https://m.uber.com/looking?${q.toString()}`;
+    // Uber's universal link (developer.uber.com, deep links): opens the Uber app with pickup and
+    // drop-off set, or Uber in the browser. Checked 2026-11-23: the older m.uber.com/looking link
+    // now leads to an error page; this one still opens the app.
+    const q = new URLSearchParams({ action: "setPickup" });
+    q.set("pickup[latitude]", String(pickup.lat));
+    q.set("pickup[longitude]", String(pickup.lng));
+    if (pickup.label) q.set("pickup[nickname]", pickup.label);
+    if (dropoff) {
+      q.set("dropoff[latitude]", String(dropoff.lat));
+      q.set("dropoff[longitude]", String(dropoff.lng));
+      if (dropoff.label) q.set("dropoff[nickname]", dropoff.label);
+    }
+    return `https://m.uber.com/ul/?${q.toString()}`;
   }
   if (/Android/i.test(userAgent)) {
     const store = c.android ? `https://play.google.com/store/apps/details?id=${c.android}` : c.url;

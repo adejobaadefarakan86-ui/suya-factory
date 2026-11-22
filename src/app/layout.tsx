@@ -8,6 +8,8 @@ import { Splash } from "@/components/splash";
 import { ServiceWorker } from "@/components/service-worker";
 import { Welcome } from "@/components/welcome";
 import { Onboarding } from "@/components/onboarding";
+import { TrailRecorder } from "@/components/back-button";
+import { Tour } from "@/components/tour";
 import { getCurrentUser } from "@/lib/auth";
 import "./globals.css";
 
@@ -35,7 +37,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     // The theme script sets data-theme / class before React loads, hence suppressHydrationWarning.
-    <html lang="en" suppressHydrationWarning className={`${heading.variable} ${body.variable} h-full antialiased`}>
+    <html lang="en" suppressHydrationWarning data-scroll-behavior="smooth" className={`${heading.variable} ${body.variable} h-full antialiased`}>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
       </head>
@@ -46,6 +48,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <Suspense fallback={null}><Welcome /></Suspense>
         {/* First-open welcome (log in / create account / guest), after the opening screen. */}
         <Suspense fallback={null}><OnboardingGate /></Suspense>
+        {/* Remembers the pages visited, for the in-app back arrow. */}
+        <Suspense fallback={null}><TrailRecorder /></Suspense>
+        {/* Guided tours (shop and control room). */}
+        <Suspense fallback={null}><Tour /></Suspense>
         <SiteHeader />
         {children}
         <SiteFooter />

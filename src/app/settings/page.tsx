@@ -8,6 +8,7 @@ import { CountrySwitcher } from "@/components/country-switcher";
 import { ThemeSwitcher } from "@/components/theme";
 import { signOut } from "../(auth)/actions";
 import { ClearCart, Motion, TextSize } from "./controls";
+import { TourButton } from "@/components/tour";
 
 export const metadata = { title: "Settings · Suya Factory" };
 
@@ -61,6 +62,9 @@ export default function SettingsPage() {
         </Group>
 
         <Group title="Help">
+          <Row title="App tour" hint="A quick look at the main buttons.">
+            <TourButton tour="shop" className={linkRow}>Show me around</TourButton>
+          </Row>
           <Row title="Email us" hint={BUSINESS.email}>
             <a href={`mailto:${BUSINESS.email}`} className={linkRow}>Write</a>
           </Row>

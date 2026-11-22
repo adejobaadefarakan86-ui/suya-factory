@@ -43,7 +43,7 @@ async function AccountButton() {
   const user = await getCurrentUser();
   if (!user) {
     return (
-      <Link href="/login" aria-label="Log in"
+      <Link href="/login" data-tour="account" aria-label="Log in"
         className="appear flex h-10 items-center gap-1.5 rounded-xl border border-line px-2.5 text-sm font-medium text-ink transition hover:border-ink sm:px-3">
         <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
           <circle cx="12" cy="8" r="4" /><path d="M4 20c1.5-4 4.5-6 8-6s6.5 2 8 6" />
@@ -54,7 +54,7 @@ async function AccountButton() {
   }
   const initials = (user.fullName ?? user.email ?? "?").split(/[\s@]+/).filter(Boolean).slice(0, 2).map((w) => w[0]!.toUpperCase()).join("");
   return (
-    <Link href="/account" aria-label="My account" title={user.fullName ?? "My account"}
+    <Link href="/account" data-tour="account" aria-label="My account" title={user.fullName ?? "My account"}
       className="appear grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-accent to-[color-mix(in_srgb,var(--accent)_55%,var(--sun))] font-display text-sm font-semibold text-white shadow-sm ring-2 ring-bg transition hover:brightness-110">
       {initials}
     </Link>
@@ -82,7 +82,7 @@ export function SiteHeader() {
         </div>
 
         {/* Computer: simple links in the middle */}
-        <nav className="hidden items-center gap-7 md:flex" aria-label="Main">
+        <nav data-tour="nav" className="hidden items-center gap-7 md:flex" aria-label="Main">
           {NAV_LINKS.map((l) => (
             <Link key={l.href} href={l.href} className="text-sm font-medium text-muted transition hover:text-ink">{l.label}</Link>
           ))}
@@ -92,7 +92,7 @@ export function SiteHeader() {
           <div className="hidden items-center gap-4 md:flex">
             <Suspense fallback={<span className="w-20" />}><CountrySwitcher /></Suspense>
             <Suspense fallback={<span className="w-12" />}><UserLinks /></Suspense>
-            <Link href="/settings" aria-label="Settings" title="Settings"
+            <Link href="/settings" data-tour="settings" aria-label="Settings" title="Settings"
               className="grid h-9 w-9 place-items-center rounded-xl text-muted transition hover:bg-cream hover:text-ink">
               <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <circle cx="12" cy="12" r="3" />

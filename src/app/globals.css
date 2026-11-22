@@ -56,7 +56,6 @@
 
   /* Pages still using Tailwind's stone/white/tint colours follow the dark theme too
      (the neutral scale is flipped, light tints become dark tints). */
-  --color-white: #1c1817;
   --color-stone-50: #171413;
   --color-stone-100: #1f1b1a;
   --color-stone-200: #2d2826;
@@ -126,6 +125,12 @@ body {
   font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
+
+/* Nothing may push past the screen on phones: long addresses, emails and links
+   wrap instead of stretching their box, and grid/flex columns may shrink to fit. */
+body { overflow-wrap: break-word; }
+main .grid > *, main .flex > * { min-width: 0; }
+input, select, textarea { max-width: 100%; }
 
 h1, h2, h3 {
   font-family: var(--font-heading), var(--font-body), ui-sans-serif, system-ui, sans-serif;
@@ -346,4 +351,9 @@ body:has([data-theme-lock]) .site-footer { display: none; }
   html[data-hero-done] .hero-in,
   html[data-hero-done] .tilt-in,
   html[data-hero-done] .draw path { animation: none; stroke-dashoffset: 0; }
+}
+
+/* Guided tour fades in. */
+@media (prefers-reduced-motion: no-preference) {
+  .tour-in { animation: page-fade 0.35s ease-out backwards; }
 }

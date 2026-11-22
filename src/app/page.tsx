@@ -130,10 +130,10 @@ function Hero() {
 async function HeroButton() {
   const [country, user] = await Promise.all([getCountry(), getCurrentUser()]);
   if (SELLS_VIA_SUPERMARKETS[country]) {
-    return <Link href="/where-to-buy" className="btn btn-primary px-8 py-4 text-base">Find the nearest supermarket</Link>;
+    return <Link href="/where-to-buy" data-tour="order" className="btn btn-primary px-8 py-4 text-base">Find the nearest supermarket</Link>;
   }
   return (
-    <a href="#kilishi" className="btn btn-primary px-8 py-4 text-base">
+    <a href="#kilishi" data-tour="order" className="btn btn-primary px-8 py-4 text-base">
       {isStaff(user) ? "See our kilishi" : "Order now"}
     </a>
   );

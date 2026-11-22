@@ -44,6 +44,8 @@ export function Onboarding({ loggedIn }: { loggedIn: boolean }) {
     return () => { document.body.style.overflow = prev; window.removeEventListener("keydown", onKey); };
   }, [open]);
 
+  // Any choice closes it (the welcome sits in the app frame, which stays put when the
+  // page changes, so it must close itself or it would cover the login page).
   function choose() {
     flag(SEEN, true);
     setOpen(false);
@@ -76,11 +78,11 @@ export function Onboarding({ loggedIn }: { loggedIn: boolean }) {
         </p>
 
         <div className="mt-8 space-y-3">
-          <Link href="/login" onClick={() => flag(SEEN, true)}
+          <Link href="/login" onClick={choose}
             className="btn w-full bg-white py-3.5 text-base font-semibold text-crimson shadow-[0_10px_30px_-12px_rgba(60,10,5,0.65)] hover:bg-[#fff4ec]">
             Log in
           </Link>
-          <Link href="/signup" onClick={() => flag(SEEN, true)}
+          <Link href="/signup" onClick={choose}
             className="btn w-full border border-white/50 bg-white/10 py-3.5 text-base font-semibold text-white hover:bg-white/20">
             Create an account
           </Link>

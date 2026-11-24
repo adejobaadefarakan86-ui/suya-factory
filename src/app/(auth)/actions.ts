@@ -44,6 +44,12 @@ export async function login(_prev: AuthState, formData: FormData): Promise<AuthS
   }
 
   await noteWelcome("back", signedIn.user?.user_metadata?.full_name);
+  // No page asked for: the team goes to the control room, customers to their account.
+  const asked = formData.get("next");
+  if ((!asked || asked === "/account") && signedIn.user) {
+    const { data: profile } = await supabase.from("profiles").select("role").eq("id", signedIn.user.id).single();
+    if (profile?.role === "staff" || profile?.role === "admin") redirect("/admin");
+  }
   redirect(safeNext(formData.get("next")));
 }
 

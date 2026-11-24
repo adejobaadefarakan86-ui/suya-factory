@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { formatMoney, type Currency } from "@/lib/money";
 import { AutoRefresh } from "@/components/auto-refresh";
 import { FirstAdminTour, TourButton } from "@/components/tour";
+import { CustomerViewLink } from "@/components/view-switch";
 
 export const metadata = { title: "Overview · Admin · Suya Factory" };
 
@@ -122,12 +123,14 @@ async function Overview() {
             ["🧾 All orders", "/admin/orders"],
             ["🏪 Supermarkets", "/admin/stores"],
             ["🛵 Ghana pickup details", "/admin/delivery"],
-            ["👀 See the shop as customers do", "/"],
           ].map(([label, href]) => (
             <Link key={href} href={href} className="rounded-full bg-white px-4 py-2 font-medium text-stone-800 shadow-sm ring-1 ring-stone-200 hover:ring-orange-400">
               {label}
             </Link>
           ))}
+          <CustomerViewLink className="rounded-full bg-white px-4 py-2 font-medium text-stone-800 shadow-sm ring-1 ring-stone-200 hover:ring-orange-400">
+            👀 Customer view
+          </CustomerViewLink>
         </div>
       </section>
     </div>

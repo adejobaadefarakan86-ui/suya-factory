@@ -41,13 +41,8 @@ export function EnquiryForm({ country, defaults }: {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <label className="block">
-          <span className="mb-1 block text-sm font-medium text-ink">Country</span>
-          <select name="country" defaultValue={v?.country ?? country} className={inputClass}>
-            <option value="NG">Nigeria</option>
-            <option value="GH">Ghana</option>
-          </select>
-        </label>
+        {/* The visitor's country, chosen on first open. */}
+        <input type="hidden" name="country" value={country} />
         <Field label="Quantity (kg)" name="quantityKg" type="number" inputMode="decimal" required
           min={BULK_MIN_KG} step={0.5} placeholder="e.g. 5" defaultValue={v?.quantityKg}
           hint={`Minimum ${BULK_MIN_KG}kg.`} />
@@ -56,7 +51,7 @@ export function EnquiryForm({ country, defaults }: {
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Needed by (optional)" name="neededBy" type="date" defaultValue={v?.neededBy} />
         <Field label="Delivery city / area" name="location" required maxLength={200}
-          placeholder="e.g. Ikeja, Lagos" defaultValue={v?.location} />
+          placeholder={country === "GH" ? "e.g. East Legon, Accra" : "e.g. Ikeja, Lagos"} defaultValue={v?.location} />
       </div>
 
       <label className="block">

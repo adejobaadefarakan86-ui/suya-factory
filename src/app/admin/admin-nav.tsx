@@ -14,7 +14,7 @@ export function AdminNav({ items, badges }: { items: NavItem[]; badges: React.Re
         return (
           <Link key={item.href} href={item.href} data-tour={"nav-" + (item.href.split("/")[2] ?? "overview")} aria-current={active ? "page" : undefined}
             className={`flex min-w-0 items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition ${
-              active ? "bg-orange-600 text-white shadow" : "text-stone-300 hover:bg-white/10 hover:text-white"
+              active ? "bg-ember text-white shadow-[0_8px_20px_-10px_rgba(226,64,47,0.8)]" : "text-stone-300 hover:bg-white/10 hover:text-white"
             }`}>
             <span className="text-base" aria-hidden>{item.icon}</span>
             <span className="flex-1 truncate">{item.label}</span>

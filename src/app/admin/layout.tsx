@@ -5,8 +5,10 @@ import { createClient } from "@/lib/supabase/server";
 import { AdminNav, type NavItem } from "./admin-nav";
 import { LogoMark } from "@/components/logo-mark";
 import { BackButton } from "@/components/back-button";
+import { CustomerViewLink } from "@/components/view-switch";
+import { TourButton } from "@/components/tour";
 
-// The admin "frame": a dark control-room sidebar. The ACCESS CHECK is not done
+// The admin "frame": a charcoal control-room sidebar. The ACCESS CHECK is not done
 // here: layouts don't re-run when you move between pages, so every admin page
 // checks requireStaff() itself. This layout only shows who is logged in.
 const NAV: NavItem[] = [
@@ -18,6 +20,8 @@ const NAV: NavItem[] = [
   { href: "/admin/delivery", label: "Pickup & delivery", icon: "🛵" },
   { href: "/admin/team", label: "Team", icon: "👥" },
 ];
+
+const extra = "flex flex-col items-center gap-1 rounded-xl px-2 py-2 text-center text-stone-400 transition hover:bg-white/10 hover:text-white md:flex-row md:gap-3 md:px-3 md:text-left";
 
 export default function AdminLayout({ children }: LayoutProps<"/admin">) {
   return (
@@ -47,9 +51,11 @@ export default function AdminLayout({ children }: LayoutProps<"/admin">) {
           </Suspense>
         </div>
 
-        <div className="mt-6 hidden border-t border-white/10 pt-4 text-sm md:block">
-          <Link href="/" className="block rounded-xl px-3 py-2 text-stone-400 hover:bg-white/10 hover:text-white">👀 See the shop as customers do</Link>
-          <Link href="/account" className="block rounded-xl px-3 py-2 text-stone-400 hover:bg-white/10 hover:text-white">⚙️ My account</Link>
+        {/* Phones and computers: the customer view, account and the tutorial. */}
+        <div className="mt-5 grid grid-cols-3 gap-1 border-t border-white/10 pt-4 text-xs md:mt-6 md:flex md:flex-col md:text-sm">
+          <CustomerViewLink className={extra}><span aria-hidden>👀</span><span>Customer view</span></CustomerViewLink>
+          <Link href="/account" className={extra}><span aria-hidden>👤</span><span>My account</span></Link>
+          <TourButton tour="admin" className={extra}><span aria-hidden>❓</span><span>Tutorial</span></TourButton>
         </div>
       </aside>
       <div className="min-w-0 flex-1 px-4 py-8 md:px-10">{children}</div>

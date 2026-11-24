@@ -2,14 +2,17 @@
 import { cookies } from "next/headers";
 import { COUNTRY_COOKIE, isCountry } from "@/lib/countries";
 
-/** Remember the visitor's country for a year. The page re-renders with the new currency. */
+/** Save the visitor's country, chosen once on first open. It can't be changed afterwards. */
 export async function setCountry(formData: FormData) {
   const country = formData.get("country");
   if (!isCountry(country)) return;
 
-  (await cookies()).set(COUNTRY_COOKIE, country, {
+  const jar = await cookies();
+  if (isCountry(jar.get(COUNTRY_COOKIE)?.value)) return; // already chosen: no switching
+
+  jar.set(COUNTRY_COOKIE, country, {
     path: "/",
-    maxAge: 60 * 60 * 24 * 365,
+    maxAge: 60 * 60 * 24 * 400, // the longest browsers allow
     sameSite: "lax",
   });
 }

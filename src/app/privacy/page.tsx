@@ -23,7 +23,7 @@ export default function PrivacyPage() {
         <ul>
           <li><strong>Contact details:</strong> your name, phone number and email.</li>
           <li><strong>Delivery details:</strong> your address, landmark and the map pin you choose.</li>
-          <li><strong>Payment details (Ghana):</strong> the amount, the MoMo number you paid from and any reference you give.
+          <li><strong>Payment details (Ghana orders):</strong> the amount, the MoMo number you paid from and any reference you give.
             We never see your MoMo PIN.</li>
           <li><strong>Your rider&apos;s details:</strong> the name, phone, plate number and delivery app of the rider you book.</li>
           <li><strong>Order details:</strong> what you ordered, when, and if you cancel, the reason you give.</li>
@@ -48,7 +48,7 @@ export default function PrivacyPage() {
         <ul>
           <li><strong>Our staff</strong> who handle your order, including through our private Telegram staff group.</li>
           <li><strong>Supermarkets (Nigeria):</strong> your name and your rider&apos;s details, so they hand over to the right person.</li>
-          <li><strong>Service providers</strong> that run the website for us: Supabase (database and accounts) and Vercel (hosting).
+          <li><strong>Service providers</strong> that run the website for us: Supabase (database and accounts) and Netlify (hosting).
             Maps and address search use OpenFreeMap and Photon (Komoot), which receive what you search for and the map area
             you view, not your name.</li>
           <li><strong>Authorities</strong>, only when the law requires it.</li>

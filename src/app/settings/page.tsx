@@ -1,10 +1,13 @@
 // Settings for everyone (guests too): look, shopping, account, help, legal.
-// Look and cart settings are kept on this device; country is a cookie.
+// Look and cart settings are kept on this device; the country was chosen on
+// first open and is shown here, not changed.
 import Link from "next/link";
 import { Suspense } from "react";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser, isStaff } from "@/lib/auth";
 import { BUSINESS } from "@/lib/business";
-import { CountrySwitcher } from "@/components/country-switcher";
+import { getCountry } from "@/lib/country";
+import { COUNTRIES } from "@/lib/countries";
+import { SELLS_VIA_SUPERMARKETS } from "@/lib/stores";
 import { ThemeSwitcher } from "@/components/theme";
 import { signOut } from "../(auth)/actions";
 import { ClearCart, Motion, TextSize } from "./controls";
@@ -49,9 +52,9 @@ export default function SettingsPage() {
         </Group>
 
         <Group title="Shopping">
-          <Row title="Country" hint="Prices and how you buy depend on it.">
-            <Suspense fallback={<span className="h-9 w-28" />}><CountrySwitcher /></Suspense>
-          </Row>
+          <Suspense fallback={<Row title="Country"><span className="h-9" /></Row>}>
+            <CountryRow />
+          </Suspense>
           <Row title="Cart"><ClearCart /></Row>
         </Group>
 
@@ -62,14 +65,12 @@ export default function SettingsPage() {
         </Group>
 
         <Group title="Help">
-          <Row title="App tour" hint="A quick look at the main buttons.">
-            <TourButton tour="shop" className={linkRow}>Show me around</TourButton>
-          </Row>
+          <Suspense fallback={null}><StaffTutorialRow /></Suspense>
           <Row title="Email us" hint={BUSINESS.email}>
             <a href={`mailto:${BUSINESS.email}`} className={linkRow}>Write</a>
           </Row>
           <Row title="Custom and bulk orders" hint="1kg or more, priced with you."><Link href="/bulk-orders" className={linkRow}>Open</Link></Row>
-          <Row title="Find a supermarket" hint="Nigeria"><Link href="/where-to-buy" className={linkRow}>Open</Link></Row>
+          <Suspense fallback={null}><SupermarketRow /></Suspense>
         </Group>
 
         <Group title="Legal">
@@ -108,5 +109,25 @@ async function AccountRows() {
         <form action={signOut}><button className="btn btn-ghost px-4 py-2 text-sm">Log out</button></form>
       </Row>
     </>
+  );
+}
+
+async function CountryRow() {
+  const country = await getCountry();
+  return <Row title="Country"><span className="text-sm font-medium text-ink">{COUNTRIES[country].name}</span></Row>;
+}
+
+async function SupermarketRow() {
+  if (!SELLS_VIA_SUPERMARKETS[await getCountry()]) return null;
+  return <Row title="Find a supermarket"><Link href="/where-to-buy" className={linkRow}>Open</Link></Row>;
+}
+
+/** Team only: replay the control-room tutorial. */
+async function StaffTutorialRow() {
+  if (!isStaff(await getCurrentUser())) return null;
+  return (
+    <Row title="Control room tutorial">
+      <TourButton tour="admin" className={linkRow}>Show it again</TourButton>
+    </Row>
   );
 }

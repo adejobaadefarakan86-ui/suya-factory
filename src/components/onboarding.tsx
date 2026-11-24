@@ -6,7 +6,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { LogoMark } from "@/components/logo-mark";
-import { startTour } from "@/components/tour";
+import { COUNTRY_CHOSEN_EVENT } from "@/components/country-picker";
 
 const SEEN = "sf-onboard-seen";   // a choice was made on this device
 const MEMBER = "sf-has-account";  // someone has logged in on this device
@@ -26,12 +26,18 @@ export function Onboarding({ loggedIn }: { loggedIn: boolean }) {
   useEffect(() => {
     if (loggedIn) { flag(MEMBER, true); return; }
     if (location.pathname !== "/" || flag(MEMBER) || flag(SEEN)) return;
+    // First the country choice (components/country-picker.tsx), then this.
+    let t: ReturnType<typeof setTimeout> | undefined;
+    const afterCountry = () => { t = setTimeout(() => setOpen(true), 700); };
+    if (!document.cookie.includes("sf_country=")) {
+      window.addEventListener(COUNTRY_CHOSEN_EVENT, afterCountry, { once: true });
+      return () => { window.removeEventListener(COUNTRY_CHOSEN_EVENT, afterCountry); clearTimeout(t); };
+    }
     const html = document.documentElement;
     const splashPlaying = !html.dataset.introSeen;
     const lessMotion = html.dataset.motion === "reduce" || matchMedia("(prefers-reduced-motion: reduce)").matches;
     // Wait for the opening screen to finish, then show.
-    const wait = splashPlaying ? (lessMotion ? 1900 : 3350) : 350;
-    const t = setTimeout(() => setOpen(true), wait);
+    t = setTimeout(() => setOpen(true), splashPlaying ? (lessMotion ? 1900 : 3350) : 350);
     return () => clearTimeout(t);
   }, [loggedIn]);
 
@@ -88,17 +94,10 @@ export function Onboarding({ loggedIn }: { loggedIn: boolean }) {
             Create an account
           </Link>
         </div>
-        <div className="mt-5 flex items-center justify-center gap-4 text-sm font-medium text-white/80">
-          <button type="button" onClick={() => { choose(); setTimeout(() => startTour("shop"), 300); }}
-            className="underline-offset-4 transition hover:text-white hover:underline">
-            Show me around
-          </button>
-          <span aria-hidden="true" className="text-white/40">·</span>
-          <button type="button" onClick={choose}
-            className="underline-offset-4 transition hover:text-white hover:underline">
-            Continue as guest
-          </button>
-        </div>
+        <button type="button" onClick={choose}
+          className="mt-5 text-sm font-medium text-white/80 underline-offset-4 transition hover:text-white hover:underline">
+          Continue as guest
+        </button>
       </div>
     </div>
   );

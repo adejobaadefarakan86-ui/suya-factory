@@ -10,6 +10,9 @@ import { Welcome } from "@/components/welcome";
 import { Onboarding } from "@/components/onboarding";
 import { TrailRecorder } from "@/components/back-button";
 import { Tour } from "@/components/tour";
+import { CountryPicker } from "@/components/country-picker";
+import { FooterRise } from "@/components/footer-rise";
+import { chosenCountry, detectCountry } from "@/lib/country";
 import { getCurrentUser } from "@/lib/auth";
 import "./globals.css";
 
@@ -46,15 +49,18 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <ServiceWorker />
         {/* Knows the current page, so it streams in. */}
         <Suspense fallback={null}><Welcome /></Suspense>
-        {/* First-open welcome (log in / create account / guest), after the opening screen. */}
+        {/* First open: choose your country (Nigeria or Ghana), once. */}
+        <Suspense fallback={null}><CountryGate /></Suspense>
+        {/* First-open welcome (log in / create account / guest), after the country. */}
         <Suspense fallback={null}><OnboardingGate /></Suspense>
         {/* Remembers the pages visited, for the in-app back arrow. */}
         <Suspense fallback={null}><TrailRecorder /></Suspense>
-        {/* Guided tours (shop and control room). */}
+        {/* Guided tour of the control room. */}
         <Suspense fallback={null}><Tour /></Suspense>
         <SiteHeader />
         {children}
-        <SiteFooter />
+        {/* Footer on the home page only, rising into place. */}
+        <Suspense fallback={null}><FooterRise><SiteFooter /></FooterRise></Suspense>
       </body>
     </html>
   );
@@ -63,4 +69,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
 /** Knows whether someone is logged in, so the welcome screen can stay away for members. */
 async function OnboardingGate() {
   return <Onboarding loggedIn={Boolean(await getCurrentUser())} />;
+}
+
+/** Shows the country choice until the visitor has made it. */
+async function CountryGate() {
+  if (await chosenCountry()) return null;
+  return <CountryPicker detected={await detectCountry()} />;
 }

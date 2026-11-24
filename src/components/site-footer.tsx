@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { BUSINESS, SOCIAL } from "@/lib/business";
 import { getCountry } from "@/lib/country";
+import { navLinks } from "@/lib/nav";
 import { ThemeSwitcher } from "@/components/theme";
 import { Flame } from "@/components/doodles";
 import { LogoMark } from "@/components/logo-mark";
@@ -10,7 +11,7 @@ import { LogoMark } from "@/components/logo-mark";
 // links). Computers: the full footer with columns.
 export function SiteFooter() {
   return (
-    <footer className="site-footer mt-auto bg-night text-on-night">
+    <footer className="site-footer rounded-t-[2rem] border-t border-white/10 bg-night text-on-night shadow-[0_-24px_60px_-34px_rgba(226,64,47,0.55)]">
       {/* Phones */}
       <div className="flex flex-col items-center px-4 pb-[max(2rem,env(safe-area-inset-bottom))] pt-10 text-center md:hidden">
         <LogoMark gid="sf-heat-foot-m" className="h-11 w-11 text-on-night" />
@@ -44,7 +45,7 @@ export function SiteFooter() {
             </p>
           </div>
 
-          <FooterLinks title="Shop" links={[["Beef kilishi", "/shop"], ["Where to buy", "/where-to-buy"], ["Custom orders", "/bulk-orders"]]} />
+          <Suspense fallback={<div />}><ShopLinks /></Suspense>
           <FooterLinks title="Help" links={[["Settings", "/settings"], ["My account", "/account"], ["Terms of sale", "/terms"], ["Privacy", "/privacy"]]} />
 
           <div className="space-y-5">
@@ -71,6 +72,12 @@ export function SiteFooter() {
       </div>
     </footer>
   );
+}
+
+/** The shop links for the visitor's country ("Where to buy" only where we sell in supermarkets). */
+async function ShopLinks() {
+  const links = navLinks(await getCountry()).map((l): [string, string] => [l.href === "/shop" ? "Beef kilishi" : l.label, l.href]);
+  return <FooterLinks title="Shop" links={links} />;
 }
 
 function FooterLinks({ title, links }: { title: string; links: [string, string][] }) {

@@ -1,7 +1,7 @@
 "use client";
 // Guided tour: dims the screen, spotlights one control at a time and explains
-// it in a short card (Back / Next / Skip). Two tours: the shop (home page) and
-// the control room (admin). Start one with startTour("shop" | "admin"); it moves
+// it in a short card (Back / Next / Skip). For the control room (admin) only;
+// customers don't get a tour. Start it with startTour("admin"); it moves
 // to the right page first if needed. Targets are elements with data-tour="…";
 // a step whose target isn't on screen (e.g. hidden on phones) uses its fallback
 // target, or shows the card in the middle.
@@ -9,20 +9,9 @@ import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useLayoutEffect, useState } from "react";
 
 type Step = { targets: string[]; title: string; text: string };
-type TourName = "shop" | "admin";
+type TourName = "admin";
 
 const TOURS: Record<TourName, { path: string; steps: Step[] }> = {
-  shop: {
-    path: "/",
-    steps: [
-      { targets: [], title: "A quick look around", text: "Six short steps to the things you'll use most. You can skip at any time." },
-      { targets: ["order"], title: "Start here", text: "Order your kilishi in Ghana, or find the nearest supermarket that has it in Nigeria." },
-      { targets: ["nav", "menu"], title: "Menu", text: "Shop, Where to buy and Custom orders (1kg and up). On a phone, they're behind this button, with the Nigeria / Ghana switch." },
-      { targets: ["cart"], title: "Your cart", text: "Everything you add waits here. Check out when you're ready, no account needed." },
-      { targets: ["account"], title: "Your account", text: "Log in to track your orders and check out faster." },
-      { targets: ["settings", "menu"], title: "Settings", text: "Choose light or dark, bigger text, or fewer animations. Find this tour there too." },
-    ],
-  },
   admin: {
     path: "/admin",
     steps: [
@@ -84,7 +73,7 @@ export function Tour() {
   useEffect(() => {
     let pending: string | null = null;
     try { pending = sessionStorage.getItem(PENDING); } catch { /* fine */ }
-    if (pending === "shop" || pending === "admin") {
+    if (pending === "admin") {
       const t = setTimeout(() => begin(pending as TourName), 600);
       return () => clearTimeout(t);
     }
@@ -164,7 +153,7 @@ export function Tour() {
   );
 }
 
-/** "Show me around" button for a tour. */
+/** "Show the tutorial" button. */
 export function TourButton({ tour, className = "", children }: { tour: TourName; className?: string; children: React.ReactNode }) {
   return <button type="button" onClick={() => startTour(tour)} className={className}>{children}</button>;
 }

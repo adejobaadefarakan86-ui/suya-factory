@@ -47,5 +47,19 @@ export async function updateSession(request: NextRequest) {
     return redirect;
   }
 
+  // Team accounts open the app on the control room. They can still look at the
+  // shop: "Customer view" sets the sf_view cookie for the rest of the visit.
+  if (data?.claims && path === "/" && request.cookies.get("sf_view")?.value !== "shop") {
+    const { data: profile } = await supabase.from("profiles").select("role").eq("id", data.claims.sub).single();
+    if (profile?.role === "staff" || profile?.role === "admin") {
+      const adminUrl = request.nextUrl.clone();
+      adminUrl.pathname = "/admin";
+      adminUrl.search = "";
+      const redirect = NextResponse.redirect(adminUrl);
+      response.cookies.getAll().forEach((cookie) => redirect.cookies.set(cookie));
+      return redirect;
+    }
+  }
+
   return response;
 }

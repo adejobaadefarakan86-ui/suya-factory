@@ -9,7 +9,7 @@
    moments only: opening screen, login, profile card, the plate disc.
    Every colour is a token for light and dark. The theme comes from
    <html data-theme>, set before the page paints (layout.tsx). The admin keeps
-   its own look: pages containing [data-theme-lock] never switch to dark.
+   its own look: <html data-area="admin"> (set in the control room) never switches to dark.
    ===================================================================== */
 
 :root {
@@ -35,7 +35,7 @@
 }
 
 /* Dark theme: logo charcoal, white text, the same flame red a touch brighter. */
-:root[data-theme="dark"] body:not(:has([data-theme-lock])) {
+:root[data-theme="dark"]:not([data-area="admin"]) body {
   color-scheme: dark;
   --bg: #0f0d0c;
   --cream: #171413;
@@ -214,7 +214,7 @@ h1, h2, h3 {
 @keyframes logo-line { to { stroke-dashoffset: 0; } }
 @keyframes hero-rise { from { opacity: 0; transform: translateY(16px); } }
 html[data-intro-seen] .splash,
-body:has([data-theme-lock]) .splash { display: none; }
+html[data-area="admin"] .splash { display: none; }
 /* Less motion wanted: the opening screen still shows, standing still, then disappears. */
 @media (prefers-reduced-motion: reduce) {
   .splash { animation: splash-out 0.01s linear 1.8s forwards; }
@@ -274,25 +274,29 @@ html[data-motion="reduce"] [data-reveal="line"]::before { transform: none !impor
   .btn:active { transform: translateY(1px); }
 }
 
-/* ---------- Admin: its own look (deep navy + cool blue-greys, brand orange for highlights) ----------
-   Every grey used in the admin is re-tinted blue inside [data-theme-lock]. */
+/* ---------- Admin: its own look, from the logo's charcoal ----------
+   A smoky charcoal sidebar, warm grey pages and the Ember gradient for the
+   current page and main highlights. Clearly the "back office", still the same brand.
+   Every grey used in the admin is re-tinted inside [data-theme-lock]. */
 [data-theme-lock] {
-  --color-stone-50: #f5f7fc;
-  --color-stone-100: #edf1f8;
-  --color-stone-200: #dce3ef;
-  --color-stone-300: #c3cddf;
-  --color-stone-400: #8f9db6;
-  --color-stone-500: #63718c;
-  --color-stone-600: #4a5672;
-  --color-stone-700: #36425d;
-  --color-stone-800: #232e47;
-  --color-stone-900: #151f38;
-  --color-stone-950: #0c1530;
+  --color-stone-50: #f8f7f6;
+  --color-stone-100: #f1efed;
+  --color-stone-200: #e4e0dc;
+  --color-stone-300: #cdc6c0;
+  --color-stone-400: #a0968e;
+  --color-stone-500: #7a7068;
+  --color-stone-600: #5c534c;
+  --color-stone-700: #453e39;
+  --color-stone-800: #2e2926;
+  --color-stone-900: #1f1b19;
+  --color-stone-950: #141110;
   --color-white: #ffffff;
 }
-/* The admin is its own app: no shop top bar or footer around it. */
-body:has([data-theme-lock]) .site-header,
-body:has([data-theme-lock]) .site-footer { display: none; }
+/* The admin is its own app: no shop top bar or footer around it. Keyed to the
+   current page (not to admin parts still in the page's memory), so they come
+   straight back when you leave the control room. */
+html[data-area="admin"] .site-header,
+html[data-area="admin"] .site-footer { display: none; }
 
 /* Welcome message fades in, then out. */
 @media (prefers-reduced-motion: no-preference) {
@@ -356,4 +360,18 @@ body:has([data-theme-lock]) .site-footer { display: none; }
 /* Guided tour fades in. */
 @media (prefers-reduced-motion: no-preference) {
   .tour-in { animation: page-fade 0.35s ease-out backwards; }
+}
+
+/* Footer (home page only): pushed up from below just before you reach it,
+   overshoots a touch and settles, like it was forced into place. */
+.footer-rise { overflow: clip; padding-top: 18px; margin-top: auto; }
+@media (prefers-reduced-motion: no-preference) {
+  html.js:not([data-motion="reduce"]) .footer-rise > .site-footer { transform: translateY(85%); transform-origin: 50% 100%; }
+  html.js:not([data-motion="reduce"]) .footer-rise.is-up > .site-footer { animation: footer-up 0.95s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+}
+@keyframes footer-up {
+  0%   { transform: translateY(85%) scaleY(0.94); }
+  55%  { transform: translateY(-16px) scaleY(1.03); }
+  75%  { transform: translateY(5px) scaleY(0.99); }
+  100% { transform: translateY(0) scaleY(1); }
 }

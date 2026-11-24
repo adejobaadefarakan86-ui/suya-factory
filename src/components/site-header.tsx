@@ -2,11 +2,12 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { getCurrentUser, isStaff } from "@/lib/auth";
 import { CartLink } from "@/components/cart-link";
-import { CountrySwitcher } from "@/components/country-switcher";
 import { MobileMenu } from "@/components/mobile-menu";
 import { LogoMark } from "@/components/logo-mark";
 import { BackButton } from "@/components/back-button";
-import { NAV_LINKS } from "@/lib/nav";
+import { AdminLink } from "@/components/view-switch";
+import { navLinks } from "@/lib/nav";
+import { getCountry } from "@/lib/country";
 import { getCatalog } from "@/lib/catalog";
 
 // The cart icon needs to know what's still for sale (the catalogue is cached, so this is quick).
@@ -29,10 +30,13 @@ async function UserLinks() {
   return (
     <>
       {isStaff(user) && (
-        <Link href="/admin" title="You're signed in with a team account: you see the shop like a customer, without buying."
-          className="shrink-0 rounded-lg bg-ink px-2.5 py-1 text-xs font-medium text-bg transition hover:bg-accent hover:text-on-accent">
-          Team view · Admin
-        </Link>
+        <AdminLink title="Back to the control room"
+          className="appear flex h-10 shrink-0 items-center gap-1.5 rounded-xl bg-ink px-3 text-sm font-semibold text-bg transition hover:bg-accent hover:text-on-accent">
+          <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" /><rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" />
+          </svg>
+          Admin
+        </AdminLink>
       )}
     </>
   );
@@ -61,6 +65,18 @@ async function AccountButton() {
   );
 }
 
+/** Computer: the main links (they depend on the visitor's country). */
+async function MainNav() {
+  return navLinks(await getCountry()).map((l) => (
+    <Link key={l.href} href={l.href} className="text-sm font-medium text-muted transition hover:text-ink">{l.label}</Link>
+  ));
+}
+
+/** Phone menu with the links for the visitor's country. */
+async function MobileMenuForCountry() {
+  return <MobileMenu links={navLinks(await getCountry())} />;
+}
+
 /** The Menu button as it looks before the page is ready (phones only). */
 function MenuPlaceholder() {
   return (
@@ -83,15 +99,11 @@ export function SiteHeader() {
 
         {/* Computer: simple links in the middle */}
         <nav data-tour="nav" className="hidden items-center gap-7 md:flex" aria-label="Main">
-          {NAV_LINKS.map((l) => (
-            <Link key={l.href} href={l.href} className="text-sm font-medium text-muted transition hover:text-ink">{l.label}</Link>
-          ))}
+          <Suspense fallback={null}><MainNav /></Suspense>
         </nav>
 
         <div className="flex items-center gap-2 sm:gap-3">
           <div className="hidden items-center gap-4 md:flex">
-            <Suspense fallback={<span className="w-20" />}><CountrySwitcher /></Suspense>
-            <Suspense fallback={<span className="w-12" />}><UserLinks /></Suspense>
             <Link href="/settings" data-tour="settings" aria-label="Settings" title="Settings"
               className="grid h-9 w-9 place-items-center rounded-xl text-muted transition hover:bg-cream hover:text-ink">
               <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -100,16 +112,13 @@ export function SiteHeader() {
               </svg>
             </Link>
           </div>
+          {/* Team accounts: a button back to the control room (phones too). */}
+          <Suspense fallback={null}><UserLinks /></Suspense>
           <Suspense fallback={<CartLink />}><CartForCustomers /></Suspense>
           <Suspense fallback={<span className="h-10 w-10" />}><AccountButton /></Suspense>
           {/* Phone: everything else lives in the menu (it knows the current page, so it streams in). */}
           <Suspense fallback={<MenuPlaceholder />}>
-          <MobileMenu>
-            <Suspense fallback={<span className="w-20" />}><CountrySwitcher /></Suspense>
-            <div className="flex items-center gap-4">
-              <Suspense fallback={<span className="w-12" />}><UserLinks /></Suspense>
-            </div>
-          </MobileMenu>
+          <MobileMenuForCountry />
           </Suspense>
         </div>
       </div>

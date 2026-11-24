@@ -86,7 +86,7 @@ function Hero() {
 
         <p style={delay(0.6)} className="hero-in mt-8 max-w-xl text-base leading-relaxed text-muted sm:text-lg">
           We&apos;re Suya Factory. We make spicy beef kilishi in a clean, hygienic kitchen and seal every pack fresh.
-          Soft and crunchy in every piece, from Lagos to Accra.
+          Soft and crunchy in every piece.
         </p>
 
         {/* The main button, in the middle */}
@@ -100,7 +100,7 @@ function Hero() {
         </div>
 
         {/* The plate, seen from above: a round photo on a warm orange disc, with a thin
-            orbit ring and a small flame sticker. Kept inside the page, never edge to edge. */}
+            orbit ring. Kept inside the page, never edge to edge. */}
         <div style={delay(0.9)} className="hero-in relative mt-14 aspect-square w-full max-w-[17rem] sm:max-w-sm">
           {/* orange disc, offset, with a soft glow */}
           <div aria-hidden="true"
@@ -115,11 +115,6 @@ function Hero() {
               width={1080} height={1078} priority sizes="(min-width: 640px) 384px, 272px"
               className="h-full w-full scale-[1.12] object-cover" />
           </div>
-          {/* flame sticker */}
-          <span className="absolute -right-2 bottom-6 flex items-center gap-1.5 rounded-full bg-night py-2 pl-2.5 pr-3.5 text-xs font-semibold text-on-night shadow-lg sm:-right-6">
-            <Flame className="flicker h-4 w-3.5 text-accent" />
-            Seriously spicy
-          </span>
         </div>
       </div>
     </section>

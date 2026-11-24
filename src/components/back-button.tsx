@@ -24,10 +24,14 @@ export function parentOf(path: string) {
   return "/";
 }
 
-/** Records each page visited (mounted once, in the app frame). */
+/** Records each page visited (mounted once, in the app frame). Also marks
+ *  <html data-area="admin"> in the control room, so the shop's top bar and footer
+ *  hide there and come back as soon as you leave (globals.css). */
 export function TrailRecorder() {
   const path = usePathname();
   useEffect(() => {
+    if (path.startsWith("/admin")) document.documentElement.dataset.area = "admin";
+    else delete document.documentElement.dataset.area;
     const t = readTrail();
     if (t.length >= 2 && t[t.length - 2] === path) t.pop(); // went back
     else if (t[t.length - 1] !== path) t.push(path);
@@ -39,7 +43,8 @@ export function TrailRecorder() {
 export function BackButton({ tone = "page" }: { tone?: "page" | "night" }) {
   const path = usePathname();
   const router = useRouter();
-  if (path === "/") return null;
+  // Not on the two "home" pages: the shop's home, and the control room's overview.
+  if (path === "/" || path === "/admin") return null;
 
   function goBack() {
     const t = readTrail();

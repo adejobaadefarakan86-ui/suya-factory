@@ -2,7 +2,10 @@
 // Settings kept on this device (localStorage), applied to <html> straight away.
 // THEME_SCRIPT re-applies them before the page paints on every visit.
 import { useEffect, useState } from "react";
+import { useTransition } from "react";
 import { cart, useCartLines } from "@/lib/cart";
+import { changeCountry } from "@/app/actions/country";
+import { COUNTRIES, type CountryCode } from "@/lib/countries";
 
 function read(key: string) {
   try { return localStorage.getItem(key); } catch { return null; }
@@ -63,5 +66,31 @@ export function ClearCart() {
     <button type="button" onClick={() => { cart.clear(); setDone(true); }} className="btn btn-ghost px-4 py-2 text-sm">
       Empty cart ({count})
     </button>
+  );
+}
+
+/** Change country, for when the detected one was wrong. Asks first; empties the cart (prices differ). */
+export function ChangeCountry({ current }: { current: CountryCode }) {
+  const other: CountryCode = current === "NG" ? "GH" : "NG";
+  const [asking, setAsking] = useState(false);
+  const [pending, start] = useTransition();
+
+  if (!asking) {
+    return (
+      <span className="flex items-center gap-3">
+        <span className="text-sm font-medium text-ink">{COUNTRIES[current].name}</span>
+        <button type="button" onClick={() => setAsking(true)} className="btn btn-ghost px-4 py-2 text-sm">Change</button>
+      </span>
+    );
+  }
+  return (
+    <span className="flex flex-wrap items-center gap-2">
+      <span className="text-sm text-ink">Switch to {COUNTRIES[other].name}?</span>
+      <button type="button" disabled={pending} className="btn btn-primary px-4 py-2 text-sm"
+        onClick={() => start(async () => { cart.clear(); await changeCountry(other); location.reload(); })}>
+        {pending ? "Switching…" : "Yes, switch"}
+      </button>
+      <button type="button" disabled={pending} onClick={() => setAsking(false)} className="btn btn-ghost px-4 py-2 text-sm">Cancel</button>
+    </span>
   );
 }

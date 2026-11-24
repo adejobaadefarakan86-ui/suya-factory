@@ -1,16 +1,15 @@
 // Settings for everyone (guests too): look, shopping, account, help, legal.
-// Look and cart settings are kept on this device; the country was chosen on
-// first open and is shown here, not changed.
+// Look and cart settings are kept on this device; the country is confirmed on
+// first open and can be changed here (with an "Are you sure?").
 import Link from "next/link";
 import { Suspense } from "react";
 import { getCurrentUser, isStaff } from "@/lib/auth";
 import { BUSINESS } from "@/lib/business";
 import { getCountry } from "@/lib/country";
-import { COUNTRIES } from "@/lib/countries";
 import { SELLS_VIA_SUPERMARKETS } from "@/lib/stores";
 import { ThemeSwitcher } from "@/components/theme";
 import { signOut } from "../(auth)/actions";
-import { ClearCart, Motion, TextSize } from "./controls";
+import { ChangeCountry, ClearCart, Motion, TextSize } from "./controls";
 import { TourButton } from "@/components/tour";
 
 export const metadata = { title: "Settings · Suya Factory" };
@@ -114,7 +113,7 @@ async function AccountRows() {
 
 async function CountryRow() {
   const country = await getCountry();
-  return <Row title="Country"><span className="text-sm font-medium text-ink">{COUNTRIES[country].name}</span></Row>;
+  return <Row title="Country" hint="Prices and how you buy depend on it."><ChangeCountry current={country} /></Row>;
 }
 
 async function SupermarketRow() {

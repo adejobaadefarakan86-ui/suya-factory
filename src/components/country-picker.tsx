@@ -1,13 +1,13 @@
 "use client";
-// First open: the customer picks their country (Nigeria or Ghana) before anything
-// else. The country we detect is marked "You're here". The choice is saved for
-// good (no switching later), so each side only ever sees its own prices and ways
-// to buy. Same look as the welcome screen. Never shown in the admin.
-import { usePathname, useRouter } from "next/navigation";
+// First open: we detect the visitor's country (Nigeria or Ghana) and they confirm
+// it with one tap. It's then saved, so each side only sees its own prices and
+// ways to buy. If detection was wrong, Settings has "Change country" (with an
+// "Are you sure?" step). Same look as the welcome screen. Never shown in the admin.
+import { usePathname } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { setCountry } from "@/app/actions/country";
 import { LogoMark } from "@/components/logo-mark";
-import type { CountryCode } from "@/lib/countries";
+import { COUNTRIES, type CountryCode } from "@/lib/countries";
 
 export const COUNTRY_CHOSEN_EVENT = "sf-country-chosen";
 
@@ -38,7 +38,7 @@ export function CountryPicker({ detected }: { detected: CountryCode }) {
   const [ready, setReady] = useState(false);
   const [picked, setPicked] = useState<CountryCode | null>(null);
   const [, startTransition] = useTransition();
-  const router = useRouter();
+  const [done, setDone] = useState(false);
   const inAdmin = path.startsWith("/admin");
 
   // Wait for the opening screen to finish, then show.
@@ -66,13 +66,13 @@ export function CountryPicker({ detected }: { detected: CountryCode }) {
       const form = new FormData();
       form.set("country", code);
       await setCountry(form);
-      document.cookie = `sf_country=${code}; path=/; max-age=${60 * 60 * 24 * 400}; samesite=lax`; // in case the reply was slow
+      // Close straight away: the page already shows this country.
+      setDone(true);
       window.dispatchEvent(new Event(COUNTRY_CHOSEN_EVENT));
-      router.refresh();
     });
   }
 
-  if (!ready || inAdmin) return null;
+  if (!ready || inAdmin || done) return null;
 
   return (
     <div role="dialog" aria-modal="true" aria-labelledby="country-title"
@@ -87,31 +87,17 @@ export function CountryPicker({ detected }: { detected: CountryCode }) {
         <span className="mx-auto grid h-16 w-16 place-items-center rounded-2xl border border-white/30 bg-white/15">
           <LogoMark mono gid="sf-heat-country" className="h-12 w-12 text-white" />
         </span>
-        <h2 id="country-title" className="mt-6 font-display text-3xl font-semibold tracking-tight">Where are you?</h2>
+        <div className="mx-auto mt-6 w-fit"><Flag code={detected} /></div>
+        <p className="mt-4 text-xs font-semibold uppercase tracking-[0.3em] text-white/75">You&apos;re in</p>
+        <h2 id="country-title" className="mt-1 font-display text-3xl font-semibold tracking-tight">{COUNTRIES[detected].name}</h2>
+        <p className="mt-2 text-sm text-white/80">{OPTIONS.find((o) => o.code === detected)!.how}</p>
 
-        <div className="mt-7 space-y-3">
-          {OPTIONS.map((o) => (
-            <button key={o.code} type="button" onClick={() => choose(o.code)}
-              className={`flex w-full items-center gap-4 rounded-2xl border px-4 py-4 text-left transition ${
-                o.code === detected
-                  ? "border-white bg-white text-[#141110] shadow-[0_10px_30px_-12px_rgba(60,10,5,0.65)]"
-                  : "border-white/50 bg-white/10 text-white hover:bg-white/20"
-              } ${picked && picked !== o.code ? "opacity-50" : ""}`}>
-              <Flag code={o.code} />
-              <span className="min-w-0 flex-1">
-                <span className="flex items-center gap-2 font-display text-lg font-semibold">
-                  {o.name}
-                  {o.code === detected && (
-                    <span className="rounded-full bg-accent px-2 py-0.5 font-sans text-[0.65rem] font-semibold uppercase tracking-wider text-white">You&apos;re here</span>
-                  )}
-                </span>
-                <span className={`block text-sm ${o.code === detected ? "text-[#6b6560]" : "text-white/80"}`}>{o.how}</span>
-              </span>
-              {picked === o.code && <span className="h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent" aria-hidden="true" />}
-            </button>
-          ))}
-        </div>
-        <p className="mt-5 text-xs text-white/75">This stays set on this device.</p>
+        <button type="button" onClick={() => choose(detected)} disabled={picked !== null}
+          className="btn mt-8 w-full gap-2 bg-white py-3.5 text-base font-semibold text-crimson shadow-[0_10px_30px_-12px_rgba(60,10,5,0.65)] hover:bg-[#fff4ec]">
+          Continue
+          {picked && <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" aria-hidden="true" />}
+        </button>
+        <p className="mt-5 text-xs text-white/75">Wrong country? Change it in Settings.</p>
       </div>
     </div>
   );

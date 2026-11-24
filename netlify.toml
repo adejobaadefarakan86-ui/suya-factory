@@ -1,0 +1,4 @@
+# Netlify settings (free plan allows business use).
+[build]
+  command = "npm run build"
+  publish = ".next"
